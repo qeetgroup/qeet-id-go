@@ -48,9 +48,10 @@ type JWKSVerifier struct {
 	jwksURL string
 	hc      *http.Client
 
-	mu        sync.Mutex
-	keys      map[string]*ecdsa.PublicKey
-	fetchedAt time.Time
+	mu          sync.Mutex
+	keys        map[string]*ecdsa.PublicKey
+	fetchedAt   time.Time
+	lastRefresh time.Time // last refresh *attempt* (success or failure); throttles cache-miss refetches
 }
 
 // NewJWKSVerifier builds a verifier pointed at jwksURL.
@@ -156,6 +157,12 @@ func (v *JWKSVerifier) resolveKey(ctx context.Context, kid string) (*ecdsa.Publi
 	if k := v.lookup(kid, false); k != nil {
 		return k, nil
 	}
+	// Cache miss. Refresh at most once per JWKSRefreshCooldown so that tokens
+	// bearing an unknown/garbage kid can't force an unbounded number of upstream
+	// JWKS fetches (one per request) — a cheap amplification vector.
+	if !v.beginRefresh() {
+		return nil, &transport.Error{Status: 401, Code: "invalid_token", Message: "no JWKS key for kid " + kid}
+	}
 	if err := v.refresh(ctx); err != nil {
 		return nil, err
 	}
@@ -163,6 +170,20 @@ func (v *JWKSVerifier) resolveKey(ctx context.Context, kid string) (*ecdsa.Publi
 		return k, nil
 	}
 	return nil, &transport.Error{Status: 401, Code: "invalid_token", Message: "no JWKS key for kid " + kid}
+}
+
+// beginRefresh reports whether an out-of-band JWKS refresh may proceed now,
+// recording the attempt time. The first fetch (no keys cached yet) is always
+// allowed; subsequent cache-miss refreshes are rate-limited to one per
+// JWKSRefreshCooldown.
+func (v *JWKSVerifier) beginRefresh() bool {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if v.keys != nil && time.Since(v.lastRefresh) < constants.JWKSRefreshCooldown {
+		return false
+	}
+	v.lastRefresh = time.Now()
+	return true
 }
 
 func (v *JWKSVerifier) lookup(kid string, forceFresh bool) *ecdsa.PublicKey {

@@ -34,6 +34,12 @@ const (
 )
 
 // JWKSCacheTTL is how long a fetched JWKS document is trusted before a
-// scheduled refresh (an unknown kid always forces an immediate refresh
-// regardless of TTL).
+// scheduled refresh. An unknown kid triggers an out-of-band refresh, but no
+// more often than JWKSRefreshCooldown (see below).
 const JWKSCacheTTL = 5 * time.Minute
+
+// JWKSRefreshCooldown bounds how often an unknown/garbage kid may trigger an
+// out-of-band JWKS refetch. Without it, tokens bearing random kids force one
+// upstream JWKS fetch per request — a cheap amplification vector. A genuinely
+// rotated-in key is still picked up within this window.
+const JWKSRefreshCooldown = 1 * time.Minute

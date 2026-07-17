@@ -46,6 +46,8 @@ type Client struct {
 	AuthPolicy    *AuthPolicyService
 	Policy        *PolicyService
 	IPRules       *IPRulesService
+	BotDetection  *BotDetectionService
+	RiskSettings  *RiskSettingsService
 
 	// Authorization — what an authenticated caller is allowed to do.
 	Roles         *RolesService
@@ -61,6 +63,7 @@ type Client struct {
 	EmailTemplates *EmailTemplatesService
 	APIKeys        *APIKeysService
 	Vault          *VaultService
+	TokenVault     *TokenVaultService
 	Webhooks       *WebhooksService
 	AuditLogs      *AuditLogsService
 	Analytics      *AnalyticsService
@@ -109,6 +112,8 @@ func New(cfg Config) *Client {
 		AuthPolicy:    &AuthPolicyService{t: t},
 		Policy:        &PolicyService{t: t},
 		IPRules:       &IPRulesService{t: t},
+		BotDetection:  &BotDetectionService{t: t},
+		RiskSettings:  &RiskSettingsService{t: t},
 
 		Roles:         &RolesService{t: t},
 		Permissions:   &PermissionsService{t: t},
@@ -121,6 +126,7 @@ func New(cfg Config) *Client {
 		EmailTemplates: &EmailTemplatesService{t: t},
 		APIKeys:        &APIKeysService{t: t},
 		Vault:          &VaultService{t: t},
+		TokenVault:     &TokenVaultService{t: t},
 		Webhooks:       &WebhooksService{t: t},
 		AuditLogs:      &AuditLogsService{t: t},
 		Analytics:      &AnalyticsService{t: t},

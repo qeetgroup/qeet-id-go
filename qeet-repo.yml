@@ -1,0 +1,90 @@
+# qeet-id-go — repository context metadata (Level 2).
+# Inherits qeetgroup/qeet-context (L0) and qeetgroup/qeet-id-context (L1).
+
+schema_version: 1
+
+context:
+  type: repository
+  level: L2
+  canonical: true
+  last_verified: "2026-08-28"
+
+inheritance:
+  organization: {repository: qeetgroup/qeet-context, level: L0}
+  product:      {repository: qeetgroup/qeet-id-context, level: L1}
+
+repository:
+  name: qeet-id-go
+  product: qeet-id
+  type: sdk
+  role: sdk
+  status: development        # v0.1.0; NEVER FETCHED by the Go module proxy
+  visibility: public
+  default_branch: main
+
+runtime:
+  language: Go
+  version: "1.23"            # needs iter.Seq2
+  third_party_deps: none     # stdlib only — no go.sum exists
+
+module:
+  name: github.com/qeetgroup/qeet-id-go
+  package: qeetid
+
+architecture:
+  style: single-package-file-per-resource   # ADR-0001
+  client_shape: flat-service-fields         # ADR-0002 — 44 *Service fields on Client
+  shared_machinery: internal/               # ADR-0003
+  internal:
+    transport:  internal/transport   # HTTP, retry, form posts, errors
+    auth:       internal/auth        # JWKS cache + ES256 verify
+    constants:  internal/constants   # all defaults + header names
+    pagination: internal/pagination  # generic Paginate[T] -> iter.Seq2
+    marshal:    internal/marshal     # Envelope[T] items/data resolution
+    validation: internal/validation
+    version:    internal/version
+    testutil:   internal/testutil
+
+contracts:
+  consumes:
+    api: qeet-id-server        # api/openapi/ — this SDK implements that contract
+    base_url: https://api.id.qeet.in
+  auth_scheme: "Authorization: ApiKey <qk_...>"
+  oauth_form_auth: "Basic <base64>"
+
+defaults:
+  timeout: 10s
+  max_retries: 2
+  max_response_bytes: 1MiB
+  jwks_cache_ttl: 5m
+  jwks_refresh_cooldown: 1m
+  retry_policy: 429 always; 5xx only when idempotent (GET/DELETE)
+
+commands:
+  build: make build
+  test:  make test        # go test -race -count=1 ./...
+  vet:   make vet
+  fmt:   make fmt         # fails if gofmt -l is non-empty
+  lint:  make lint        # golangci-lint run
+  tidy:  make tidy
+
+ci:
+  workflows: [ci.yml, codeql.yml, lint.yml, release.yml, security.yml]
+  matrix: ["1.23", "1.24"]
+  gates: [go vet, go build, go test -race + coverage, gofmt check, golangci-lint, govulncheck, gitleaks, CodeQL]
+  release: tag v* -> GitHub release (the tag IS the artifact; Go modules need no build)
+
+security:
+  sensitive_paths:
+    - internal/auth/jwks.go       # ES256 verification
+    - webhooks_verify.go          # HMAC signature verification
+    - internal/transport/         # header + auth injection
+  never: [log an API key, skip signature verification, weaken retry idempotency rules]
+
+llm_context:
+  primary_instructions: AGENTS.md
+  canonical: docs/llm/context.md
+  boundaries: docs/llm/boundaries.md
+  workflows: docs/llm/workflows.md
+  architecture_map: docs/llm/architecture-map.md
+  adapters: [CLAUDE.md, GEMINI.md, .github/copilot-instructions.md]

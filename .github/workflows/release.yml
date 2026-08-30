@@ -2,31 +2,83 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main] # every merge to main gates, then tags — the tag IS the release
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which version part to increment
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the version tag after a successful gate
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    environment:
+      name: production
+      url: https://pkg.go.dev/github.com/qeetgroup/qeet-id-go
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history to find the latest tag
+
+      - name: Determine next version
+        id: version
+        env:
+          # `type: choice` constrains this server-side, but keep it out of the
+          # script body anyway so the run block never interpolates input.
+          BUMP: ${{ inputs.bump || 'patch' }}
+        run: |
+          latest=$(git tag --list 'v*' --sort=-version:refname | head -1)
+          latest=${latest:-v0.0.0}
+          IFS='.' read -r major minor patch <<< "${latest#v}"
+          case "$BUMP" in
+            major) new_tag="v$((major + 1)).0.0" ;;
+            minor) new_tag="v${major}.$((minor + 1)).0" ;;
+            *)     new_tag="v${major}.${minor}.$((patch + 1))" ;;
+          esac
+          echo "Latest: $latest  ->  new: $new_tag"
+          echo "tag=$new_tag" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24'
           cache-dependency-path: go.sum
 
-      # A Go module has nothing to "build" for release — go.sum/go.mod plus
-      # the tag are the published artifact (go get resolves it directly from
-      # the tag). The only gate here is that the tagged commit is green.
+      # A Go module has nothing to "build" for release — go.mod/go.sum plus the
+      # tag are the published artifact (go get resolves it straight from the
+      # tag). So the gate below is the only thing standing between main and a
+      # public version: it must be green before we tag.
       - run: go vet ./...
       - run: go build ./...
       - run: go test -race -count=1 ./...
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          # Pull this tag's section out of CHANGELOG.md as the release body.
-          generate_release_notes: true
+      # Tag AFTER a green gate so every tag == a version that actually builds.
+      - name: Push version tag and create GitHub release
+        env:
+          VERSION: ${{ steps.version.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --generate-notes \
+            --repo "${{ github.repository }}"
+
+      # Ask the module proxy to fetch the new version now, so `go get` and
+      # pkg.go.dev pick it up immediately instead of on first external request.
+      - name: Warm the Go module proxy
+        env:
+          VERSION: ${{ steps.version.outputs.tag }}
+          GOPROXY: https://proxy.golang.org
+        run: go list -m "github.com/qeetgroup/qeet-id-go@${VERSION}" || true

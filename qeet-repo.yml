@@ -72,7 +72,7 @@ ci:
   workflows: [ci.yml, codeql.yml, lint.yml, release.yml, security.yml]
   matrix: ["1.23", "1.24"]
   gates: [go vet, go build, go test -race + coverage, gofmt check, golangci-lint, govulncheck, gitleaks, CodeQL]
-  release: tag v* -> GitHub release (the tag IS the artifact; Go modules need no build)
+  release: push main -> gate -> auto-tag vX.Y.Z + GitHub release (the tag IS the artifact)
 
 security:
   sensitive_paths:

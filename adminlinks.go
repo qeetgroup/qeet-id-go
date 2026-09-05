@@ -22,8 +22,8 @@ type AdminLink struct {
 	CreatedAt    string   `json:"created_at"`
 }
 
-// CreateAdminLinkInput — TTLSeconds is clamped server-side to [15min, 7d],
-// defaulting to 24h when zero.
+// CreateAdminLinkInput — TTLSeconds is clamped server-side to [15min, 24h],
+// defaulting to 1h when zero.
 type CreateAdminLinkInput struct {
 	Capabilities []string `json:"capabilities"`
 	TTLSeconds   int      `json:"ttl_seconds,omitempty"`
@@ -39,9 +39,9 @@ type CreateAdminLinkResult struct {
 
 // AdminLinksService manages delegated admin-portal links (renamed from the
 // earlier "AdminPortal" naming — this manages links/tokens, not a portal
-// itself). The public token-based portal session
-// (/admin-portal/{token}/...) is for the external IT admin's own browser
-// session and isn't wrapped here.
+// itself). The external IT admin's browser exchanges the generated URL's
+// fragment token once for a short-lived, HttpOnly portal session; that browser
+// flow isn't wrapped here.
 type AdminLinksService struct{ t *transport.Transport }
 
 func (s *AdminLinksService) Create(ctx context.Context, tenantID string, in CreateAdminLinkInput) (*CreateAdminLinkResult, error) {

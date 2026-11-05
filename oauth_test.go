@@ -38,8 +38,12 @@ func TestClientCredentials(t *testing.T) {
 	}
 	req := &http.Request{Header: got.header}
 	user, pass, ok := req.BasicAuth()
-	if !ok || user != "sp-1" || pass != "s3cr3t+/=" {
-		t.Errorf("Basic credentials = %q %q %v; want them sent as is", user, pass, ok)
+	// RFC 6749 §2.3.1: each value is form-encoded before Basic encoding.
+	if !ok || user != "sp-1" || pass != "s3cr3t%2B%2F%3D" {
+		t.Errorf("Basic credentials = %q %q %v; want them form-encoded", user, pass, ok)
+	}
+	if decoded, err := url.QueryUnescape(pass); err != nil || decoded != "s3cr3t+/=" {
+		t.Errorf("decoded secret = %q, %v; want the original", decoded, err)
 	}
 	form, _ := url.ParseQuery(got.body)
 	if form.Get("grant_type") != "client_credentials" || form.Get("scope") != "user.read" || form.Has("client_secret") {

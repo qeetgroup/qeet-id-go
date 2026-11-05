@@ -170,9 +170,10 @@ func (c *Client) send(ctx context.Context, req *request, target string, payload 
 	}
 	switch {
 	case req.clientID != "":
-		// Sent as is: the server compares the Basic credentials without
-		// form-decoding them.
-		hreq.SetBasicAuth(req.clientID, req.clientSecret)
+		// RFC 6749 §2.3.1: each value is form-encoded before Basic encoding,
+		// and the server decodes it. The URL-safe secrets it issues are
+		// unchanged by this.
+		hreq.SetBasicAuth(url.QueryEscape(req.clientID), url.QueryEscape(req.clientSecret))
 	case req.bearer != "":
 		hreq.Header.Set("Authorization", "Bearer "+req.bearer)
 	case !req.public && c.cred != nil:

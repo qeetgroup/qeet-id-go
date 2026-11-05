@@ -45,7 +45,7 @@ type Claims struct {
 	// ExchangeDepth counts the token exchanges that produced the token.
 	ExchangeDepth int
 	// Custom holds the claims an authentication hook added, from the token's
-	// claims object.
+	// claims object. Numbers in it are json.Number values.
 	Custom map[string]any
 
 	// Raw is the token's decoded payload, for claims not listed above.

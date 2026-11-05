@@ -176,6 +176,10 @@ qeetid.WithTokenSource(qeetid.TokenSourceFunc(func(context.Context) (string, err
 }))
 ```
 
+If you already use [`golang.org/x/oauth2/clientcredentials`](https://pkg.go.dev/golang.org/x/oauth2/clientcredentials),
+it works against Qeet ID unchanged: set `TokenURL` to `https://api.id.qeet.in/v1/oauth/token` and
+adapt its token source as above.
+
 ## Errors
 
 When the API answers with an error status, methods return an `*qeetid.APIError`:

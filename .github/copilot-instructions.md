@@ -5,32 +5,38 @@ architecture.
 
 ## Repository
 
-The server-side **Go SDK for Qeet ID**. Module `github.com/qeetgroup/qeet-id-go`, package `qeetid`, Go 1.23, **zero third-party dependencies**. It wraps a contract owned by `qeet-id-server` — it never adds behaviour the API lacks.
+The server-side **Go SDK for Qeet ID**. Module `github.com/qeetgroup/qeet-id-go`, package `qeetid`,
+Go 1.26+, standard library only. It wraps the contract owned by `qeet-id-server` (its five OpenAPI
+documents) and never adds behaviour the API lacks.
 
 Context: **L0** `qeet-context` (organization) → **L1** `qeet-id-context` (product) → **L2** this
 repository → source.
 
 ## Structure
 
-Public API is a **single root package**, one file per resource (`users.go`, `agents.go`, …), with 44 flat `*Service` fields on `Client`. Shared machinery is in `internal/{transport,auth,constants,pagination,marshal,validation,version,testutil}`. **Never create a subpackage for public API** (ADR-0001) and **never introduce nested namespace groups** (ADR-0002).
+The root package holds the client (`client.go`, `options.go`, `auth.go`, `transport.go`,
+`errors.go`, `pagination.go`) and one file per service (`users.go`, `webhooks.go`, …) with its
+methods and types. Leaf packages: `webhook/` (verify deliveries) and `jwt/` (verify access tokens).
+`internal/version` holds the version. See ADR-0004 in `docs/design-decisions/`.
 
 ## Rules
 
-1. **Zero third-party dependencies.** Stdlib only — there is deliberately no `go.sum`. Adding one is a decision, not a commit.
-2. **Never invent an endpoint.** Verify against the real handler in `qeet-id-server`, not just the OpenAPI document.
-3. **Retry idempotency is a safety rule:** 429 always retries; 5xx only on GET/DELETE. Making POST/PATCH/PUT retryable duplicates server-side writes.
-4. **Never weaken JWKS or webhook verification** (`internal/auth/jwks.go`, `webhooks_verify.go`), including to make a test pass.
-5. **`context.Context` is always the first argument** on any method that performs I/O.
-6. A transport failure is a wrapped `fmt.Errorf`, **not** an `*Error` — there is no `NetworkError` type here, unlike the Node SDK.
+1. Standard library only.
+2. Match the OpenAPI documents exactly; the server's handlers decide ambiguities.
+3. `context.Context` first, `opts ...RequestOption` last; lists return `*Page[T]`.
+4. Retries only where safe (`retryPlan`); never retry a 401 or `auth.session_revoked`.
+5. Never weaken `webhook/` or `jwt/` verification; never log or embed a credential.
+6. Every method has a route test case.
 
 ## Commands
 
-`make build` · `make test` · `make vet` · `make fmt` · `make lint` · `make tidy`
+`make build` · `make test` · `make vet` · `make fmt` · `make lint` · `make vuln` · `make tidy` ·
+`make ci`
 
 ## Do not
 
 - suggest adding a third-party dependency
-- suggest a subpackage for public API, or nested client namespaces
-- make a non-idempotent HTTP method retryable
-- log, embed, or echo an API key — not in an error, not in a debug line
-- invent Make targets — `build test vet fmt lint tidy` is the complete set
+- add a public package other than `webhook` and `jwt` without a decision
+- widen the retry rules or retry a 401
+- log, embed or echo a credential, in an error or a log line
+- reference tracker tickets in code, comments or docs

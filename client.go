@@ -1,140 +1,242 @@
-// Package qeetid is the server-side Go SDK for Qeet ID: manage users,
-// organizations, roles, and every other management resource; run
-// authorization checks; and verify sessions/JWTs.
-//
-// Authenticate with a secret API key (`qk_…`); never embed it in client code.
-// The package has no third-party dependencies — only the standard library.
-//
-//	client := qeetid.New(qeetid.Config{APIKey: os.Getenv("QEETID_API_KEY")})
-//	claims, err := client.Sessions.Verify(ctx, token)
-//	ok, err := client.Permissions.Check(ctx, qeetid.PermissionCheck{
-//		User: claims.UserID, Tenant: claims.TenantID, Permission: "billing:write",
-//	})
-//
-// Every resource sits directly on Client as a *XService field — comment
-// banners below group them (Identity / Authentication / Authorization /
-// Administration) for documentation only; there is no nesting, so every
-// resource is one field access away: client.Users, client.Sessions,
-// client.Webhooks.
 package qeetid
 
-import "github.com/qeetgroup/qeet-id-go/internal/transport"
+import (
+	"errors"
+	"fmt"
+	"log/slog"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
-// Client is the Qeet ID API client. Construct once with New and reuse it; it
-// is safe for concurrent use.
+	"github.com/qeetgroup/qeet-id-go/internal/version"
+)
+
+// Client is a client for the Qeet ID API. Create one with NewClient and share
+// it: a Client is safe for concurrent use, and reusing it reuses connections
+// and cached tokens.
+//
+// Each field groups the operations on one kind of resource, as in
+// client.Users.Get(ctx, userID). The fields are set by NewClient and must not
+// be changed.
 type Client struct {
-	// Identity — who exists: human users, organizations, and machine identities.
-	Users             *UsersService
-	Organizations     *OrganizationsService
-	ServicePrincipals *ServicePrincipalsService
-	Agents            *AgentsService
-	Domains           *DomainsService
+	// Tenants and the people, groups and invitations in them.
+	Tenants     *TenantsService
+	Users       *UsersService
+	Groups      *GroupsService
+	Invitations *InvitationsService
+	Domains     *DomainsService
+	Branding    *BrandingService
 
-	// Authentication — proving who's calling: sessions, federation protocols,
-	// and their supporting policy.
-	Sessions      *SessionsService
-	OAuth         *OAuthService
-	OIDC          *OIDCService
-	SAML          *SAMLService
-	SAMLProviders *SAMLServiceProvidersService
-	SCIM          *SCIMService
-	LDAP          *LDAPService
-	Social        *SocialService
-	MFA           *MFAService
-	Credentials   *CredentialsService
-	AuthHooks     *AuthHooksService
-	AuthPolicy    *AuthPolicyService
-	Policy        *PolicyService
-	IPRules       *IPRulesService
-	BotDetection  *BotDetectionService
-	RiskSettings  *RiskSettingsService
-
-	// Authorization — what an authenticated caller is allowed to do.
+	// Access control: roles, permissions, attribute- and relationship-based
+	// rules, and AuthZEN decisions.
 	Roles         *RolesService
 	Permissions   *PermissionsService
-	Groups        *GroupsService
-	Relationships *RelationTuplesService
-	Decisions     *AuthZENService
+	ABACPolicies  *ABACPoliciesService
+	Relationships *RelationshipsService
+	AuthZEN       *AuthZENService
 
-	// Administration — tenant operations: branding, developer tooling,
-	// compliance, and billing for the Qeet ID platform itself.
-	Branding       *BrandingService
-	Invitations    *InvitationsService
-	EmailTemplates *EmailTemplatesService
-	APIKeys        *APIKeysService
-	Vault          *VaultService
-	TokenVault     *TokenVaultService
-	Webhooks       *WebhooksService
-	AuditLogs      *AuditLogsService
+	// Sign-in policy and threat protection.
+	AuthPolicy     *AuthPolicyService
+	SecurityPolicy *SecurityPolicyService
+	IPRules        *IPRulesService
+	Threats        *ThreatsService
+
+	// Applications, machine identities and federation. OAuth runs the
+	// token flows in which your application is the client of Qeet ID.
+	OAuth                *OAuthService
+	OIDCClients          *OIDCClientsService
+	OAuthResources       *OAuthResourcesService
+	OAuthGrants          *OAuthGrantsService
+	DeviceAuthorizations *DeviceAuthorizationsService
+	SigningKeys          *SigningKeysService
+	ServicePrincipals    *ServicePrincipalsService
+	SocialProviders      *SocialProvidersService
+	SAMLConnections      *SAMLConnectionsService
+	SAMLServiceProviders *SAMLServiceProvidersService
+	OIDCConnections      *OIDCConnectionsService
+	LDAP                 *LDAPService
+	Directory            *DirectoryService
+	SCIM                 *SCIMService
+	AdminPortalLinks     *AdminPortalLinksService
+
+	// Developer resources.
+	APIKeys     *APIKeysService
+	Agents      *AgentsService
+	Credentials *CredentialsService
+	AuthHooks   *AuthHooksService
+	Webhooks    *WebhooksService
+	Secrets     *SecretsService
+	TokenVault  *TokenVaultService
+
+	// Operations: audit, compliance, data lifecycle, email and billing.
+	Audit          *AuditService
 	Analytics      *AnalyticsService
-	GDPR           *GDPRService
-	Billing        *BillingService
+	Compliance     *ComplianceService
 	Retention      *RetentionService
-	RateLimits     *RateLimitsService
+	GDPR           *GDPRService
 	LogSinks       *LogSinksService
-	AdminLinks     *AdminLinksService
+	RateLimits     *RateLimitsService
+	EmailTemplates *EmailTemplatesService
+	EmailDelivery  *EmailDeliveryService
+	Billing        *BillingService
+	Entitlements   *EntitlementsService
 
-	transport *transport.Transport
+	baseURL       string
+	hc            *http.Client
+	cred          credential
+	timeout       time.Duration
+	maxRetries    int
+	minRetryDelay time.Duration
+	maxRetryDelay time.Duration
+	logger        *slog.Logger
+	userAgent     string
+	headers       http.Header
 }
 
-// New builds a client. APIKey is required.
-func New(cfg Config) *Client {
-	t := transport.New(transport.Options{
-		APIKey:     cfg.APIKey,
-		BaseURL:    cfg.BaseURL,
-		HTTPClient: cfg.HTTPClient,
-		Timeout:    cfg.Timeout,
-		MaxRetries: cfg.MaxRetries,
-		Headers:    cfg.Headers,
-		UserAgent:  cfg.UserAgent,
-		Logger:     cfg.Logger,
-	})
-	return &Client{
-		transport: t,
-
-		Users:             &UsersService{t: t},
-		Organizations:     &OrganizationsService{t: t},
-		ServicePrincipals: &ServicePrincipalsService{t: t},
-		Agents:            &AgentsService{t: t},
-		Domains:           &DomainsService{t: t},
-
-		Sessions:      newSessionsService(t.BaseURL(), t.HTTPClient()),
-		OAuth:         newOAuthService(t),
-		OIDC:          &OIDCService{t: t},
-		SAML:          &SAMLService{t: t},
-		SAMLProviders: &SAMLServiceProvidersService{t: t},
-		SCIM:          &SCIMService{t: t},
-		LDAP:          &LDAPService{t: t},
-		Social:        &SocialService{t: t},
-		MFA:           &MFAService{t: t},
-		Credentials:   &CredentialsService{t: t},
-		AuthHooks:     &AuthHooksService{t: t},
-		AuthPolicy:    &AuthPolicyService{t: t},
-		Policy:        &PolicyService{t: t},
-		IPRules:       &IPRulesService{t: t},
-		BotDetection:  &BotDetectionService{t: t},
-		RiskSettings:  &RiskSettingsService{t: t},
-
-		Roles:         &RolesService{t: t},
-		Permissions:   &PermissionsService{t: t},
-		Groups:        &GroupsService{t: t},
-		Relationships: &RelationTuplesService{t: t},
-		Decisions:     &AuthZENService{t: t},
-
-		Branding:       &BrandingService{t: t},
-		Invitations:    &InvitationsService{t: t},
-		EmailTemplates: &EmailTemplatesService{t: t},
-		APIKeys:        &APIKeysService{t: t},
-		Vault:          &VaultService{t: t},
-		TokenVault:     &TokenVaultService{t: t},
-		Webhooks:       &WebhooksService{t: t},
-		AuditLogs:      &AuditLogsService{t: t},
-		Analytics:      &AnalyticsService{t: t},
-		GDPR:           &GDPRService{t: t},
-		Billing:        &BillingService{t: t},
-		Retention:      &RetentionService{t: t},
-		RateLimits:     &RateLimitsService{t: t},
-		LogSinks:       &LogSinksService{t: t},
-		AdminLinks:     &AdminLinksService{t: t},
+// NewClient returns a Client configured by opts. Give it one credential:
+// WithAPIKey, WithClientCredentials or WithTokenSource. A client without one
+// can still call the public endpoints, such as token verification for verifiable
+// credentials and the OAuth endpoints that authenticate the calling
+// application.
+//
+//	client, err := qeetid.NewClient(qeetid.WithAPIKey(os.Getenv("QEETID_API_KEY")))
+//
+// NewClient makes no network calls. It returns an error when an option is
+// invalid.
+func NewClient(opts ...Option) (*Client, error) {
+	cfg := defaultConfig()
+	for _, o := range opts {
+		if o != nil {
+			o.applyOption(&cfg)
+		}
 	}
+	if len(cfg.credentials) > 1 {
+		names := make([]string, len(cfg.credentials))
+		for i, cr := range cfg.credentials {
+			names[i] = cr.name
+		}
+		cfg.errs = append(cfg.errs, fmt.Errorf("qeetid: use one credential option, got %s", strings.Join(names, ", ")))
+	}
+	base, err := normalizeBaseURL(cfg.baseURL)
+	if err != nil {
+		cfg.errs = append(cfg.errs, err)
+	}
+	if err := errors.Join(cfg.errs...); err != nil {
+		return nil, err
+	}
+
+	c := &Client{
+		baseURL:       base,
+		hc:            cfg.httpClient,
+		timeout:       cfg.timeout,
+		maxRetries:    cfg.maxRetries,
+		minRetryDelay: cfg.minRetryDelay,
+		maxRetryDelay: cfg.maxRetryDelay,
+		logger:        cfg.logger,
+		userAgent:     version.UserAgent(),
+		headers:       cfg.headers,
+	}
+	if c.hc == nil {
+		c.hc = &http.Client{}
+	}
+	if cfg.userAgentSuffix != "" {
+		c.userAgent += " " + cfg.userAgentSuffix
+	}
+	if len(cfg.credentials) == 1 {
+		switch cr := cfg.credentials[0]; {
+		case cr.apiKey != "":
+			c.cred = apiKeyCredential{key: cr.apiKey}
+		case cr.ts != nil:
+			c.cred = bearerCredential{ts: cr.ts}
+		case cr.cc != nil:
+			c.cred = bearerCredential{ts: newClientCredentialsSource(c, cr.cc)}
+		}
+	}
+
+	c.Tenants = &TenantsService{c: c}
+	c.Users = &UsersService{c: c}
+	c.Groups = &GroupsService{c: c}
+	c.Invitations = &InvitationsService{c: c}
+	c.Domains = &DomainsService{c: c}
+	c.Branding = &BrandingService{c: c}
+
+	c.Roles = &RolesService{c: c}
+	c.Permissions = &PermissionsService{c: c}
+	c.ABACPolicies = &ABACPoliciesService{c: c}
+	c.Relationships = &RelationshipsService{c: c}
+	c.AuthZEN = &AuthZENService{c: c}
+
+	c.AuthPolicy = &AuthPolicyService{c: c}
+	c.SecurityPolicy = &SecurityPolicyService{c: c}
+	c.IPRules = &IPRulesService{c: c}
+	c.Threats = &ThreatsService{c: c}
+
+	c.OAuth = &OAuthService{c: c}
+	c.OIDCClients = &OIDCClientsService{c: c}
+	c.OAuthResources = &OAuthResourcesService{c: c}
+	c.OAuthGrants = &OAuthGrantsService{c: c}
+	c.DeviceAuthorizations = &DeviceAuthorizationsService{c: c}
+	c.SigningKeys = &SigningKeysService{c: c}
+	c.ServicePrincipals = &ServicePrincipalsService{c: c}
+	c.SocialProviders = &SocialProvidersService{c: c}
+	c.SAMLConnections = &SAMLConnectionsService{c: c}
+	c.SAMLServiceProviders = &SAMLServiceProvidersService{c: c}
+	c.OIDCConnections = &OIDCConnectionsService{c: c}
+	c.LDAP = &LDAPService{c: c}
+	c.Directory = &DirectoryService{c: c}
+	c.SCIM = &SCIMService{c: c}
+	c.AdminPortalLinks = &AdminPortalLinksService{c: c}
+
+	c.APIKeys = &APIKeysService{c: c}
+	c.Agents = &AgentsService{c: c}
+	c.Credentials = &CredentialsService{c: c}
+	c.AuthHooks = &AuthHooksService{c: c}
+	c.Webhooks = &WebhooksService{c: c}
+	c.Secrets = &SecretsService{c: c}
+	c.TokenVault = &TokenVaultService{c: c}
+
+	c.Audit = &AuditService{c: c}
+	c.Analytics = &AnalyticsService{c: c}
+	c.Compliance = &ComplianceService{c: c}
+	c.Retention = &RetentionService{c: c}
+	c.GDPR = &GDPRService{c: c}
+	c.LogSinks = &LogSinksService{c: c}
+	c.RateLimits = &RateLimitsService{c: c}
+	c.EmailTemplates = &EmailTemplatesService{c: c}
+	c.EmailDelivery = &EmailDeliveryService{c: c}
+	c.Billing = &BillingService{c: c}
+	c.Entitlements = &EntitlementsService{c: c}
+	return c, nil
+}
+
+// BaseURL returns the API base URL the client sends requests to.
+func (c *Client) BaseURL() string { return c.baseURL }
+
+// normalizeBaseURL checks that raw is an absolute https URL (or http on a
+// loopback host) without a query or fragment, and trims a trailing slash.
+func normalizeBaseURL(raw string) (string, error) {
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil {
+		return "", fmt.Errorf("qeetid: WithBaseURL: %w", err)
+	}
+	if u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") {
+		return "", fmt.Errorf("qeetid: WithBaseURL: %q is not an absolute http(s) URL", raw)
+	}
+	if u.Scheme == "http" && !isLoopback(u.Hostname()) {
+		return "", fmt.Errorf("qeetid: WithBaseURL: %q must use https; http is allowed only for a loopback host", raw)
+	}
+	if u.RawQuery != "" || u.Fragment != "" || u.User != nil {
+		return "", fmt.Errorf("qeetid: WithBaseURL: %q must not carry credentials, a query or a fragment", raw)
+	}
+	return strings.TrimRight(u.String(), "/"), nil
+}
+
+func isLoopback(host string) bool {
+	if host == "localhost" || strings.HasSuffix(host, ".localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }

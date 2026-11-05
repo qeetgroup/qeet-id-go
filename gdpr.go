@@ -2,90 +2,124 @@ package qeetid
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/qeetgroup/qeet-id-go/internal/marshal"
-	"github.com/qeetgroup/qeet-id-go/internal/transport"
+	"net/http"
+	"time"
 )
 
-// PurgeRequest is a GDPR erasure request against a user, with a grace
-// window before it actually runs.
-type PurgeRequest struct {
-	ID          string `json:"id"`
-	TenantID    string `json:"tenant_id"`
-	UserID      string `json:"user_id"`
-	RequestedBy string `json:"requested_by,omitempty"`
-	Reason      string `json:"reason,omitempty"`
-	Status      string `json:"status"`
-	GraceUntil  string `json:"grace_until"`
-	CompletedAt string `json:"completed_at,omitempty"`
-	CreatedAt   string `json:"created_at"`
+// GDPRService handles erasure and data-export requests.
+type GDPRService struct{ c *Client }
+
+// CreatePurge requests the erasure of a person's data. It runs when the grace period ends unless
+// cancelled.
+//
+// API: POST /v1/gdpr/purge
+func (s *GDPRService) CreatePurge(ctx context.Context, params CreatePurgeRequestParams, opts ...RequestOption) (*PurgeRequest, error) {
+	return call[PurgeRequest](ctx, s.c, &request{method: http.MethodPost, path: "/v1/gdpr/purge", body: params}, opts)
 }
 
-// CreatePurgeInput — TenantID/UserID identify who to erase; the requester
-// is inferred server-side from the caller's principal, not sent in the body.
-type CreatePurgeInput struct {
-	TenantID string `json:"tenant_id"`
-	UserID   string `json:"user_id"`
+// CancelPurge cancels a pending erasure request.
+//
+// API: DELETE /v1/gdpr/purge/{id}
+func (s *GDPRService) CancelPurge(ctx context.Context, requestID string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/gdpr/purge/{requestID}",
+		pathArgs: []string{requestID},
+	}, nil, opts)
+}
+
+// ListPurges lists a tenant's erasure requests.
+//
+// API: GET /v1/tenants/{tenantID}/gdpr/purge
+func (s *GDPRService) ListPurges(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[PurgeRequest], error) {
+	return call[Page[PurgeRequest]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/gdpr/purge",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// CreateExport requests an export of a person's data. Poll GetExport until it is ready.
+//
+// API: POST /v1/gdpr/export
+func (s *GDPRService) CreateExport(ctx context.Context, params CreateExportRequestParams, opts ...RequestOption) (*ExportRequest, error) {
+	return call[ExportRequest](ctx, s.c, &request{method: http.MethodPost, path: "/v1/gdpr/export", body: params}, opts)
+}
+
+// ListExports lists a tenant's export requests.
+//
+// API: GET /v1/tenants/{tenantID}/gdpr/export
+func (s *GDPRService) ListExports(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[ExportRequest], error) {
+	return call[Page[ExportRequest]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/gdpr/export",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// GetExport returns an export request, with its payload once ready.
+//
+// API: GET /v1/tenants/{tenantID}/gdpr/export/{id}
+func (s *GDPRService) GetExport(ctx context.Context, tenantID, requestID string, opts ...RequestOption) (*ExportRequest, error) {
+	return call[ExportRequest](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/gdpr/export/{requestID}",
+		pathArgs: []string{tenantID, requestID},
+	}, opts)
+}
+
+// CreatePurgeRequestParams is the request body of GDPRService.CreatePurge.
+type CreatePurgeRequestParams struct {
 	Reason   string `json:"reason,omitempty"`
+	TenantID string `json:"tenant_id,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
 }
 
-// ExportRequest is a GDPR data-export request. Payload is populated inline
-// once Status is "ready" — there is no separate download-URL field; fetch
-// GetExport again once ready and read Payload directly.
+// PurgeRequest is a request to erase a person's data. It runs when its grace period ends unless
+// cancelled.
+type PurgeRequest struct {
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at,omitzero"`
+	GraceUntil  time.Time  `json:"grace_until,omitzero"`
+	ID          string     `json:"id,omitempty"`
+	Reason      string     `json:"reason,omitempty"`
+	RequestedBy string     `json:"requested_by,omitempty"`
+	Status      string     `json:"status,omitempty"`
+	TenantID    string     `json:"tenant_id,omitempty"`
+	// The account to erase; kept after the account itself is deleted.
+	UserID string `json:"user_id,omitempty"`
+	// The person's email as the request was filed; null once they are erased.
+	SubjectEmail string `json:"subject_email,omitempty"`
+	// Their display name as the request was filed; null once they are erased.
+	SubjectName string `json:"subject_name,omitempty"`
+	// The erasure ran, so who it was filed for is no longer kept.
+	SubjectRedacted bool `json:"subject_redacted"`
+	// How many days a request waits before the erasure runs.
+	GracePeriodDays int `json:"grace_period_days"`
+}
+
+// CreateExportRequestParams is the request body of GDPRService.CreateExport.
+type CreateExportRequestParams struct {
+	TenantID string `json:"tenant_id,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
+}
+
+// ExportRequest is a request to export a person's data. Payload is set once Status is ready.
 type ExportRequest struct {
-	ID          string         `json:"id"`
-	TenantID    string         `json:"tenant_id"`
-	UserID      string         `json:"user_id"`
-	RequestedBy string         `json:"requested_by,omitempty"`
-	Status      string         `json:"status"` // pending | ready | failed
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at,omitzero"`
+	Error       string     `json:"error,omitempty"`
+	ID          string     `json:"id,omitempty"`
+	// The person's data in the organisation, while status is ready: profile (with metadata), sessions,
+	// passkeys, roles, mfa_totp_enabled, identities (linked social and single sign-on accounts),
+	// otp_factors (destinations masked), app_consents, app_grants, groups, sign_ins (the latest 1000) and
+	// generated_at.
 	Payload     map[string]any `json:"payload,omitempty"`
-	Error       string         `json:"error,omitempty"`
-	CompletedAt string         `json:"completed_at,omitempty"`
-	CreatedAt   string         `json:"created_at"`
-}
-
-type CreateExportInput struct {
-	TenantID string `json:"tenant_id"`
-	UserID   string `json:"user_id"`
-}
-
-// GDPRService manages erasure (purge) and data-export requests.
-type GDPRService struct{ t *transport.Transport }
-
-// CreatePurge is not tenant-path-scoped — tenant/user are identified in the body.
-func (s *GDPRService) CreatePurge(ctx context.Context, in CreatePurgeInput) (*PurgeRequest, error) {
-	var out PurgeRequest
-	err := s.t.Post(ctx, "/v1/gdpr/purge", in, &out)
-	return &out, err
-}
-
-func (s *GDPRService) CancelPurge(ctx context.Context, id string) error {
-	return s.t.Delete(ctx, "/v1/gdpr/purge/"+url.PathEscape(id), nil)
-}
-
-func (s *GDPRService) ListPurge(ctx context.Context, tenantID string) ([]PurgeRequest, error) {
-	var env marshal.Envelope[PurgeRequest]
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/gdpr/purge", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-// CreateExport is async (202 Accepted) — poll GetExport until Status is
-// "ready" or "failed".
-func (s *GDPRService) CreateExport(ctx context.Context, in CreateExportInput) (*ExportRequest, error) {
-	var out ExportRequest
-	err := s.t.Post(ctx, "/v1/gdpr/export", in, &out)
-	return &out, err
-}
-
-func (s *GDPRService) ListExports(ctx context.Context, tenantID string) ([]ExportRequest, error) {
-	var env marshal.Envelope[ExportRequest]
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/gdpr/export", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-func (s *GDPRService) GetExport(ctx context.Context, tenantID, id string) (*ExportRequest, error) {
-	var out ExportRequest
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/gdpr/export/"+url.PathEscape(id), transport.RequestOptions{}, &out)
-	return &out, err
+	RequestedBy string         `json:"requested_by,omitempty"`
+	// pending, ready, failed, or expired once the payload has been deleted (seven days after it was
+	// built, or when the person was erased or their account deleted).
+	Status   string `json:"status,omitempty"`
+	TenantID string `json:"tenant_id,omitempty"`
+	// The account exported; kept after the account itself is deleted.
+	UserID string `json:"user_id,omitempty"`
 }

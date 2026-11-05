@@ -1,6 +1,8 @@
 # ADR-0003: Shared HTTP/crypto machinery lives in `internal/`
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-0004](ADR-0004-sdk-design.md) (2026-11-05). The machinery now
+lives unexported in the root package, which removes the type aliases this ADR needed; only
+`internal/version` remains.
 
 ## Context
 

@@ -1,111 +1,88 @@
 # Workflows — qeet-id-go
 
-**Level:** L2 · **Last verified:** 2026-08-28
+**Level:** L2 · **Last verified:** 2026-11-05
 **Verification scope:** every command checked against the `Makefile` and `.github/workflows/`.
 
 ## Set up
 
 ```bash
-git clone && cd qeet-id-go
+git clone https://github.com/qeetgroup/qeet-id-go && cd qeet-id-go
 make build
 make test
 ```
 
-No services required — tests use an in-process `httptest.Server`. There is no `.env`.
+No services are needed: tests answer requests in process. There is no `.env`.
 
-## Add a method to an existing resource
-
-```text
-1  verify the endpoint          read the handler in qeet-id-server — NOT just the OpenAPI doc
-2  open <resource>.go           match the neighbouring method exactly
-3  ctx first                    func (s *XService) Do(ctx context.Context, ...) (T, error)
-4  models                       big resources use <resource>_models.go / _requests.go / _responses.go
-5  validation                   internal/validation for fail-fast argument checks
-6  test                         internal/testutil.NewServer — never hand-roll a mock
-7  README table row             the resource table is part of the contract
-8  make fmt vet lint test
-```
-
-**Never wrap an endpoint you have not confirmed exists.** `CONTRIBUTING.md` is explicit: verify
-against the real backend handler.
-
-## Add a whole resource
+## Add a method to an existing service
 
 ```text
-1  new file <resource>.go in the ROOT package        (never a subpackage — ADR-0001)
-2  type XService struct { t *transport.Transport }
-3  add the field to Client in client.go, under the right comment banner   (flat — ADR-0002)
-4  wire it in New():  X: &XService{t: t}
-5  <resource>_test.go
-6  README table row
-7  make fmt vet lint test
+1  find the operation           qeet-id-server/api/openapi/<doc>.yaml; read its handler when the
+                                document is loose (untyped body, oneOf, "required" from struct tags)
+2  open <service>.go            match the neighbouring methods exactly
+3  signature                    ctx, path args in path order, params XParams (body),
+                                params/options *XParams (query), opts ...RequestOption
+4  body                         return call[T](ctx, s.c, &request{method, path, pathArgs, query,
+                                body, idempotent, public}, opts)
+5  types                        field names and JSON tags exactly as the contract; time.Time for
+                                date-time; typed string constants for enums; omitempty on request
+                                strings
+6  doc comment                  "<Name> <does what>." … ends with "API: VERB /path"
+7  route case                   routes_cases_test.go (or handRouteCases in routes_test.go)
+8  make ci
 ```
 
-## Add pagination to a list method
+**Never wrap an endpoint you have not confirmed exists.**
+
+## Add a service
 
 ```text
-1  internal/pagination.Paginate[T](ctx, startCursor, fetchPage)
-2  expose an All(ctx, ...) iter.Seq2[T, error] on the service
-3  yield errors as (zero, err) — do not swallow
-4  test both a single page and a multi-page walk
+1  new file <service>.go in the root package
+2  type XService struct{ c *Client } with a doc comment
+3  add the field to Client in client.go, in the right group, and wire it in NewClient
+4  route cases for every method (TestRoutesCoverEveryService enforces it)
+5  README "Services" table
+6  make ci
 ```
 
-The `next == cursor` loop guard is already in `Paginate`. Do not reimplement it per resource.
-
-## Change transport behaviour
-
-**Review required.**
+## Add a cursor-paginated list
 
 ```text
-1  internal/transport/{request,response,retry}.go
-2  constants stay in internal/constants/constants.go — never inline a default
-3  RETRY IDEMPOTENCY IS A SAFETY RULE: 429 always; 5xx only for GET/DELETE
-4  internal/transport tests
-5  make test    (-race matters here)
+1  List returns call[Page[T]](...) with a query params struct that has Cursor and Limit
+2  give the params struct cursor() and withCursor(string) helpers
+3  add All<Suffix>(ctx, ..., params, opts...) iter.Seq2[*T, error] returning paginate(...)
+4  test a multi-page walk, a break and an error
 ```
 
-**Never make a non-idempotent method retryable.** A retried POST duplicates a server-side write.
+## Change transport or retry behaviour
 
-## Change cryptography
+**Review required.** `transport.go` (`do`, `send`, `retryPlan`), `errors.go`. Keep: no retry of a
+401 or `auth.session_revoked`; writes retried only with an idempotency key or a 429/503 with
+`Retry-After`; bodies encoded once; no credentials in logs or errors. Extend `retry_test.go`.
 
-**Security review required.**
+## Change webhook or token verification
+
+**Security review required.** `webhook/webhook.go`, `jwt/`. Never relax: constant-time comparison,
+timestamp tolerance, ES256 only, `kid` required, issuer and audience required. When the server's
+signing changes, record new fixtures from its signing code into `webhook/testdata/`.
+
+## Update dependencies and tools
 
 ```text
-1  internal/auth/jwks.go (ES256, kid, cache TTLs) or webhooks_verify.go (HMAC)
-2  cite the RFC — do not improvise
-3  constant-time comparison for signatures
-4  tests incl. NEGATIVE cases: bad signature, unknown kid, expired token
-5  make test
+1  go get -u ./... && go mod tidy          (there are no module dependencies today)
+2  go directive = the older of the two supported Go releases; CI matrix = both
+3  tool versions: Makefile (GOLANGCI_LINT_VERSION, GOVULNCHECK_VERSION),
+   lint.yml, security.yml — keep them equal
+4  make ci
 ```
-
-Never weaken verification to make a test pass. Never add a "skip verification" flag.
 
 ## Release
 
 ```text
-1  bump internal/version/version.go
-2  CHANGELOG.md
-3  docs/release-notes/vX.Y.Z.md
-4  make fmt vet lint test
-5  tag vX.Y.Z and push the tag
+1  update CHANGELOG.md: move [Unreleased] under the new version
+2  set the version in internal/version/version.go to match
+3  merge to main — release.yml runs the gate and pushes the next patch tag (bump with the
+   workflow's manual dispatch for a minor or major)
 ```
 
-`release.yml` runs vet/build/test then creates a GitHub release. **A Go module has nothing to
-build — the tag is the artifact.**
-
-> This SDK has never been fetched by the module proxy. A first real release is a product decision,
-> not a routine step — see `qeet-id-context/DRIFT-REGISTER.md` QID-009.
-
-## Finish any task
-
-```bash
-make fmt && make vet && make lint && make test
-git diff
-```
-
-`make fmt` **fails** on unformatted files rather than rewriting them, matching CI.
-
-### Escalate rather than proceed
-
-Adding a dependency · changing an exported name · changing the auth scheme · weakening verification ·
-making a non-idempotent method retryable · anything requiring a change in another repository.
+A tag publishes a module version that cannot be changed, only retracted with a newer version. The
+first tag is the owner's decision.

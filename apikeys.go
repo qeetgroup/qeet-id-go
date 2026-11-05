@@ -2,62 +2,84 @@ package qeetid
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/qeetgroup/qeet-id-go/internal/marshal"
-	"github.com/qeetgroup/qeet-id-go/internal/transport"
+	"net/http"
+	"time"
 )
 
-// APIKey is a server-side management-API key. There is no per-key Get or
-// Rotate in the backend — only Create, Delete (revoke), and List.
-type APIKey struct {
-	ID         string   `json:"id"`
-	TenantID   string   `json:"tenant_id"`
-	UserID     string   `json:"user_id,omitempty"`
-	Name       string   `json:"name"`
-	Prefix     string   `json:"prefix"`
-	Scopes     []string `json:"scopes,omitempty"`
-	ExpiresAt  string   `json:"expires_at,omitempty"`
-	LastUsedAt string   `json:"last_used_at,omitempty"`
-	RevokedAt  string   `json:"revoked_at,omitempty"`
-	CreatedAt  string   `json:"created_at"`
+// APIKeysService manages API keys.
+type APIKeysService struct{ c *Client }
+
+// Create creates an API key. The result carries the key, shown only once.
+//
+// It accepts WithIdempotencyKey. Without one, the client sends a random key so that a retry cannot
+// apply the request twice.
+//
+// API: POST /v1/api-keys
+func (s *APIKeysService) Create(ctx context.Context, params CreateAPIKeyParams, opts ...RequestOption) (*CreateAPIKeyResult, error) {
+	return call[CreateAPIKeyResult](ctx, s.c, &request{method: http.MethodPost, path: "/v1/api-keys", body: params, idempotent: true}, opts)
 }
 
-// CreateAPIKeyInput — TenantID and Name are required. Unlike most other
-// resources, TenantID here is genuinely required in the body (not derived
-// from the caller's own key) — you're creating a key for a tenant, so it
-// can't be implicit. ExpiresAt is an RFC3339 timestamp, not a day offset.
-type CreateAPIKeyInput struct {
-	TenantID  string   `json:"tenant_id"`
-	UserID    string   `json:"user_id,omitempty"`
-	Name      string   `json:"name"`
-	Scopes    []string `json:"scopes,omitempty"`
-	ExpiresAt string   `json:"expires_at,omitempty"`
+// List lists a tenant's API keys.
+//
+// API: GET /v1/tenants/{tenantID}/api-keys
+func (s *APIKeysService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[APIKey], error) {
+	return call[Page[APIKey]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/api-keys",
+		pathArgs: []string{tenantID},
+	}, opts)
 }
 
-// CreateAPIKeyResult carries the plaintext secret, shown once at creation.
+// Rotate replaces an API key with a new one. The old key keeps working for the overlap given.
+//
+// API: POST /v1/tenants/{tenantID}/api-keys/{id}/rotate
+func (s *APIKeysService) Rotate(ctx context.Context, tenantID, keyID string, params RotateSecretParams, opts ...RequestOption) (*CreateAPIKeyResult, error) {
+	return call[CreateAPIKeyResult](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/api-keys/{keyID}/rotate",
+		pathArgs: []string{tenantID, keyID},
+		body:     params,
+	}, opts)
+}
+
+// Revoke revokes an API key at once.
+//
+// API: DELETE /v1/api-keys/{id}
+func (s *APIKeysService) Revoke(ctx context.Context, keyID string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{method: http.MethodDelete, path: "/v1/api-keys/{keyID}", pathArgs: []string{keyID}}, nil, opts)
+}
+
+// CreateAPIKeyParams is the request body of APIKeysService.Create.
+type CreateAPIKeyParams struct {
+	TenantID  string     `json:"tenant_id,omitempty"`
+	UserID    string     `json:"user_id,omitempty"`
+	Name      string     `json:"name,omitempty"`
+	Scopes    []string   `json:"scopes,omitempty"`
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+}
+
+// CreateAPIKeyResult carries an API key and its secret, which is shown only once.
 type CreateAPIKeyResult struct {
-	APIKey  APIKey `json:"api_key"`
-	Secret  string `json:"secret"`
+	APIKey  APIKey `json:"api_key,omitzero"`
+	Secret  string `json:"secret,omitempty"`
 	Warning string `json:"warning,omitempty"`
 }
 
-// APIKeysService manages server-side API keys.
-type APIKeysService struct{ t *transport.Transport }
-
-func (s *APIKeysService) Create(ctx context.Context, in CreateAPIKeyInput) (*CreateAPIKeyResult, error) {
-	var out CreateAPIKeyResult
-	err := s.t.Post(ctx, "/v1/api-keys", in, &out)
-	return &out, err
-}
-
-// Delete revokes an API key immediately.
-func (s *APIKeysService) Delete(ctx context.Context, id string) error {
-	return s.t.Delete(ctx, "/v1/api-keys/"+url.PathEscape(id), nil)
-}
-
-func (s *APIKeysService) List(ctx context.Context, tenantID string) ([]APIKey, error) {
-	var env marshal.Envelope[APIKey]
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/api-keys", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
+// APIKey is an API key. Its secret is shown only when it is created or rotated.
+type APIKey struct {
+	ID         string     `json:"id,omitempty"`
+	TenantID   string     `json:"tenant_id,omitempty"`
+	UserID     string     `json:"user_id,omitempty"`
+	Name       string     `json:"name,omitempty"`
+	Prefix     string     `json:"prefix,omitempty"`
+	Scopes     []string   `json:"scopes,omitempty"`
+	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
+	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
+	RevokedAt  *time.Time `json:"revoked_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at,omitzero"`
+	// The person who created the key, or rotated it into being; null for a key made by a machine or
+	// before this was kept.
+	CreatedBy string `json:"created_by,omitempty"`
+	// The key this one replaced at a rotation.
+	RotatedFrom string `json:"rotated_from,omitempty"`
 }

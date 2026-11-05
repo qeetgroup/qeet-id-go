@@ -12,7 +12,7 @@ real coverage the moment the backend ships them.
 Tracked: qeet-id ROADMAP.md item 3.5. Today every tenant is flat — no
 parent/child organization relationships. Once the backend introduces
 `platform/tenancy` and a `parent_id` on organizations, this SDK adds it to
-`OrganizationsService`.
+`TenantsService`.
 
 ## SPIFFE / workload identity (JWT-SVID)
 

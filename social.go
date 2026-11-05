@@ -2,67 +2,123 @@ package qeetid
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/qeetgroup/qeet-id-go/internal/marshal"
-	"github.com/qeetgroup/qeet-id-go/internal/transport"
+	"net/http"
+	"time"
 )
 
-// SocialProvider is a configured social-login provider (Google, GitHub,
-// etc.). ClientSecret is write-only — never returned.
+// SocialProvidersService manages sign-in with social providers and the social accounts linked to
+// users.
+type SocialProvidersService struct{ c *Client }
+
+// List lists a tenant's social providers.
+//
+// API: GET /v1/tenants/{tenantID}/social/providers
+func (s *SocialProvidersService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[SocialProvider], error) {
+	return call[Page[SocialProvider]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/social/providers",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// Upsert creates or replaces the caller's tenant configuration for a provider.
+//
+// API: POST /v1/social/providers
+func (s *SocialProvidersService) Upsert(ctx context.Context, params UpsertSocialProviderParams, opts ...RequestOption) (*SocialProvider, error) {
+	return call[SocialProvider](ctx, s.c, &request{method: http.MethodPost, path: "/v1/social/providers", body: params}, opts)
+}
+
+// Update changes a provider's configuration. Fields left nil are not changed.
+//
+// API: PATCH /v1/social/providers/{provider}
+func (s *SocialProvidersService) Update(ctx context.Context, provider string, params UpdateSocialProviderParams, opts ...RequestOption) (*SocialProvider, error) {
+	return call[SocialProvider](ctx, s.c, &request{
+		method:   http.MethodPatch,
+		path:     "/v1/social/providers/{provider}",
+		pathArgs: []string{provider},
+		body:     params,
+	}, opts)
+}
+
+// Delete removes a provider.
+//
+// API: DELETE /v1/social/providers/{provider}
+func (s *SocialProvidersService) Delete(ctx context.Context, provider string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/social/providers/{provider}",
+		pathArgs: []string{provider},
+	}, nil, opts)
+}
+
+// UnlinkIdentity unlinks a social account from its user.
+//
+// API: DELETE /v1/social/identities/{id}
+func (s *SocialProvidersService) UnlinkIdentity(ctx context.Context, identityID string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/social/identities/{identityID}",
+		pathArgs: []string{identityID},
+	}, nil, opts)
+}
+
+// SocialProvider is a tenant's configuration for signing in with a social provider such as Google or
+// GitHub.
 type SocialProvider struct {
-	ID           string `json:"id"`
-	TenantID     string `json:"tenant_id"`
-	Provider     string `json:"provider"`
-	ClientID     string `json:"client_id"`
+	// oidc for a provider found by discovery_url, else the adapter its name picks.
+	Kind         SocialProviderKind `json:"kind,omitempty"`
+	AppleTeamID  string             `json:"apple_team_id,omitempty"`
+	AppleKeyID   string             `json:"apple_key_id,omitempty"`
+	ClientID     string             `json:"client_id,omitempty"`
+	CreatedAt    time.Time          `json:"created_at,omitzero"`
+	DiscoveryURL string             `json:"discovery_url,omitempty"`
+	Enabled      bool               `json:"enabled"`
+	ID           string             `json:"id,omitempty"`
+	Provider     string             `json:"provider,omitempty"`
+	TenantID     string             `json:"tenant_id,omitempty"`
+}
+
+// SocialProviderKind is a string enumeration used by SocialProvider.Kind. oidc for a provider found by
+// discovery_url, else the adapter its name picks.
+type SocialProviderKind string
+
+// Values of SocialProviderKind. The server may add values; handle an unknown one gracefully.
+const (
+	SocialProviderKindOIDC     SocialProviderKind = "oidc"
+	SocialProviderKindGithub   SocialProviderKind = "github"
+	SocialProviderKindFacebook SocialProviderKind = "facebook"
+	SocialProviderKindX        SocialProviderKind = "x"
+	SocialProviderKindDiscord  SocialProviderKind = "discord"
+	SocialProviderKindApple    SocialProviderKind = "apple"
+)
+
+// UpsertSocialProviderParams is the request body of SocialProvidersService.Upsert.
+type UpsertSocialProviderParams struct {
+	Provider string `json:"provider,omitempty"`
+	ClientID string `json:"client_id,omitempty"`
+	// Required for a new provider. On a provider that exists, empty keeps the stored secret. For Apple,
+	// the .p8 private key.
+	ClientSecret string `json:"client_secret,omitempty"`
+	// An OpenID Connect provider's public https discovery URL; ignored for github, facebook, x, discord
+	// and apple.
 	DiscoveryURL string `json:"discovery_url,omitempty"`
-	Enabled      bool   `json:"enabled"`
-	CreatedAt    string `json:"created_at"`
+	// Apple's team ID; required for apple.
+	AppleTeamID string `json:"apple_team_id,omitempty"`
+	// The ID of the key client_secret holds; required for apple.
+	AppleKeyID string `json:"apple_key_id,omitempty"`
 }
 
-type UpsertSocialProviderInput struct {
-	TenantID     string `json:"tenant_id"`
-	Provider     string `json:"provider"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
-	DiscoveryURL string `json:"discovery_url"`
-}
-
-// ExternalIdentity links a user to an upstream social/OIDC provider account.
-type ExternalIdentity struct {
-	ID       string `json:"id"`
-	UserID   string `json:"user_id"`
-	TenantID string `json:"tenant_id"`
-	Provider string `json:"provider"`
-	Subject  string `json:"subject"`
-	Email    string `json:"email,omitempty"`
-	LinkedAt string `json:"linked_at"`
-}
-
-// SocialService manages social-login provider configuration and the
-// identities users have linked. The browser-redirect endpoints
-// (start/callback/exchange) belong to the client-side SDK, not here.
-type SocialService struct{ t *transport.Transport }
-
-func (s *SocialService) ListProviders(ctx context.Context, tenantID string) ([]SocialProvider, error) {
-	var env marshal.Envelope[SocialProvider]
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/social/providers", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-// UpsertProvider creates or updates a tenant's provider config.
-func (s *SocialService) UpsertProvider(ctx context.Context, in UpsertSocialProviderInput) (*SocialProvider, error) {
-	var out SocialProvider
-	err := s.t.Post(ctx, "/v1/social/providers", in, &out)
-	return &out, err
-}
-
-func (s *SocialService) ListUserIdentities(ctx context.Context, userID string) ([]ExternalIdentity, error) {
-	var env marshal.Envelope[ExternalIdentity]
-	err := s.t.Get(ctx, "/v1/users/"+url.PathEscape(userID)+"/social/identities", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-func (s *SocialService) UnlinkIdentity(ctx context.Context, id string) error {
-	return s.t.Delete(ctx, "/v1/social/identities/"+url.PathEscape(id), nil)
+// UpdateSocialProviderParams is the request body of SocialProvidersService.Update.
+type UpdateSocialProviderParams struct {
+	// false switches the provider off — it is no longer offered and sign-in through it is refused — until
+	// switched on again; other saves keep it off.
+	Enabled  *bool   `json:"enabled,omitempty"`
+	ClientID *string `json:"client_id,omitempty"`
+	// Replaces the stored secret; omitted or empty keeps it. For Apple, a new .p8 key, which must sign
+	// with the team and key IDs.
+	ClientSecret *string `json:"client_secret,omitempty"`
+	// An OpenID Connect provider's alone; ignored for the others.
+	DiscoveryURL *string `json:"discovery_url,omitempty"`
+	AppleTeamID  *string `json:"apple_team_id,omitempty"`
+	AppleKeyID   *string `json:"apple_key_id,omitempty"`
 }

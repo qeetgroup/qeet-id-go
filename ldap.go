@@ -35,7 +35,7 @@ func (s *LDAPService) Create(ctx context.Context, tenantID string, params Create
 // Get returns a connection.
 //
 // API: GET /v1/tenants/{tenantID}/ldap/{id}
-func (s *LDAPService) Get(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*LDAPConnection, error) {
+func (s *LDAPService) Get(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*LDAPConnection, error) {
 	return call[LDAPConnection](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}",
@@ -46,7 +46,7 @@ func (s *LDAPService) Get(ctx context.Context, tenantID string, connectionID str
 // Update changes a connection. Fields left nil are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/ldap/{id}
-func (s *LDAPService) Update(ctx context.Context, tenantID string, connectionID string, params UpdateLDAPConnectionParams, opts ...RequestOption) (*LDAPConnection, error) {
+func (s *LDAPService) Update(ctx context.Context, tenantID, connectionID string, params UpdateLDAPConnectionParams, opts ...RequestOption) (*LDAPConnection, error) {
 	return call[LDAPConnection](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}",
@@ -58,7 +58,7 @@ func (s *LDAPService) Update(ctx context.Context, tenantID string, connectionID 
 // Delete deletes a connection.
 //
 // API: DELETE /v1/tenants/{tenantID}/ldap/{id}
-func (s *LDAPService) Delete(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) error {
+func (s *LDAPService) Delete(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}",
@@ -69,7 +69,7 @@ func (s *LDAPService) Delete(ctx context.Context, tenantID string, connectionID 
 // Test binds to the directory with the connection's settings. A failed bind is returned as an error.
 //
 // API: POST /v1/tenants/{tenantID}/ldap/{id}/test
-func (s *LDAPService) Test(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*LDAPTestResult, error) {
+func (s *LDAPService) Test(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*LDAPTestResult, error) {
 	return call[LDAPTestResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}/test",
@@ -80,7 +80,7 @@ func (s *LDAPService) Test(ctx context.Context, tenantID string, connectionID st
 // ListGroupMappings lists how directory groups map to tenant groups.
 //
 // API: GET /v1/tenants/{tenantID}/ldap/{id}/group-mappings
-func (s *LDAPService) ListGroupMappings(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*Page[GroupMapping], error) {
+func (s *LDAPService) ListGroupMappings(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*Page[GroupMapping], error) {
 	return call[Page[GroupMapping]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}/group-mappings",
@@ -91,7 +91,7 @@ func (s *LDAPService) ListGroupMappings(ctx context.Context, tenantID string, co
 // CreateGroupMapping maps a directory group to a tenant group.
 //
 // API: POST /v1/tenants/{tenantID}/ldap/{id}/group-mappings
-func (s *LDAPService) CreateGroupMapping(ctx context.Context, tenantID string, connectionID string, params CreateGroupMappingParams, opts ...RequestOption) (*GroupMapping, error) {
+func (s *LDAPService) CreateGroupMapping(ctx context.Context, tenantID, connectionID string, params CreateGroupMappingParams, opts ...RequestOption) (*GroupMapping, error) {
 	return call[GroupMapping](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}/group-mappings",
@@ -103,7 +103,7 @@ func (s *LDAPService) CreateGroupMapping(ctx context.Context, tenantID string, c
 // DeleteGroupMapping removes a group mapping.
 //
 // API: DELETE /v1/tenants/{tenantID}/ldap/{id}/group-mappings/{mappingID}
-func (s *LDAPService) DeleteGroupMapping(ctx context.Context, tenantID string, connectionID string, mappingID string, opts ...RequestOption) error {
+func (s *LDAPService) DeleteGroupMapping(ctx context.Context, tenantID, connectionID, mappingID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/ldap/{connectionID}/group-mappings/{mappingID}",

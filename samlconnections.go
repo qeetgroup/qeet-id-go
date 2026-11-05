@@ -48,7 +48,7 @@ func (s *SAMLConnectionsService) Import(ctx context.Context, tenantID string, pa
 // Get returns a connection.
 //
 // API: GET /v1/tenants/{tenantID}/saml/{id}
-func (s *SAMLConnectionsService) Get(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*SAMLConnection, error) {
+func (s *SAMLConnectionsService) Get(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}",
@@ -59,7 +59,7 @@ func (s *SAMLConnectionsService) Get(ctx context.Context, tenantID string, conne
 // Update changes a connection. Empty fields are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/saml/{id}
-func (s *SAMLConnectionsService) Update(ctx context.Context, tenantID string, connectionID string, params SAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
+func (s *SAMLConnectionsService) Update(ctx context.Context, tenantID, connectionID string, params SAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}",
@@ -71,7 +71,7 @@ func (s *SAMLConnectionsService) Update(ctx context.Context, tenantID string, co
 // Delete deletes a connection.
 //
 // API: DELETE /v1/tenants/{tenantID}/saml/{id}
-func (s *SAMLConnectionsService) Delete(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) error {
+func (s *SAMLConnectionsService) Delete(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}",
@@ -82,7 +82,7 @@ func (s *SAMLConnectionsService) Delete(ctx context.Context, tenantID string, co
 // ApplyMetadata updates a connection from the identity provider's metadata.
 //
 // API: POST /v1/tenants/{tenantID}/saml/{id}/metadata
-func (s *SAMLConnectionsService) ApplyMetadata(ctx context.Context, tenantID string, connectionID string, params ApplySAMLMetadataParams, opts ...RequestOption) (*SAMLConnection, error) {
+func (s *SAMLConnectionsService) ApplyMetadata(ctx context.Context, tenantID, connectionID string, params ApplySAMLMetadataParams, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/metadata",
@@ -94,7 +94,7 @@ func (s *SAMLConnectionsService) ApplyMetadata(ctx context.Context, tenantID str
 // AddCertificate adds an identity provider signing certificate, for a certificate rollover.
 //
 // API: POST /v1/tenants/{tenantID}/saml/{id}/certificates
-func (s *SAMLConnectionsService) AddCertificate(ctx context.Context, tenantID string, connectionID string, params AddSAMLCertificateParams, opts ...RequestOption) (*SAMLCertificate, error) {
+func (s *SAMLConnectionsService) AddCertificate(ctx context.Context, tenantID, connectionID string, params AddSAMLCertificateParams, opts ...RequestOption) (*SAMLCertificate, error) {
 	return call[SAMLCertificate](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/certificates",
@@ -106,7 +106,7 @@ func (s *SAMLConnectionsService) AddCertificate(ctx context.Context, tenantID st
 // RemoveCertificate removes an identity provider signing certificate.
 //
 // API: DELETE /v1/tenants/{tenantID}/saml/{id}/certificates/{certificateID}
-func (s *SAMLConnectionsService) RemoveCertificate(ctx context.Context, tenantID string, connectionID string, certificateID string, opts ...RequestOption) error {
+func (s *SAMLConnectionsService) RemoveCertificate(ctx context.Context, tenantID, connectionID, certificateID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/certificates/{certificateID}",
@@ -117,7 +117,7 @@ func (s *SAMLConnectionsService) RemoveCertificate(ctx context.Context, tenantID
 // Test checks a connection's settings.
 //
 // API: POST /v1/tenants/{tenantID}/saml/{id}/test
-func (s *SAMLConnectionsService) Test(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*SAMLTestResult, error) {
+func (s *SAMLConnectionsService) Test(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*SAMLTestResult, error) {
 	return call[SAMLTestResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/test",
@@ -128,7 +128,7 @@ func (s *SAMLConnectionsService) Test(ctx context.Context, tenantID string, conn
 // ListGroupMappings lists how identity provider groups map to tenant groups.
 //
 // API: GET /v1/tenants/{tenantID}/saml/{id}/group-mappings
-func (s *SAMLConnectionsService) ListGroupMappings(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*Page[GroupMapping], error) {
+func (s *SAMLConnectionsService) ListGroupMappings(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*Page[GroupMapping], error) {
 	return call[Page[GroupMapping]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/group-mappings",
@@ -139,7 +139,7 @@ func (s *SAMLConnectionsService) ListGroupMappings(ctx context.Context, tenantID
 // CreateGroupMapping maps an identity provider group to a tenant group.
 //
 // API: POST /v1/tenants/{tenantID}/saml/{id}/group-mappings
-func (s *SAMLConnectionsService) CreateGroupMapping(ctx context.Context, tenantID string, connectionID string, params CreateGroupMappingParams, opts ...RequestOption) (*GroupMapping, error) {
+func (s *SAMLConnectionsService) CreateGroupMapping(ctx context.Context, tenantID, connectionID string, params CreateGroupMappingParams, opts ...RequestOption) (*GroupMapping, error) {
 	return call[GroupMapping](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/group-mappings",
@@ -151,7 +151,7 @@ func (s *SAMLConnectionsService) CreateGroupMapping(ctx context.Context, tenantI
 // DeleteGroupMapping removes a group mapping.
 //
 // API: DELETE /v1/tenants/{tenantID}/saml/{id}/group-mappings/{mappingID}
-func (s *SAMLConnectionsService) DeleteGroupMapping(ctx context.Context, tenantID string, connectionID string, mappingID string, opts ...RequestOption) error {
+func (s *SAMLConnectionsService) DeleteGroupMapping(ctx context.Context, tenantID, connectionID, mappingID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/group-mappings/{mappingID}",

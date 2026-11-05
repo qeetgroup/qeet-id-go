@@ -230,7 +230,7 @@ func (s *UsersService) RevokeSessions(ctx context.Context, userID string, opts .
 // EndSession ends one of a user's sessions.
 //
 // API: DELETE /v1/tenants/{tenantID}/users/{id}/sessions/{sessionID}
-func (s *UsersService) EndSession(ctx context.Context, tenantID string, userID string, sessionID string, opts ...RequestOption) error {
+func (s *UsersService) EndSession(ctx context.Context, tenantID, userID, sessionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/users/{userID}/sessions/{sessionID}",
@@ -263,7 +263,7 @@ func (s *UsersService) ForgetTrustedDevices(ctx context.Context, userID string, 
 // ForgetTrustedDevice forgets one remembered device of a user.
 //
 // API: DELETE /v1/users/{id}/trusted-devices/{deviceID}
-func (s *UsersService) ForgetTrustedDevice(ctx context.Context, userID string, deviceID string, opts ...RequestOption) (*ForgottenDevices, error) {
+func (s *UsersService) ForgetTrustedDevice(ctx context.Context, userID, deviceID string, opts ...RequestOption) (*ForgottenDevices, error) {
 	return call[ForgottenDevices](ctx, s.c, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/users/{userID}/trusted-devices/{deviceID}",
@@ -285,7 +285,7 @@ func (s *UsersService) ListPushDevices(ctx context.Context, userID string, opts 
 // DisconnectPushDevice disconnects one of a user's linked phones.
 //
 // API: DELETE /v1/users/{id}/push-devices/{deviceID}
-func (s *UsersService) DisconnectPushDevice(ctx context.Context, userID string, deviceID string, opts ...RequestOption) error {
+func (s *UsersService) DisconnectPushDevice(ctx context.Context, userID, deviceID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/users/{userID}/push-devices/{deviceID}",
@@ -296,7 +296,7 @@ func (s *UsersService) DisconnectPushDevice(ctx context.Context, userID string, 
 // ListPasskeys lists a user's passkeys.
 //
 // API: GET /v1/tenants/{tenantID}/users/{id}/passkeys
-func (s *UsersService) ListPasskeys(ctx context.Context, tenantID string, userID string, opts ...RequestOption) (*Page[UserPasskey], error) {
+func (s *UsersService) ListPasskeys(ctx context.Context, tenantID, userID string, opts ...RequestOption) (*Page[UserPasskey], error) {
 	return call[Page[UserPasskey]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/users/{userID}/passkeys",
@@ -307,7 +307,7 @@ func (s *UsersService) ListPasskeys(ctx context.Context, tenantID string, userID
 // DeletePasskey removes one of a user's passkeys.
 //
 // API: DELETE /v1/tenants/{tenantID}/users/{id}/passkeys/{passkeyID}
-func (s *UsersService) DeletePasskey(ctx context.Context, tenantID string, userID string, passkeyID string, opts ...RequestOption) error {
+func (s *UsersService) DeletePasskey(ctx context.Context, tenantID, userID, passkeyID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/users/{userID}/passkeys/{passkeyID}",
@@ -318,7 +318,7 @@ func (s *UsersService) DeletePasskey(ctx context.Context, tenantID string, userI
 // SignIns summarizes a user's sign-ins over a period: methods, addresses, browsers and failures.
 //
 // API: GET /v1/tenants/{tenantID}/users/{id}/sign-ins
-func (s *UsersService) SignIns(ctx context.Context, tenantID string, userID string, params *SignInSummaryParams, opts ...RequestOption) (*SignInSummary, error) {
+func (s *UsersService) SignIns(ctx context.Context, tenantID, userID string, params *SignInSummaryParams, opts ...RequestOption) (*SignInSummary, error) {
 	return call[SignInSummary](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/users/{userID}/sign-ins",

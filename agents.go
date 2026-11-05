@@ -39,7 +39,7 @@ func (s *AgentsService) List(ctx context.Context, tenantID string, opts ...Reque
 // Update enables or disables an agent.
 //
 // API: PATCH /v1/tenants/{tenantID}/agents/{id}
-func (s *AgentsService) Update(ctx context.Context, tenantID string, agentID string, params UpdateAgentParams, opts ...RequestOption) error {
+func (s *AgentsService) Update(ctx context.Context, tenantID, agentID string, params UpdateAgentParams, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/agents/{agentID}",
@@ -51,7 +51,7 @@ func (s *AgentsService) Update(ctx context.Context, tenantID string, agentID str
 // Delete deletes an agent.
 //
 // API: DELETE /v1/tenants/{tenantID}/agents/{id}
-func (s *AgentsService) Delete(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) error {
+func (s *AgentsService) Delete(ctx context.Context, tenantID, agentID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/agents/{agentID}",
@@ -62,7 +62,7 @@ func (s *AgentsService) Delete(ctx context.Context, tenantID string, agentID str
 // Suspend suspends an agent. Its tokens stop working until Resume.
 //
 // API: POST /v1/tenants/{tenantID}/agents/{id}/suspend
-func (s *AgentsService) Suspend(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
+func (s *AgentsService) Suspend(ctx context.Context, tenantID, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
 	return call[AgentStatusResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/agents/{agentID}/suspend",
@@ -73,7 +73,7 @@ func (s *AgentsService) Suspend(ctx context.Context, tenantID string, agentID st
 // Resume makes a suspended agent active again.
 //
 // API: POST /v1/tenants/{tenantID}/agents/{id}/resume
-func (s *AgentsService) Resume(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
+func (s *AgentsService) Resume(ctx context.Context, tenantID, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
 	return call[AgentStatusResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/agents/{agentID}/resume",
@@ -84,7 +84,7 @@ func (s *AgentsService) Resume(ctx context.Context, tenantID string, agentID str
 // Decommission decommissions an agent for good. It cannot be resumed.
 //
 // API: POST /v1/tenants/{tenantID}/agents/{id}/decommission
-func (s *AgentsService) Decommission(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
+func (s *AgentsService) Decommission(ctx context.Context, tenantID, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
 	return call[AgentStatusResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/agents/{agentID}/decommission",
@@ -117,7 +117,7 @@ func (s *AgentsService) ResumeAll(ctx context.Context, tenantID string, opts ...
 // RotateSecret replaces an agent's secret. The old secret keeps working for the overlap given.
 //
 // API: POST /v1/tenants/{tenantID}/agents/{id}/rotate-secret
-func (s *AgentsService) RotateSecret(ctx context.Context, tenantID string, agentID string, params RotateSecretParams, opts ...RequestOption) (*RotatedAgentSecret, error) {
+func (s *AgentsService) RotateSecret(ctx context.Context, tenantID, agentID string, params RotateSecretParams, opts ...RequestOption) (*RotatedAgentSecret, error) {
 	return call[RotatedAgentSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/agents/{agentID}/rotate-secret",
@@ -130,7 +130,7 @@ func (s *AgentsService) RotateSecret(ctx context.Context, tenantID string, agent
 // server's cap.
 //
 // API: GET /v1/tenants/{tenantID}/agents/sponsored-by/{userID}
-func (s *AgentsService) ListSponsoredBy(ctx context.Context, tenantID string, userID string, opts ...RequestOption) (*Page[Agent], error) {
+func (s *AgentsService) ListSponsoredBy(ctx context.Context, tenantID, userID string, opts ...RequestOption) (*Page[Agent], error) {
 	return call[Page[Agent]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/agents/sponsored-by/{userID}",
@@ -142,7 +142,7 @@ func (s *AgentsService) ListSponsoredBy(ctx context.Context, tenantID string, us
 // leaves.
 //
 // API: POST /v1/tenants/{tenantID}/agents/sponsored-by/{userID}/transfer
-func (s *AgentsService) TransferSponsorship(ctx context.Context, tenantID string, userID string, params TransferSponsorshipParams, opts ...RequestOption) (*SponsorshipTransfer, error) {
+func (s *AgentsService) TransferSponsorship(ctx context.Context, tenantID, userID string, params TransferSponsorshipParams, opts ...RequestOption) (*SponsorshipTransfer, error) {
 	return call[SponsorshipTransfer](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/agents/sponsored-by/{userID}/transfer",

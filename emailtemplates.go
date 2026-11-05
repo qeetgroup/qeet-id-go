@@ -22,7 +22,7 @@ func (s *EmailTemplatesService) List(ctx context.Context, tenantID string, opts 
 // Get returns a template.
 //
 // API: GET /v1/tenants/{tenantID}/email-templates/{key}
-func (s *EmailTemplatesService) Get(ctx context.Context, tenantID string, key string, opts ...RequestOption) (*EmailTemplate, error) {
+func (s *EmailTemplatesService) Get(ctx context.Context, tenantID, key string, opts ...RequestOption) (*EmailTemplate, error) {
 	return call[EmailTemplate](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/email-templates/{key}",
@@ -33,7 +33,7 @@ func (s *EmailTemplatesService) Get(ctx context.Context, tenantID string, key st
 // Update saves a tenant's customization of a template.
 //
 // API: PUT /v1/tenants/{tenantID}/email-templates/{key}
-func (s *EmailTemplatesService) Update(ctx context.Context, tenantID string, key string, params UpdateEmailTemplateParams, opts ...RequestOption) (*EmailTemplate, error) {
+func (s *EmailTemplatesService) Update(ctx context.Context, tenantID, key string, params UpdateEmailTemplateParams, opts ...RequestOption) (*EmailTemplate, error) {
 	return call[EmailTemplate](ctx, s.c, &request{
 		method:   http.MethodPut,
 		path:     "/v1/tenants/{tenantID}/email-templates/{key}",
@@ -45,7 +45,7 @@ func (s *EmailTemplatesService) Update(ctx context.Context, tenantID string, key
 // Reset drops a tenant's customization and returns the default template.
 //
 // API: DELETE /v1/tenants/{tenantID}/email-templates/{key}
-func (s *EmailTemplatesService) Reset(ctx context.Context, tenantID string, key string, opts ...RequestOption) (*EmailTemplate, error) {
+func (s *EmailTemplatesService) Reset(ctx context.Context, tenantID, key string, opts ...RequestOption) (*EmailTemplate, error) {
 	return call[EmailTemplate](ctx, s.c, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/email-templates/{key}",
@@ -56,7 +56,7 @@ func (s *EmailTemplatesService) Reset(ctx context.Context, tenantID string, key 
 // Preview renders a template with sample values. Nothing is sent.
 //
 // API: POST /v1/tenants/{tenantID}/email-templates/{key}/preview
-func (s *EmailTemplatesService) Preview(ctx context.Context, tenantID string, key string, params PreviewEmailTemplateParams, opts ...RequestOption) (*EmailPreview, error) {
+func (s *EmailTemplatesService) Preview(ctx context.Context, tenantID, key string, params PreviewEmailTemplateParams, opts ...RequestOption) (*EmailPreview, error) {
 	return call[EmailPreview](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/email-templates/{key}/preview",
@@ -68,7 +68,7 @@ func (s *EmailTemplatesService) Preview(ctx context.Context, tenantID string, ke
 // SendTest sends a template to the calling person's verified email address.
 //
 // API: POST /v1/tenants/{tenantID}/email-templates/{key}/test
-func (s *EmailTemplatesService) SendTest(ctx context.Context, tenantID string, key string, params SendTestEmailParams, opts ...RequestOption) (*TestEmailResult, error) {
+func (s *EmailTemplatesService) SendTest(ctx context.Context, tenantID, key string, params SendTestEmailParams, opts ...RequestOption) (*TestEmailResult, error) {
 	return call[TestEmailResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/email-templates/{key}/test",

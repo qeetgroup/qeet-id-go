@@ -36,7 +36,7 @@ func (s *ABACPoliciesService) Create(ctx context.Context, tenantID string, param
 // Get returns a policy.
 //
 // API: GET /v1/tenants/{tenantID}/abac/policies/{id}
-func (s *ABACPoliciesService) Get(ctx context.Context, tenantID string, policyID string, opts ...RequestOption) (*ABACPolicy, error) {
+func (s *ABACPoliciesService) Get(ctx context.Context, tenantID, policyID string, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}",
@@ -47,7 +47,7 @@ func (s *ABACPoliciesService) Get(ctx context.Context, tenantID string, policyID
 // Update changes a policy and records a new version.
 //
 // API: PATCH /v1/tenants/{tenantID}/abac/policies/{id}
-func (s *ABACPoliciesService) Update(ctx context.Context, tenantID string, policyID string, params ABACPolicyParams, opts ...RequestOption) (*ABACPolicy, error) {
+func (s *ABACPoliciesService) Update(ctx context.Context, tenantID, policyID string, params ABACPolicyParams, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}",
@@ -59,7 +59,7 @@ func (s *ABACPoliciesService) Update(ctx context.Context, tenantID string, polic
 // Delete deletes a policy.
 //
 // API: DELETE /v1/tenants/{tenantID}/abac/policies/{id}
-func (s *ABACPoliciesService) Delete(ctx context.Context, tenantID string, policyID string, opts ...RequestOption) error {
+func (s *ABACPoliciesService) Delete(ctx context.Context, tenantID, policyID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}",
@@ -70,7 +70,7 @@ func (s *ABACPoliciesService) Delete(ctx context.Context, tenantID string, polic
 // ListVersions lists the saved versions of a policy.
 //
 // API: GET /v1/tenants/{tenantID}/abac/policies/{id}/versions
-func (s *ABACPoliciesService) ListVersions(ctx context.Context, tenantID string, policyID string, opts ...RequestOption) (*Page[ABACPolicyVersion], error) {
+func (s *ABACPoliciesService) ListVersions(ctx context.Context, tenantID, policyID string, opts ...RequestOption) (*Page[ABACPolicyVersion], error) {
 	return call[Page[ABACPolicyVersion]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}/versions",
@@ -81,7 +81,7 @@ func (s *ABACPoliciesService) ListVersions(ctx context.Context, tenantID string,
 // RestoreVersion makes a saved version of a policy current again.
 //
 // API: POST /v1/tenants/{tenantID}/abac/policies/{id}/versions/{version}/restore
-func (s *ABACPoliciesService) RestoreVersion(ctx context.Context, tenantID string, policyID string, version string, opts ...RequestOption) (*ABACPolicy, error) {
+func (s *ABACPoliciesService) RestoreVersion(ctx context.Context, tenantID, policyID, version string, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}/versions/{version}/restore",

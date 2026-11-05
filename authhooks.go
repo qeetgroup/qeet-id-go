@@ -36,7 +36,7 @@ func (s *AuthHooksService) Create(ctx context.Context, tenantID string, params C
 // Update changes a hook. Fields left nil are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/auth-hooks/{id}
-func (s *AuthHooksService) Update(ctx context.Context, tenantID string, hookID string, params UpdateAuthHookParams, opts ...RequestOption) (*AuthHookState, error) {
+func (s *AuthHooksService) Update(ctx context.Context, tenantID, hookID string, params UpdateAuthHookParams, opts ...RequestOption) (*AuthHookState, error) {
 	return call[AuthHookState](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/auth-hooks/{hookID}",
@@ -48,7 +48,7 @@ func (s *AuthHooksService) Update(ctx context.Context, tenantID string, hookID s
 // Delete deletes a hook.
 //
 // API: DELETE /v1/tenants/{tenantID}/auth-hooks/{id}
-func (s *AuthHooksService) Delete(ctx context.Context, tenantID string, hookID string, opts ...RequestOption) error {
+func (s *AuthHooksService) Delete(ctx context.Context, tenantID, hookID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/auth-hooks/{hookID}",
@@ -59,7 +59,7 @@ func (s *AuthHooksService) Delete(ctx context.Context, tenantID string, hookID s
 // Test calls a hook with a sample request and reports its answer.
 //
 // API: POST /v1/tenants/{tenantID}/auth-hooks/{id}/test
-func (s *AuthHooksService) Test(ctx context.Context, tenantID string, hookID string, opts ...RequestOption) (*AuthHookTest, error) {
+func (s *AuthHooksService) Test(ctx context.Context, tenantID, hookID string, opts ...RequestOption) (*AuthHookTest, error) {
 	return call[AuthHookTest](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/auth-hooks/{hookID}/test",

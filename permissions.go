@@ -28,7 +28,7 @@ func (s *PermissionsService) Check(ctx context.Context, params *CheckPermissionP
 // grants behind them.
 //
 // API: GET /v1/users/{userID}/tenants/{tenantID}/permissions
-func (s *PermissionsService) Effective(ctx context.Context, userID string, tenantID string, opts ...RequestOption) (*EffectivePermissions, error) {
+func (s *PermissionsService) Effective(ctx context.Context, userID, tenantID string, opts ...RequestOption) (*EffectivePermissions, error) {
 	return call[EffectivePermissions](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/users/{userID}/tenants/{tenantID}/permissions",

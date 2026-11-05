@@ -105,7 +105,7 @@ func (s *ThreatsService) AnomalySummary(ctx context.Context, tenantID string, op
 // ResolveAnomaly marks an anomaly resolved.
 //
 // API: POST /v1/tenants/{tenantID}/security/anomalies/{id}/resolve
-func (s *ThreatsService) ResolveAnomaly(ctx context.Context, tenantID string, anomalyID string, opts ...RequestOption) error {
+func (s *ThreatsService) ResolveAnomaly(ctx context.Context, tenantID, anomalyID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/security/anomalies/{anomalyID}/resolve",

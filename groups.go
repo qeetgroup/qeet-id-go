@@ -65,7 +65,7 @@ func (s *GroupsService) ListMembers(ctx context.Context, groupID string, opts ..
 // AddMember adds a user to a group.
 //
 // API: POST /v1/groups/{id}/members/{userID}
-func (s *GroupsService) AddMember(ctx context.Context, groupID string, userID string, opts ...RequestOption) error {
+func (s *GroupsService) AddMember(ctx context.Context, groupID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/groups/{groupID}/members/{userID}",
@@ -76,7 +76,7 @@ func (s *GroupsService) AddMember(ctx context.Context, groupID string, userID st
 // RemoveMember removes a user from a group.
 //
 // API: DELETE /v1/groups/{id}/members/{userID}
-func (s *GroupsService) RemoveMember(ctx context.Context, groupID string, userID string, opts ...RequestOption) error {
+func (s *GroupsService) RemoveMember(ctx context.Context, groupID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/groups/{groupID}/members/{userID}",
@@ -87,7 +87,7 @@ func (s *GroupsService) RemoveMember(ctx context.Context, groupID string, userID
 // ListRoles lists the roles granted to a group. Every member inherits them.
 //
 // API: GET /v1/tenants/{tenantID}/groups/{groupID}/roles
-func (s *GroupsService) ListRoles(ctx context.Context, tenantID string, groupID string, opts ...RequestOption) (*Page[GroupRole], error) {
+func (s *GroupsService) ListRoles(ctx context.Context, tenantID, groupID string, opts ...RequestOption) (*Page[GroupRole], error) {
 	return call[Page[GroupRole]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/groups/{groupID}/roles",
@@ -98,7 +98,7 @@ func (s *GroupsService) ListRoles(ctx context.Context, tenantID string, groupID 
 // GrantRole grants a role to a group.
 //
 // API: POST /v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}
-func (s *GroupsService) GrantRole(ctx context.Context, tenantID string, groupID string, roleID string, opts ...RequestOption) error {
+func (s *GroupsService) GrantRole(ctx context.Context, tenantID, groupID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}",
@@ -109,7 +109,7 @@ func (s *GroupsService) GrantRole(ctx context.Context, tenantID string, groupID 
 // RevokeRole revokes a role from a group.
 //
 // API: DELETE /v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}
-func (s *GroupsService) RevokeRole(ctx context.Context, tenantID string, groupID string, roleID string, opts ...RequestOption) error {
+func (s *GroupsService) RevokeRole(ctx context.Context, tenantID, groupID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}",

@@ -50,7 +50,7 @@ func (s *SCIMService) CreateToken(ctx context.Context, tenantID string, params C
 // RotateToken replaces a SCIM token. The old token keeps working for the overlap given.
 //
 // API: POST /v1/tenants/{tenantID}/scim/tokens/{id}/rotate
-func (s *SCIMService) RotateToken(ctx context.Context, tenantID string, tokenID string, params RotateSCIMTokenParams, opts ...RequestOption) (*RotatedSCIMToken, error) {
+func (s *SCIMService) RotateToken(ctx context.Context, tenantID, tokenID string, params RotateSCIMTokenParams, opts ...RequestOption) (*RotatedSCIMToken, error) {
 	return call[RotatedSCIMToken](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/scim/tokens/{tokenID}/rotate",
@@ -62,7 +62,7 @@ func (s *SCIMService) RotateToken(ctx context.Context, tenantID string, tokenID 
 // RevokeToken revokes a SCIM token.
 //
 // API: DELETE /v1/tenants/{tenantID}/scim/tokens/{id}
-func (s *SCIMService) RevokeToken(ctx context.Context, tenantID string, tokenID string, opts ...RequestOption) error {
+func (s *SCIMService) RevokeToken(ctx context.Context, tenantID, tokenID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/scim/tokens/{tokenID}",

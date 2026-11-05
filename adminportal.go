@@ -36,7 +36,7 @@ func (s *AdminPortalLinksService) List(ctx context.Context, tenantID string, opt
 // Revoke revokes a link.
 //
 // API: DELETE /v1/tenants/{tenantID}/admin-portal/links/{id}
-func (s *AdminPortalLinksService) Revoke(ctx context.Context, tenantID string, linkID string, opts ...RequestOption) error {
+func (s *AdminPortalLinksService) Revoke(ctx context.Context, tenantID, linkID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/admin-portal/links/{linkID}",

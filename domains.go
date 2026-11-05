@@ -36,7 +36,7 @@ func (s *DomainsService) Create(ctx context.Context, tenantID string, params Cre
 // Verify checks a claimed domain's DNS record and marks the domain verified when it matches.
 //
 // API: POST /v1/tenants/{tenantID}/domains/{id}/verify
-func (s *DomainsService) Verify(ctx context.Context, tenantID string, domainID string, opts ...RequestOption) (*Domain, error) {
+func (s *DomainsService) Verify(ctx context.Context, tenantID, domainID string, opts ...RequestOption) (*Domain, error) {
 	return call[Domain](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/domains/{domainID}/verify",
@@ -47,7 +47,7 @@ func (s *DomainsService) Verify(ctx context.Context, tenantID string, domainID s
 // Update changes a verified domain's single sign-on and just-in-time provisioning settings.
 //
 // API: PATCH /v1/tenants/{tenantID}/domains/{id}
-func (s *DomainsService) Update(ctx context.Context, tenantID string, domainID string, params UpdateDomainParams, opts ...RequestOption) (*Domain, error) {
+func (s *DomainsService) Update(ctx context.Context, tenantID, domainID string, params UpdateDomainParams, opts ...RequestOption) (*Domain, error) {
 	return call[Domain](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/domains/{domainID}",
@@ -59,7 +59,7 @@ func (s *DomainsService) Update(ctx context.Context, tenantID string, domainID s
 // Delete removes a domain.
 //
 // API: DELETE /v1/tenants/{tenantID}/domains/{id}
-func (s *DomainsService) Delete(ctx context.Context, tenantID string, domainID string, opts ...RequestOption) error {
+func (s *DomainsService) Delete(ctx context.Context, tenantID, domainID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/domains/{domainID}",
@@ -104,7 +104,7 @@ func (s *DomainsService) ListBreakGlassMembers(ctx context.Context, tenantID str
 // AddBreakGlassMember makes a member a break-glass member.
 //
 // API: PUT /v1/tenants/{tenantID}/break-glass-members/{userID}
-func (s *DomainsService) AddBreakGlassMember(ctx context.Context, tenantID string, userID string, opts ...RequestOption) error {
+func (s *DomainsService) AddBreakGlassMember(ctx context.Context, tenantID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPut,
 		path:     "/v1/tenants/{tenantID}/break-glass-members/{userID}",
@@ -115,7 +115,7 @@ func (s *DomainsService) AddBreakGlassMember(ctx context.Context, tenantID strin
 // RemoveBreakGlassMember removes a break-glass member.
 //
 // API: DELETE /v1/tenants/{tenantID}/break-glass-members/{userID}
-func (s *DomainsService) RemoveBreakGlassMember(ctx context.Context, tenantID string, userID string, opts ...RequestOption) error {
+func (s *DomainsService) RemoveBreakGlassMember(ctx context.Context, tenantID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/break-glass-members/{userID}",

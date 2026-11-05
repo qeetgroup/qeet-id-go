@@ -36,7 +36,7 @@ func (s *TokenVaultService) ListProviders(ctx context.Context, tenantID string, 
 // DeleteProvider removes a provider.
 //
 // API: DELETE /v1/tenants/{tenantID}/vault/tokens/providers/{provider}
-func (s *TokenVaultService) DeleteProvider(ctx context.Context, tenantID string, provider string, opts ...RequestOption) error {
+func (s *TokenVaultService) DeleteProvider(ctx context.Context, tenantID, provider string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/vault/tokens/providers/{provider}",

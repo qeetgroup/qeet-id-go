@@ -40,7 +40,7 @@ func (s *RelationshipsService) Create(ctx context.Context, tenantID string, para
 // Delete deletes a tuple.
 //
 // API: DELETE /v1/tenants/{tenantID}/relation-tuples/{id}
-func (s *RelationshipsService) Delete(ctx context.Context, tenantID string, tupleID string, opts ...RequestOption) error {
+func (s *RelationshipsService) Delete(ctx context.Context, tenantID, tupleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/relation-tuples/{tupleID}",

@@ -13,7 +13,7 @@ type ComplianceService struct{ c *Client }
 // GenerateEvidence checks the tenant's controls against a framework and stores the evidence.
 //
 // API: POST /v1/tenants/{tenantID}/compliance/{framework}/evidence
-func (s *ComplianceService) GenerateEvidence(ctx context.Context, tenantID string, framework string, opts ...RequestOption) (*EvidenceRun, error) {
+func (s *ComplianceService) GenerateEvidence(ctx context.Context, tenantID, framework string, opts ...RequestOption) (*EvidenceRun, error) {
 	return call[EvidenceRun](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/compliance/{framework}/evidence",
@@ -24,7 +24,7 @@ func (s *ComplianceService) GenerateEvidence(ctx context.Context, tenantID strin
 // ListEvidence lists the evidence runs for a framework.
 //
 // API: GET /v1/tenants/{tenantID}/compliance/{framework}/evidence
-func (s *ComplianceService) ListEvidence(ctx context.Context, tenantID string, framework string, opts ...RequestOption) (*Page[EvidenceRun], error) {
+func (s *ComplianceService) ListEvidence(ctx context.Context, tenantID, framework string, opts ...RequestOption) (*Page[EvidenceRun], error) {
 	return call[Page[EvidenceRun]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/compliance/{framework}/evidence",
@@ -35,7 +35,7 @@ func (s *ComplianceService) ListEvidence(ctx context.Context, tenantID string, f
 // GetEvidence returns an evidence run with its full report.
 //
 // API: GET /v1/tenants/{tenantID}/compliance/evidence/{id}
-func (s *ComplianceService) GetEvidence(ctx context.Context, tenantID string, runID string, opts ...RequestOption) (*EvidenceRun, error) {
+func (s *ComplianceService) GetEvidence(ctx context.Context, tenantID, runID string, opts ...RequestOption) (*EvidenceRun, error) {
 	return call[EvidenceRun](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/compliance/evidence/{runID}",
@@ -57,7 +57,7 @@ func (s *ComplianceService) ListControlOwners(ctx context.Context, tenantID stri
 // SetControlOwner makes a person the owner of a control.
 //
 // API: PUT /v1/tenants/{tenantID}/compliance/controls/{controlID}/owner
-func (s *ComplianceService) SetControlOwner(ctx context.Context, tenantID string, controlID string, params SetControlOwnerParams, opts ...RequestOption) error {
+func (s *ComplianceService) SetControlOwner(ctx context.Context, tenantID, controlID string, params SetControlOwnerParams, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPut,
 		path:     "/v1/tenants/{tenantID}/compliance/controls/{controlID}/owner",
@@ -69,7 +69,7 @@ func (s *ComplianceService) SetControlOwner(ctx context.Context, tenantID string
 // RemoveControlOwner removes a control's owner.
 //
 // API: DELETE /v1/tenants/{tenantID}/compliance/controls/{controlID}/owner
-func (s *ComplianceService) RemoveControlOwner(ctx context.Context, tenantID string, controlID string, opts ...RequestOption) error {
+func (s *ComplianceService) RemoveControlOwner(ctx context.Context, tenantID, controlID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/compliance/controls/{controlID}/owner",
@@ -104,7 +104,7 @@ func (s *ComplianceService) CreateAudit(ctx context.Context, tenantID string, pa
 // DeleteAudit deletes a recorded external audit.
 //
 // API: DELETE /v1/tenants/{tenantID}/compliance/audits/{id}
-func (s *ComplianceService) DeleteAudit(ctx context.Context, tenantID string, auditID string, opts ...RequestOption) error {
+func (s *ComplianceService) DeleteAudit(ctx context.Context, tenantID, auditID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/compliance/audits/{auditID}",

@@ -35,7 +35,7 @@ func (s *LogSinksService) Create(ctx context.Context, tenantID string, params Lo
 // SetEnabled enables or disables a log sink.
 //
 // API: PATCH /v1/tenants/{tenantID}/log-sinks/{id}
-func (s *LogSinksService) SetEnabled(ctx context.Context, tenantID string, sinkID string, params SetLogSinkEnabledParams, opts ...RequestOption) error {
+func (s *LogSinksService) SetEnabled(ctx context.Context, tenantID, sinkID string, params SetLogSinkEnabledParams, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/log-sinks/{sinkID}",
@@ -47,7 +47,7 @@ func (s *LogSinksService) SetEnabled(ctx context.Context, tenantID string, sinkI
 // Delete deletes a log sink.
 //
 // API: DELETE /v1/tenants/{tenantID}/log-sinks/{id}
-func (s *LogSinksService) Delete(ctx context.Context, tenantID string, sinkID string, opts ...RequestOption) error {
+func (s *LogSinksService) Delete(ctx context.Context, tenantID, sinkID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/log-sinks/{sinkID}",
@@ -58,7 +58,7 @@ func (s *LogSinksService) Delete(ctx context.Context, tenantID string, sinkID st
 // Test sends a test event to a saved log sink.
 //
 // API: POST /v1/tenants/{tenantID}/log-sinks/{id}/test
-func (s *LogSinksService) Test(ctx context.Context, tenantID string, sinkID string, opts ...RequestOption) (*LogSinkTest, error) {
+func (s *LogSinksService) Test(ctx context.Context, tenantID, sinkID string, opts ...RequestOption) (*LogSinkTest, error) {
 	return call[LogSinkTest](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/log-sinks/{sinkID}/test",

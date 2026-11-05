@@ -60,7 +60,7 @@ func (s *GDPRService) ListExports(ctx context.Context, tenantID string, opts ...
 // GetExport returns an export request, with its payload once ready.
 //
 // API: GET /v1/tenants/{tenantID}/gdpr/export/{id}
-func (s *GDPRService) GetExport(ctx context.Context, tenantID string, requestID string, opts ...RequestOption) (*ExportRequest, error) {
+func (s *GDPRService) GetExport(ctx context.Context, tenantID, requestID string, opts ...RequestOption) (*ExportRequest, error) {
 	return call[ExportRequest](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/gdpr/export/{requestID}",

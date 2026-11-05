@@ -48,7 +48,7 @@ func (s *WebhooksService) List(ctx context.Context, tenantID string, opts ...Req
 // Update changes a subscription's URL or events. Empty fields are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/webhooks/{id}
-func (s *WebhooksService) Update(ctx context.Context, tenantID string, webhookID string, params UpdateWebhookParams, opts ...RequestOption) (*Webhook, error) {
+func (s *WebhooksService) Update(ctx context.Context, tenantID, webhookID string, params UpdateWebhookParams, opts ...RequestOption) (*Webhook, error) {
 	return call[Webhook](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/webhooks/{webhookID}",
@@ -71,7 +71,7 @@ func (s *WebhooksService) Disable(ctx context.Context, webhookID string, opts ..
 // Enable enables a disabled subscription and sends the deliveries that queued meanwhile.
 //
 // API: POST /v1/tenants/{tenantID}/webhooks/{id}/enable
-func (s *WebhooksService) Enable(ctx context.Context, tenantID string, webhookID string, opts ...RequestOption) (*Webhook, error) {
+func (s *WebhooksService) Enable(ctx context.Context, tenantID, webhookID string, opts ...RequestOption) (*Webhook, error) {
 	return call[Webhook](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/webhooks/{webhookID}/enable",
@@ -83,7 +83,7 @@ func (s *WebhooksService) Enable(ctx context.Context, tenantID string, webhookID
 // each secret.
 //
 // API: POST /v1/tenants/{tenantID}/webhooks/{id}/rotate-secret
-func (s *WebhooksService) RotateSecret(ctx context.Context, tenantID string, webhookID string, opts ...RequestOption) (*RotatedWebhookSecret, error) {
+func (s *WebhooksService) RotateSecret(ctx context.Context, tenantID, webhookID string, opts ...RequestOption) (*RotatedWebhookSecret, error) {
 	return call[RotatedWebhookSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/webhooks/{webhookID}/rotate-secret",
@@ -137,7 +137,7 @@ func (s *WebhooksService) AllDeliveries(ctx context.Context, webhookID string, p
 // ListAttempts lists the attempts made to send one delivery.
 //
 // API: GET /v1/tenants/{tenantID}/webhooks/{id}/deliveries/{deliveryID}/attempts
-func (s *WebhooksService) ListAttempts(ctx context.Context, tenantID string, webhookID string, deliveryID string, opts ...RequestOption) (*Page[WebhookAttempt], error) {
+func (s *WebhooksService) ListAttempts(ctx context.Context, tenantID, webhookID, deliveryID string, opts ...RequestOption) (*Page[WebhookAttempt], error) {
 	return call[Page[WebhookAttempt]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/webhooks/{webhookID}/deliveries/{deliveryID}/attempts",
@@ -148,7 +148,7 @@ func (s *WebhooksService) ListAttempts(ctx context.Context, tenantID string, web
 // RetryDelivery sends a delivery again.
 //
 // API: POST /v1/webhooks/{id}/deliveries/{deliveryID}/retry
-func (s *WebhooksService) RetryDelivery(ctx context.Context, webhookID string, deliveryID string, opts ...RequestOption) error {
+func (s *WebhooksService) RetryDelivery(ctx context.Context, webhookID, deliveryID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/webhooks/{webhookID}/deliveries/{deliveryID}/retry",
@@ -159,7 +159,7 @@ func (s *WebhooksService) RetryDelivery(ctx context.Context, webhookID string, d
 // RetryGivenUp sends every given-up delivery of a subscription again.
 //
 // API: POST /v1/tenants/{tenantID}/webhooks/{id}/deliveries/retry
-func (s *WebhooksService) RetryGivenUp(ctx context.Context, tenantID string, webhookID string, opts ...RequestOption) (*RequeuedDeliveries, error) {
+func (s *WebhooksService) RetryGivenUp(ctx context.Context, tenantID, webhookID string, opts ...RequestOption) (*RequeuedDeliveries, error) {
 	return call[RequeuedDeliveries](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/webhooks/{webhookID}/deliveries/retry",

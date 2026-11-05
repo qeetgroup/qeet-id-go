@@ -36,7 +36,7 @@ func (s *OAuthGrantsService) All(ctx context.Context, tenantID string, params *L
 // Revoke revokes a grant and the tokens issued under it.
 //
 // API: DELETE /v1/tenants/{tenantID}/oauth/grants/{id}
-func (s *OAuthGrantsService) Revoke(ctx context.Context, tenantID string, grantID string, opts ...RequestOption) error {
+func (s *OAuthGrantsService) Revoke(ctx context.Context, tenantID, grantID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/oauth/grants/{grantID}",

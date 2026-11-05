@@ -36,7 +36,7 @@ func (s *OAuthResourcesService) Create(ctx context.Context, tenantID string, par
 // Delete removes a resource.
 //
 // API: DELETE /v1/tenants/{tenantID}/oidc/resources/{id}
-func (s *OAuthResourcesService) Delete(ctx context.Context, tenantID string, resourceID string, opts ...RequestOption) error {
+func (s *OAuthResourcesService) Delete(ctx context.Context, tenantID, resourceID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/oidc/resources/{resourceID}",

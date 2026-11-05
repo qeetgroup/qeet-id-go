@@ -36,7 +36,7 @@ func (s *SAMLServiceProvidersService) Create(ctx context.Context, tenantID strin
 // Get returns a service provider.
 //
 // API: GET /v1/tenants/{tenantID}/saml-providers/{id}
-func (s *SAMLServiceProvidersService) Get(ctx context.Context, tenantID string, providerID string, opts ...RequestOption) (*SAMLServiceProvider, error) {
+func (s *SAMLServiceProvidersService) Get(ctx context.Context, tenantID, providerID string, opts ...RequestOption) (*SAMLServiceProvider, error) {
 	return call[SAMLServiceProvider](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}",
@@ -47,7 +47,7 @@ func (s *SAMLServiceProvidersService) Get(ctx context.Context, tenantID string, 
 // Update changes a service provider. Empty fields are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/saml-providers/{id}
-func (s *SAMLServiceProvidersService) Update(ctx context.Context, tenantID string, providerID string, params SAMLServiceProviderParams, opts ...RequestOption) (*SAMLServiceProvider, error) {
+func (s *SAMLServiceProvidersService) Update(ctx context.Context, tenantID, providerID string, params SAMLServiceProviderParams, opts ...RequestOption) (*SAMLServiceProvider, error) {
 	return call[SAMLServiceProvider](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}",
@@ -59,7 +59,7 @@ func (s *SAMLServiceProvidersService) Update(ctx context.Context, tenantID strin
 // Delete deletes a service provider.
 //
 // API: DELETE /v1/tenants/{tenantID}/saml-providers/{id}
-func (s *SAMLServiceProvidersService) Delete(ctx context.Context, tenantID string, providerID string, opts ...RequestOption) error {
+func (s *SAMLServiceProvidersService) Delete(ctx context.Context, tenantID, providerID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}",
@@ -70,7 +70,7 @@ func (s *SAMLServiceProvidersService) Delete(ctx context.Context, tenantID strin
 // ListAssignments lists the people and groups assigned to a service provider.
 //
 // API: GET /v1/tenants/{tenantID}/saml-providers/{id}/assignments
-func (s *SAMLServiceProvidersService) ListAssignments(ctx context.Context, tenantID string, providerID string, opts ...RequestOption) (*SAMLServiceProviderAssignments, error) {
+func (s *SAMLServiceProvidersService) ListAssignments(ctx context.Context, tenantID, providerID string, opts ...RequestOption) (*SAMLServiceProviderAssignments, error) {
 	return call[SAMLServiceProviderAssignments](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments",
@@ -81,7 +81,7 @@ func (s *SAMLServiceProvidersService) ListAssignments(ctx context.Context, tenan
 // AssignUser assigns a person to a service provider.
 //
 // API: POST /v1/tenants/{tenantID}/saml-providers/{id}/assignments/users/{userID}
-func (s *SAMLServiceProvidersService) AssignUser(ctx context.Context, tenantID string, providerID string, userID string, opts ...RequestOption) error {
+func (s *SAMLServiceProvidersService) AssignUser(ctx context.Context, tenantID, providerID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/users/{userID}",
@@ -92,7 +92,7 @@ func (s *SAMLServiceProvidersService) AssignUser(ctx context.Context, tenantID s
 // UnassignUser unassigns a person from a service provider.
 //
 // API: DELETE /v1/tenants/{tenantID}/saml-providers/{id}/assignments/users/{userID}
-func (s *SAMLServiceProvidersService) UnassignUser(ctx context.Context, tenantID string, providerID string, userID string, opts ...RequestOption) error {
+func (s *SAMLServiceProvidersService) UnassignUser(ctx context.Context, tenantID, providerID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/users/{userID}",
@@ -103,7 +103,7 @@ func (s *SAMLServiceProvidersService) UnassignUser(ctx context.Context, tenantID
 // AssignGroup assigns a group to a service provider.
 //
 // API: POST /v1/tenants/{tenantID}/saml-providers/{id}/assignments/groups/{groupID}
-func (s *SAMLServiceProvidersService) AssignGroup(ctx context.Context, tenantID string, providerID string, groupID string, opts ...RequestOption) error {
+func (s *SAMLServiceProvidersService) AssignGroup(ctx context.Context, tenantID, providerID, groupID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/groups/{groupID}",
@@ -114,7 +114,7 @@ func (s *SAMLServiceProvidersService) AssignGroup(ctx context.Context, tenantID 
 // UnassignGroup unassigns a group from a service provider.
 //
 // API: DELETE /v1/tenants/{tenantID}/saml-providers/{id}/assignments/groups/{groupID}
-func (s *SAMLServiceProvidersService) UnassignGroup(ctx context.Context, tenantID string, providerID string, groupID string, opts ...RequestOption) error {
+func (s *SAMLServiceProvidersService) UnassignGroup(ctx context.Context, tenantID, providerID, groupID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/groups/{groupID}",

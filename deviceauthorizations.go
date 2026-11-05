@@ -24,7 +24,7 @@ func (s *DeviceAuthorizationsService) List(ctx context.Context, tenantID string,
 // Revoke revokes a device authorization.
 //
 // API: DELETE /v1/tenants/{tenantID}/oauth/devices/{id}
-func (s *DeviceAuthorizationsService) Revoke(ctx context.Context, tenantID string, authorizationID string, opts ...RequestOption) error {
+func (s *DeviceAuthorizationsService) Revoke(ctx context.Context, tenantID, authorizationID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/oauth/devices/{authorizationID}",

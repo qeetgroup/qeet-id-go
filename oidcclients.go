@@ -35,7 +35,7 @@ func (s *OIDCClientsService) Create(ctx context.Context, tenantID string, params
 // Get returns an application.
 //
 // API: GET /v1/tenants/{tenantID}/oidc/clients/{id}
-func (s *OIDCClientsService) Get(ctx context.Context, tenantID string, clientID string, opts ...RequestOption) (*OIDCClient, error) {
+func (s *OIDCClientsService) Get(ctx context.Context, tenantID, clientID string, opts ...RequestOption) (*OIDCClient, error) {
 	return call[OIDCClient](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}",
@@ -46,7 +46,7 @@ func (s *OIDCClientsService) Get(ctx context.Context, tenantID string, clientID 
 // Update changes an application. Fields left nil are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/oidc/clients/{id}
-func (s *OIDCClientsService) Update(ctx context.Context, tenantID string, clientID string, params UpdateOIDCClientParams, opts ...RequestOption) (*OIDCClient, error) {
+func (s *OIDCClientsService) Update(ctx context.Context, tenantID, clientID string, params UpdateOIDCClientParams, opts ...RequestOption) (*OIDCClient, error) {
 	return call[OIDCClient](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}",
@@ -58,7 +58,7 @@ func (s *OIDCClientsService) Update(ctx context.Context, tenantID string, client
 // Delete deletes an application.
 //
 // API: DELETE /v1/tenants/{tenantID}/oidc/clients/{id}
-func (s *OIDCClientsService) Delete(ctx context.Context, tenantID string, clientID string, opts ...RequestOption) error {
+func (s *OIDCClientsService) Delete(ctx context.Context, tenantID, clientID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}",
@@ -69,7 +69,7 @@ func (s *OIDCClientsService) Delete(ctx context.Context, tenantID string, client
 // RotateSecret replaces an application's secret. The result carries the new secret, shown only once.
 //
 // API: POST /v1/tenants/{tenantID}/oidc/clients/{id}/rotate-secret
-func (s *OIDCClientsService) RotateSecret(ctx context.Context, tenantID string, clientID string, opts ...RequestOption) (*RotatedClientSecret, error) {
+func (s *OIDCClientsService) RotateSecret(ctx context.Context, tenantID, clientID string, opts ...RequestOption) (*RotatedClientSecret, error) {
 	return call[RotatedClientSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}/rotate-secret",
@@ -80,7 +80,7 @@ func (s *OIDCClientsService) RotateSecret(ctx context.Context, tenantID string, 
 // AuthFailures lists recent wrong-secret attempts for an application and whether it is locked out.
 //
 // API: GET /v1/tenants/{tenantID}/oidc/clients/{id}/auth-failures
-func (s *OIDCClientsService) AuthFailures(ctx context.Context, tenantID string, clientID string, opts ...RequestOption) (*ClientAuthFailures, error) {
+func (s *OIDCClientsService) AuthFailures(ctx context.Context, tenantID, clientID string, opts ...RequestOption) (*ClientAuthFailures, error) {
 	return call[ClientAuthFailures](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}/auth-failures",
@@ -102,7 +102,7 @@ func (s *OIDCClientsService) ListShadowAI(ctx context.Context, tenantID string, 
 // AcknowledgeShadowAI records that an administrator reviewed a shadow-AI candidate.
 //
 // API: POST /v1/tenants/{tenantID}/oidc/clients/{id}/review
-func (s *OIDCClientsService) AcknowledgeShadowAI(ctx context.Context, tenantID string, clientID string, opts ...RequestOption) error {
+func (s *OIDCClientsService) AcknowledgeShadowAI(ctx context.Context, tenantID, clientID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}/review",

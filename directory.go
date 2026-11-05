@@ -26,7 +26,7 @@ func (s *DirectoryService) ListConnections(ctx context.Context, tenantID string,
 // ListMappings lists a connection's effective profile mapping rules and the fields they can target.
 //
 // API: GET /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings
-func (s *DirectoryService) ListMappings(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*DirectoryMappings, error) {
+func (s *DirectoryService) ListMappings(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*DirectoryMappings, error) {
 	return call[DirectoryMappings](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings",
@@ -37,7 +37,7 @@ func (s *DirectoryService) ListMappings(ctx context.Context, tenantID string, co
 // CreateMapping adds a profile mapping rule.
 //
 // API: POST /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings
-func (s *DirectoryService) CreateMapping(ctx context.Context, tenantID string, connectionID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
+func (s *DirectoryService) CreateMapping(ctx context.Context, tenantID, connectionID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
 	return call[DirectoryMapping](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings",
@@ -49,7 +49,7 @@ func (s *DirectoryService) CreateMapping(ctx context.Context, tenantID string, c
 // UpdateMapping replaces a profile mapping rule. Version must be the version last read.
 //
 // API: PUT /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}
-func (s *DirectoryService) UpdateMapping(ctx context.Context, tenantID string, connectionID string, mappingID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
+func (s *DirectoryService) UpdateMapping(ctx context.Context, tenantID, connectionID, mappingID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
 	return call[DirectoryMapping](ctx, s.c, &request{
 		method:   http.MethodPut,
 		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}",
@@ -61,7 +61,7 @@ func (s *DirectoryService) UpdateMapping(ctx context.Context, tenantID string, c
 // DeleteMapping deletes a profile mapping rule.
 //
 // API: DELETE /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}
-func (s *DirectoryService) DeleteMapping(ctx context.Context, tenantID string, connectionID string, mappingID string, opts ...RequestOption) error {
+func (s *DirectoryService) DeleteMapping(ctx context.Context, tenantID, connectionID, mappingID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}",
@@ -72,7 +72,7 @@ func (s *DirectoryService) DeleteMapping(ctx context.Context, tenantID string, c
 // PreviewMappings applies the saved rules to sample directory data without changing anything.
 //
 // API: POST /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/preview
-func (s *DirectoryService) PreviewMappings(ctx context.Context, tenantID string, connectionID string, params PreviewMappingsParams, opts ...RequestOption) (*MappingPreview, error) {
+func (s *DirectoryService) PreviewMappings(ctx context.Context, tenantID, connectionID string, params PreviewMappingsParams, opts ...RequestOption) (*MappingPreview, error) {
 	return call[MappingPreview](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/preview",
@@ -96,7 +96,7 @@ func (s *DirectoryService) ListErrors(ctx context.Context, tenantID string, para
 // ResolveError marks a directory error resolved.
 //
 // API: POST /v1/tenants/{tenantID}/directory/errors/{eventID}/resolve
-func (s *DirectoryService) ResolveError(ctx context.Context, tenantID string, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
+func (s *DirectoryService) ResolveError(ctx context.Context, tenantID, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
 	return call[DirectoryActionResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/directory/errors/{eventID}/resolve",
@@ -107,7 +107,7 @@ func (s *DirectoryService) ResolveError(ctx context.Context, tenantID string, ev
 // RetryError retries the failed connection check behind a directory error.
 //
 // API: POST /v1/tenants/{tenantID}/directory/errors/{eventID}/retry
-func (s *DirectoryService) RetryError(ctx context.Context, tenantID string, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
+func (s *DirectoryService) RetryError(ctx context.Context, tenantID, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
 	return call[DirectoryActionResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/directory/errors/{eventID}/retry",
@@ -153,7 +153,7 @@ func (s *DirectoryService) CreateAlert(ctx context.Context, tenantID string, par
 // UpdateAlert changes or pauses a directory failure alert.
 //
 // API: PATCH /v1/tenants/{tenantID}/directory/alerts/{alertID}
-func (s *DirectoryService) UpdateAlert(ctx context.Context, tenantID string, alertID string, params UpdateDirectoryAlertParams, opts ...RequestOption) (*DirectoryAlert, error) {
+func (s *DirectoryService) UpdateAlert(ctx context.Context, tenantID, alertID string, params UpdateDirectoryAlertParams, opts ...RequestOption) (*DirectoryAlert, error) {
 	return call[DirectoryAlert](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/directory/alerts/{alertID}",
@@ -165,7 +165,7 @@ func (s *DirectoryService) UpdateAlert(ctx context.Context, tenantID string, ale
 // DeleteAlert removes a directory failure alert.
 //
 // API: DELETE /v1/tenants/{tenantID}/directory/alerts/{alertID}
-func (s *DirectoryService) DeleteAlert(ctx context.Context, tenantID string, alertID string, opts ...RequestOption) error {
+func (s *DirectoryService) DeleteAlert(ctx context.Context, tenantID, alertID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/directory/alerts/{alertID}",
@@ -176,7 +176,7 @@ func (s *DirectoryService) DeleteAlert(ctx context.Context, tenantID string, ale
 // Profile returns the directory attributes behind a person's profile.
 //
 // API: GET /v1/tenants/{tenantID}/directory/profiles/{userID}
-func (s *DirectoryService) Profile(ctx context.Context, tenantID string, userID string, opts ...RequestOption) (*Page[DirectoryProfileValue], error) {
+func (s *DirectoryService) Profile(ctx context.Context, tenantID, userID string, opts ...RequestOption) (*Page[DirectoryProfileValue], error) {
 	return call[Page[DirectoryProfileValue]](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/directory/profiles/{userID}",

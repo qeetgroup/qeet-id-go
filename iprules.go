@@ -35,7 +35,7 @@ func (s *IPRulesService) Create(ctx context.Context, tenantID string, params Cre
 // Delete deletes a rule.
 //
 // API: DELETE /v1/tenants/{tenantID}/ip-rules/{ruleID}
-func (s *IPRulesService) Delete(ctx context.Context, tenantID string, ruleID string, opts ...RequestOption) error {
+func (s *IPRulesService) Delete(ctx context.Context, tenantID, ruleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/ip-rules/{ruleID}",

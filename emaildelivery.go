@@ -38,7 +38,7 @@ func (s *EmailDeliveryService) ListSuppressions(ctx context.Context, tenantID st
 // DeleteSuppression clears a suppression so email is sent to the address again.
 //
 // API: DELETE /v1/tenants/{tenantID}/email/suppressions/{id}
-func (s *EmailDeliveryService) DeleteSuppression(ctx context.Context, tenantID string, suppressionID string, opts ...RequestOption) error {
+func (s *EmailDeliveryService) DeleteSuppression(ctx context.Context, tenantID, suppressionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/email/suppressions/{suppressionID}",

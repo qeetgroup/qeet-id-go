@@ -95,7 +95,7 @@ func (s *BillingService) ListInvoices(ctx context.Context, tenantID string, opts
 // apply the request twice.
 //
 // API: POST /v1/tenants/{tenantID}/billing/invoices/{invoiceID}/pay
-func (s *BillingService) PayInvoice(ctx context.Context, tenantID string, invoiceID string, params PayInvoiceParams, opts ...RequestOption) (*CheckoutResult, error) {
+func (s *BillingService) PayInvoice(ctx context.Context, tenantID, invoiceID string, params PayInvoiceParams, opts ...RequestOption) (*CheckoutResult, error) {
 	return call[CheckoutResult](ctx, s.c, &request{
 		method:     http.MethodPost,
 		path:       "/v1/tenants/{tenantID}/billing/invoices/{invoiceID}/pay",

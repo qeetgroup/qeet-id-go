@@ -50,7 +50,7 @@ func (s *ServicePrincipalsService) Disable(ctx context.Context, principalID stri
 // Enable enables a disabled service principal.
 //
 // API: POST /v1/tenants/{tenantID}/service-principals/{id}/enable
-func (s *ServicePrincipalsService) Enable(ctx context.Context, tenantID string, principalID string, opts ...RequestOption) error {
+func (s *ServicePrincipalsService) Enable(ctx context.Context, tenantID, principalID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/service-principals/{principalID}/enable",
@@ -62,7 +62,7 @@ func (s *ServicePrincipalsService) Enable(ctx context.Context, tenantID string, 
 // given.
 //
 // API: POST /v1/tenants/{tenantID}/service-principals/{id}/rotate-secret
-func (s *ServicePrincipalsService) RotateSecret(ctx context.Context, tenantID string, principalID string, params RotateSecretParams, opts ...RequestOption) (*RotatedServicePrincipalSecret, error) {
+func (s *ServicePrincipalsService) RotateSecret(ctx context.Context, tenantID, principalID string, params RotateSecretParams, opts ...RequestOption) (*RotatedServicePrincipalSecret, error) {
 	return call[RotatedServicePrincipalSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/service-principals/{principalID}/rotate-secret",

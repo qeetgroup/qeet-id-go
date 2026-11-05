@@ -33,7 +33,7 @@ func (s *APIKeysService) List(ctx context.Context, tenantID string, opts ...Requ
 // Rotate replaces an API key with a new one. The old key keeps working for the overlap given.
 //
 // API: POST /v1/tenants/{tenantID}/api-keys/{id}/rotate
-func (s *APIKeysService) Rotate(ctx context.Context, tenantID string, keyID string, params RotateSecretParams, opts ...RequestOption) (*CreateAPIKeyResult, error) {
+func (s *APIKeysService) Rotate(ctx context.Context, tenantID, keyID string, params RotateSecretParams, opts ...RequestOption) (*CreateAPIKeyResult, error) {
 	return call[CreateAPIKeyResult](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/api-keys/{keyID}/rotate",

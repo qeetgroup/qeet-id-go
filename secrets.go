@@ -36,7 +36,7 @@ func (s *SecretsService) Create(ctx context.Context, tenantID string, params Cre
 // Update changes a secret's value, scope or rotation interval.
 //
 // API: PATCH /v1/tenants/{tenantID}/secrets/{id}
-func (s *SecretsService) Update(ctx context.Context, tenantID string, secretID string, params UpdateSecretParams, opts ...RequestOption) (*Secret, error) {
+func (s *SecretsService) Update(ctx context.Context, tenantID, secretID string, params UpdateSecretParams, opts ...RequestOption) (*Secret, error) {
 	return call[Secret](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/secrets/{secretID}",
@@ -48,7 +48,7 @@ func (s *SecretsService) Update(ctx context.Context, tenantID string, secretID s
 // Delete deletes a secret.
 //
 // API: DELETE /v1/tenants/{tenantID}/secrets/{id}
-func (s *SecretsService) Delete(ctx context.Context, tenantID string, secretID string, opts ...RequestOption) error {
+func (s *SecretsService) Delete(ctx context.Context, tenantID, secretID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/secrets/{secretID}",
@@ -59,7 +59,7 @@ func (s *SecretsService) Delete(ctx context.Context, tenantID string, secretID s
 // Reveal returns a secret's value. Every reveal is audited.
 //
 // API: POST /v1/tenants/{tenantID}/secrets/{id}/reveal
-func (s *SecretsService) Reveal(ctx context.Context, tenantID string, secretID string, opts ...RequestOption) (*RevealedSecret, error) {
+func (s *SecretsService) Reveal(ctx context.Context, tenantID, secretID string, opts ...RequestOption) (*RevealedSecret, error) {
 	return call[RevealedSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/secrets/{secretID}/reveal",

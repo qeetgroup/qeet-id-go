@@ -37,7 +37,7 @@ func (s *RolesService) Create(ctx context.Context, tenantID string, params Creat
 // Update renames a role or changes its description.
 //
 // API: PATCH /v1/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) Update(ctx context.Context, tenantID string, roleID string, params UpdateRoleParams, opts ...RequestOption) (*Role, error) {
+func (s *RolesService) Update(ctx context.Context, tenantID, roleID string, params UpdateRoleParams, opts ...RequestOption) (*Role, error) {
 	return call[Role](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/roles/{roleID}",
@@ -49,7 +49,7 @@ func (s *RolesService) Update(ctx context.Context, tenantID string, roleID strin
 // Delete deletes a role.
 //
 // API: DELETE /v1/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) Delete(ctx context.Context, tenantID string, roleID string, opts ...RequestOption) error {
+func (s *RolesService) Delete(ctx context.Context, tenantID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/roles/{roleID}",
@@ -71,7 +71,7 @@ func (s *RolesService) ListPermissions(ctx context.Context, roleID string, opts 
 // SetPermissions replaces the permissions a role grants and returns the new set.
 //
 // API: PUT /v1/tenants/{tenantID}/roles/{roleID}/permissions
-func (s *RolesService) SetPermissions(ctx context.Context, tenantID string, roleID string, params SetRolePermissionsParams, opts ...RequestOption) (*Page[Permission], error) {
+func (s *RolesService) SetPermissions(ctx context.Context, tenantID, roleID string, params SetRolePermissionsParams, opts ...RequestOption) (*Page[Permission], error) {
 	return call[Page[Permission]](ctx, s.c, &request{
 		method:   http.MethodPut,
 		path:     "/v1/tenants/{tenantID}/roles/{roleID}/permissions",
@@ -83,7 +83,7 @@ func (s *RolesService) SetPermissions(ctx context.Context, tenantID string, role
 // GrantPermission adds a permission to a role.
 //
 // API: POST /v1/roles/{roleID}/permissions/{permID}
-func (s *RolesService) GrantPermission(ctx context.Context, roleID string, permissionID string, opts ...RequestOption) error {
+func (s *RolesService) GrantPermission(ctx context.Context, roleID, permissionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/roles/{roleID}/permissions/{permissionID}",
@@ -94,7 +94,7 @@ func (s *RolesService) GrantPermission(ctx context.Context, roleID string, permi
 // RevokePermission removes a permission from a role.
 //
 // API: DELETE /v1/roles/{roleID}/permissions/{permID}
-func (s *RolesService) RevokePermission(ctx context.Context, roleID string, permissionID string, opts ...RequestOption) error {
+func (s *RolesService) RevokePermission(ctx context.Context, roleID, permissionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/roles/{roleID}/permissions/{permissionID}",
@@ -105,7 +105,7 @@ func (s *RolesService) RevokePermission(ctx context.Context, roleID string, perm
 // Holders lists the people and groups that hold a role, one page at a time.
 //
 // API: GET /v1/tenants/{tenantID}/roles/{roleID}/holders
-func (s *RolesService) Holders(ctx context.Context, tenantID string, roleID string, params *RoleHoldersParams, opts ...RequestOption) (*RoleHolders, error) {
+func (s *RolesService) Holders(ctx context.Context, tenantID, roleID string, params *RoleHoldersParams, opts ...RequestOption) (*RoleHolders, error) {
 	return call[RoleHolders](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/roles/{roleID}/holders",
@@ -117,7 +117,7 @@ func (s *RolesService) Holders(ctx context.Context, tenantID string, roleID stri
 // AssignToUser gives a user a role in a tenant.
 //
 // API: POST /v1/users/{userID}/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) AssignToUser(ctx context.Context, userID string, tenantID string, roleID string, opts ...RequestOption) error {
+func (s *RolesService) AssignToUser(ctx context.Context, userID, tenantID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/users/{userID}/tenants/{tenantID}/roles/{roleID}",
@@ -128,7 +128,7 @@ func (s *RolesService) AssignToUser(ctx context.Context, userID string, tenantID
 // UnassignFromUser takes a role away from a user.
 //
 // API: DELETE /v1/users/{userID}/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) UnassignFromUser(ctx context.Context, userID string, tenantID string, roleID string, opts ...RequestOption) error {
+func (s *RolesService) UnassignFromUser(ctx context.Context, userID, tenantID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/users/{userID}/tenants/{tenantID}/roles/{roleID}",

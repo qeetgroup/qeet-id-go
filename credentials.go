@@ -35,7 +35,7 @@ func (s *CredentialsService) List(ctx context.Context, tenantID string, opts ...
 // Revoke revokes a credential.
 //
 // API: POST /v1/tenants/{tenantID}/credentials/{id}/revoke
-func (s *CredentialsService) Revoke(ctx context.Context, tenantID string, credentialID string, opts ...RequestOption) error {
+func (s *CredentialsService) Revoke(ctx context.Context, tenantID, credentialID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
 		path:     "/v1/tenants/{tenantID}/credentials/{credentialID}/revoke",

@@ -35,7 +35,7 @@ func (s *OIDCConnectionsService) Create(ctx context.Context, tenantID string, pa
 // Get returns a connection.
 //
 // API: GET /v1/tenants/{tenantID}/oidc-connections/{id}
-func (s *OIDCConnectionsService) Get(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) (*OIDCConnection, error) {
+func (s *OIDCConnectionsService) Get(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*OIDCConnection, error) {
 	return call[OIDCConnection](ctx, s.c, &request{
 		method:   http.MethodGet,
 		path:     "/v1/tenants/{tenantID}/oidc-connections/{connectionID}",
@@ -46,7 +46,7 @@ func (s *OIDCConnectionsService) Get(ctx context.Context, tenantID string, conne
 // Update changes a connection. Fields left nil are not changed.
 //
 // API: PATCH /v1/tenants/{tenantID}/oidc-connections/{id}
-func (s *OIDCConnectionsService) Update(ctx context.Context, tenantID string, connectionID string, params UpdateOIDCConnectionParams, opts ...RequestOption) (*OIDCConnection, error) {
+func (s *OIDCConnectionsService) Update(ctx context.Context, tenantID, connectionID string, params UpdateOIDCConnectionParams, opts ...RequestOption) (*OIDCConnection, error) {
 	return call[OIDCConnection](ctx, s.c, &request{
 		method:   http.MethodPatch,
 		path:     "/v1/tenants/{tenantID}/oidc-connections/{connectionID}",
@@ -58,7 +58,7 @@ func (s *OIDCConnectionsService) Update(ctx context.Context, tenantID string, co
 // Delete deletes a connection.
 //
 // API: DELETE /v1/tenants/{tenantID}/oidc-connections/{id}
-func (s *OIDCConnectionsService) Delete(ctx context.Context, tenantID string, connectionID string, opts ...RequestOption) error {
+func (s *OIDCConnectionsService) Delete(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
 		path:     "/v1/tenants/{tenantID}/oidc-connections/{connectionID}",

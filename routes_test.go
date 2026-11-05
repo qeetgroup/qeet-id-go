@@ -3,11 +3,54 @@ package qeetid
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 )
 
+// handRouteCases covers the methods written by hand rather than from the
+// contract tables.
+var handRouteCases = []routeCase{
+	{name: "OAuth.ClientCredentials", method: "POST", path: "/v1/oauth/token", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.OAuth.ClientCredentials(ctx, ClientCredentialsParams{ClientID: "id", ClientSecret: "s"})
+		return err
+	}},
+	{name: "OAuth.ExchangeCode", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: exchangeCode},
+	{name: "OAuth.RefreshToken", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.OAuth.RefreshToken(ctx, RefreshTokenParams{ClientID: "id", ClientSecret: "s", RefreshToken: "rt"})
+		return err
+	}},
+	{name: "OAuth.ExchangeToken", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: exchangeToken},
+	{name: "OAuth.AuthorizeDevice", method: "POST", path: "/v1/oauth/device_authorization", public: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.OAuth.AuthorizeDevice(ctx, DeviceAuthorizationParams{ClientID: "tv"})
+		return err
+	}},
+	{name: "OAuth.PollDeviceToken", method: "POST", path: "/v1/oauth/token-code", public: true, call: pollDevice},
+	{name: "OAuth.AuthorizeBackchannel", method: "POST", path: "/v1/oauth/bc-authorize", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.OAuth.AuthorizeBackchannel(ctx, BackchannelAuthorizationParams{ClientID: "k", ClientSecret: "s", LoginHint: "ada@example.com"})
+		return err
+	}},
+	{name: "OAuth.PollBackchannelToken", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: pollBackchannel},
+	{name: "OAuth.Introspect", method: "POST", path: "/oauth/introspect", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.OAuth.Introspect(ctx, IntrospectParams{ClientID: "id", ClientSecret: "s", Token: "t"})
+		return err
+	}},
+	{name: "OAuth.Revoke", method: "POST", path: "/oauth/revoke", public: true, basic: true, call: revoke},
+	{name: "OAuth.Discover", method: "GET", path: "/.well-known/openid-configuration", public: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.OAuth.Discover(ctx)
+		return err
+	}},
+	{name: "LDAP.Authenticate", method: "POST", path: "/ldap/conn-1/authenticate", public: true, call: func(ctx context.Context, c *Client) error {
+		_, err := c.LDAP.Authenticate(ctx, "conn-1", LDAPAuthenticateParams{Username: "u", Password: "p"})
+		return err
+	}},
+	{name: "Users.Import", method: "POST", path: "/v1/users/bulk/import", call: func(ctx context.Context, c *Client) error {
+		_, err := c.Users.Import(ctx, ImportSourceCognito, []byte("email\na@x.in\n"))
+		return err
+	}},
+}
+
 func TestRoutes(t *testing.T) {
-	for _, tc := range routeCases {
+	for _, tc := range append(append([]routeCase(nil), routeCases...), handRouteCases...) {
 		t.Run(tc.name, func(t *testing.T) {
 			f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(http.StatusOK, `{"items":[]}`)}}
 			c := newFakeClient(t, f)
@@ -24,6 +67,9 @@ func TestRoutes(t *testing.T) {
 			}
 			auth := got.header.Get("Authorization")
 			switch {
+			case tc.basic && !strings.HasPrefix(auth, "Basic "):
+				t.Errorf("Authorization = %q, want the OAuth client's Basic credentials", auth)
+			case tc.basic:
 			case tc.public && auth != "":
 				t.Errorf("public endpoint got Authorization %q, want none", auth)
 			case !tc.public && auth != "ApiKey qk_test.secret":
@@ -44,7 +90,7 @@ func TestRoutesCoverEveryService(t *testing.T) {
 		t.Fatal(err)
 	}
 	covered := map[string]bool{}
-	for _, tc := range routeCases {
+	for _, tc := range append(append([]routeCase(nil), routeCases...), handRouteCases...) {
 		for i := range len(tc.name) {
 			if tc.name[i] == '.' {
 				covered[tc.name[:i]] = true

@@ -43,7 +43,9 @@ type Client struct {
 	IPRules        *IPRulesService
 	Threats        *ThreatsService
 
-	// Applications, machine identities and federation.
+	// Applications, machine identities and federation. OAuth runs the
+	// token flows in which your application is the client of Qeet ID.
+	OAuth                *OAuthService
 	OIDCClients          *OIDCClientsService
 	OAuthResources       *OAuthResourcesService
 	OAuthGrants          *OAuthGrantsService
@@ -171,6 +173,7 @@ func NewClient(opts ...Option) (*Client, error) {
 	c.IPRules = &IPRulesService{c: c}
 	c.Threats = &ThreatsService{c: c}
 
+	c.OAuth = &OAuthService{c: c}
 	c.OIDCClients = &OIDCClientsService{c: c}
 	c.OAuthResources = &OAuthResourcesService{c: c}
 	c.OAuthGrants = &OAuthGrantsService{c: c}

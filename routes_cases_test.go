@@ -747,6 +747,11 @@ var routeCases = []routeCase{
 		return err
 	}},
 	{name: "SCIM.RevokeToken", method: "DELETE", path: "/v1/tenants/tenantID-1/scim/tokens/tokenID-1", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error { return c.SCIM.RevokeToken(ctx, "tenantID-1", "tokenID-1") }},
+	{name: "SCIM.ReplaceAllTokens", method: "POST", path: "/v1/tenants/tenantID-1/scim/token", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error {
+		_, err := c.SCIM.ReplaceAllTokens(ctx, "tenantID-1")
+		return err
+	}},
+	{name: "SCIM.RevokeAllTokens", method: "DELETE", path: "/v1/tenants/tenantID-1/scim/token", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error { return c.SCIM.RevokeAllTokens(ctx, "tenantID-1") }},
 	{name: "SCIM.ListUsers", method: "GET", path: "/v1/tenants/tenantID-1/scim/users", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error {
 		_, err := c.SCIM.ListUsers(ctx, "tenantID-1", nil)
 		return err
@@ -940,6 +945,10 @@ var routeCases = []routeCase{
 		return c.TokenVault.DeleteProvider(ctx, "tenantID-1", "provider-1")
 	}},
 	{name: "TokenVault.ListConnections", method: "GET", path: "/v1/vault/tokens", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error { _, err := c.TokenVault.ListConnections(ctx); return err }},
+	{name: "TokenVault.Connect", method: "GET", path: "/v1/vault/tokens/provider-1/connect", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error {
+		_, err := c.TokenVault.Connect(ctx, "provider-1")
+		return err
+	}},
 	{name: "TokenVault.AccessToken", method: "GET", path: "/v1/vault/tokens/provider-1/access-token", public: false, idempotent: false, call: func(ctx context.Context, c *Client) error {
 		_, err := c.TokenVault.AccessToken(ctx, "provider-1")
 		return err

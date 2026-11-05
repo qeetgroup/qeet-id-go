@@ -70,6 +70,29 @@ func (s *SCIMService) RevokeToken(ctx context.Context, tenantID string, tokenID 
 	}, nil, opts)
 }
 
+// ReplaceAllTokens issues a new SCIM token and revokes every earlier one at once. The result carries
+// the token, shown only once.
+//
+// API: POST /v1/tenants/{tenantID}/scim/token
+func (s *SCIMService) ReplaceAllTokens(ctx context.Context, tenantID string, opts ...RequestOption) (*ReplacedSCIMTokens, error) {
+	return call[ReplacedSCIMTokens](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/scim/token",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// RevokeAllTokens revokes every SCIM token of the tenant, which stops provisioning.
+//
+// API: DELETE /v1/tenants/{tenantID}/scim/token
+func (s *SCIMService) RevokeAllTokens(ctx context.Context, tenantID string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/tenants/{tenantID}/scim/token",
+		pathArgs: []string{tenantID},
+	}, nil, opts)
+}
+
 // ListUsers lists the users the identity provider provisioned, one page at a time.
 //
 // API: GET /v1/tenants/{tenantID}/scim/users
@@ -233,6 +256,12 @@ type RotatedSCIMToken struct {
 	SCIMToken SCIMToken `json:"scim_token,omitzero"`
 	// The new token to give the identity provider, shown only here.
 	Token string `json:"token,omitempty"`
+}
+
+// ReplacedSCIMTokens is the result of SCIMService.ReplaceAllTokens.
+type ReplacedSCIMTokens struct {
+	Config SCIMConfig `json:"config,omitzero"`
+	Token  string     `json:"token,omitempty"`
 }
 
 // ListSCIMResourcesParams holds the optional query parameters of SCIMService.ListUsers. A nil

@@ -51,6 +51,18 @@ func (s *TokenVaultService) ListConnections(ctx context.Context, opts ...Request
 	return call[Page[TokenVaultConnection]](ctx, s.c, &request{method: http.MethodGet, path: "/v1/vault/tokens"}, opts)
 }
 
+// Connect begins connecting the calling person's account at a provider. Send the person to
+// AuthorizeURL; the provider redirects back to Qeet ID, which stores the tokens.
+//
+// API: GET /v1/vault/tokens/{provider}/connect
+func (s *TokenVaultService) Connect(ctx context.Context, provider string, opts ...RequestOption) (*TokenVaultAuthorization, error) {
+	return call[TokenVaultAuthorization](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/vault/tokens/{provider}/connect",
+		pathArgs: []string{provider},
+	}, opts)
+}
+
 // AccessToken returns a live access token for the calling person's connected account, refreshing it
 // first when needed. The refresh token is never returned.
 //
@@ -107,6 +119,11 @@ type TokenVaultConnection struct {
 	Provider          string    `json:"provider,omitempty"`
 	Scope             string    `json:"scope,omitempty"`
 	UpdatedAt         time.Time `json:"updated_at,omitzero"`
+}
+
+// TokenVaultAuthorization is the result of TokenVaultService.Connect.
+type TokenVaultAuthorization struct {
+	AuthorizeURL string `json:"authorize_url,omitempty"`
 }
 
 // TokenVaultAccessToken is the result of TokenVaultService.AccessToken.

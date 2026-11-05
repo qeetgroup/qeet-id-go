@@ -6,9 +6,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-A rebuild of the SDK against the Qeet ID 1.0 API contract. No version of the
-module has been tagged yet, so the changes below are measured against the
-0.1.0 draft described further down.
+## [0.1.0] — 2026-11-05
+
+The first tagged version: a rebuild of the SDK against the Qeet ID 1.0 API
+contract. The changes below are measured against the never-tagged 0.1.0
+draft described further down.
 
 ### Breaking changes
 
@@ -119,9 +121,9 @@ module has been tagged yet, so the changes below are measured against the
 
 The module still has no dependencies outside the standard library.
 
-## [0.1.0] — 2026-07-10 (draft, never tagged)
+## 0.1.0 draft — 2026-07-10 (never tagged)
 
-Initial release.
+The first draft.
 
 ### Added
 
@@ -200,4 +202,5 @@ for the internal package layout and [docs/design-decisions/](docs/design-decisio
 for the API-shape trade-offs (single package vs. per-resource packages, flat
 vs. grouped `Client` fields).
 
-[Unreleased]: https://github.com/qeetgroup/qeet-id-go/commits/main
+[Unreleased]: https://github.com/qeetgroup/qeet-id-go/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/qeetgroup/qeet-id-go/releases/tag/v0.1.0

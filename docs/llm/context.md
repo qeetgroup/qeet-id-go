@@ -98,7 +98,8 @@ for `jwt`, runnable examples.
 | `lint.yml` | golangci-lint v2.15.0 |
 | `security.yml` | govulncheck v1.9.0, gitleaks; weekly |
 | `codeql.yml` | CodeQL |
-| `release.yml` | run by hand on `main`: gate, then the next tag (patch, minor or major) and a GitHub release |
+| `version.yml` | pull requests into `main`: bumps the patch of `SDK` in `internal/version/version.go` |
+| `release.yml` | push to `main`: when that version has no tag, the gate, then the `vX.Y.Z` tag and a GitHub release |
 
 ## Documentation authority
 

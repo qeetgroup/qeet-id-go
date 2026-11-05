@@ -79,10 +79,10 @@ commands:
   ci:    make ci
 
 ci:
-  workflows: [ci.yml, codeql.yml, lint.yml, release.yml, security.yml]
+  workflows: [ci.yml, codeql.yml, lint.yml, release.yml, security.yml, version.yml]
   matrix: ["1.26.x", "1.27.x"]
   gates: [gofmt, go vet, go build, go test -race + coverage, golangci-lint, govulncheck, gitleaks, CodeQL]
-  release: push main -> gate -> auto-tag next patch vX.Y.Z + GitHub release (the tag IS the artifact)
+  release: PR into main -> version.yml bumps SDK in internal/version; push main -> no tag yet -> gate -> tag vX.Y.Z + GitHub release (the tag IS the artifact)
 
 security:
   sensitive_paths:

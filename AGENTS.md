@@ -104,14 +104,16 @@ make ci      # fmt, vet, build, test, lint, vuln — what the workflows run
 
 `ci.yml` (Go 1.26.x and 1.27.x): gofmt, `go vet`, `go build`, `go test -race` with coverage.
 `lint.yml`: golangci-lint v2.15.0. `security.yml`: govulncheck v1.9.0 and gitleaks, weekly too.
-`codeql.yml`: CodeQL. `release.yml`: run by hand on `main` (patch, minor or major), runs the gate
-and **pushes the next tag**, which publishes a module version. Merging into `main` tags nothing.
+`codeql.yml`: CodeQL. `version.yml` bumps the patch of `SDK` in `internal/version/version.go` on every pull request into
+`main` (raise minor or major by hand). `release.yml` runs on every push to `main`: when `vSDK` is not
+tagged yet, it runs the gate and **pushes the tag**, which publishes a module version, then opens a
+GitHub Release; otherwise it does nothing.
 
 ## Branches
 
 Two long-lived branches: `develop`, where work lands, and `main`, what is released. Changes reach
 `main` only by a pull request from `develop`. There are no release branches: a version is a
-`vX.Y.Z` tag, pushed when `release.yml` is run on `main`.
+`vX.Y.Z` tag, pushed by `release.yml` when a pull request is merged into `main`.
 
 ## Before you finish
 

@@ -79,11 +79,12 @@ signing changes, record new fixtures from its signing code into `webhook/testdat
 
 ```text
 1  update CHANGELOG.md: move [Unreleased] under the new version
-2  set the version in internal/version/version.go to match
-3  merge develop into main (pull request), which tags nothing
-4  run release.yml on main by hand, choosing patch, minor or major: it runs the gate and pushes
-   the next tag
+2  open a pull request from develop into main: version.yml bumps the patch of SDK in
+   internal/version/version.go on the PR branch (for a minor or major, set it yourself)
+3  merge it: release.yml sees a version with no tag, runs the gate, pushes vX.Y.Z, opens a GitHub
+   Release and asks the Go module proxy for the new version
 ```
 
-A tag publishes a module version that cannot be changed, only retracted with a newer version. The
-first tag is the owner's decision.
+A tag publishes a module version that cannot be changed, only retracted (a `retract` directive in
+`go.mod`) in a newer version. A push whose version is already tagged releases nothing, so re-running
+is safe.

@@ -1,85 +1,115 @@
 name: Release
 
-# Run by hand from main (Actions > Release > Run workflow), choosing the part of
-# the version to bump; the tag it pushes is the release. Merging into main never
-# tags by itself: the version is decided when a release is run.
+# Releases qeet-id-go on merge to main — the same release flow as the Qeetrix packages. A Go
+# module is published by its tag: the Go proxy serves it from vX.Y.Z, so the tag is the release.
+#
+#   1. Open a PR into main. version.yml bumps the patch of `SDK` in internal/version/version.go on
+#      the PR branch; raise minor or major by hand.
+#   2. Merge to main. The gate job runs every check again.
+#   3. The release job runs in the `release` environment (give it required reviewers to approve
+#      each release). It pushes the vX.Y.Z tag, opens a GitHub Release and warms the Go proxy.
+#
+# Re-running is safe: if the tag already exists, nothing is released. A bad release is retracted
+# with a `retract` directive in go.mod in the next version; a tag is never moved.
+
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      bump:
-        description: Which version part to increment
-        type: choice
-        options: [patch, minor, major]
-        default: patch
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 permissions:
-  contents: write # push the version tag after a successful gate
+  contents: read
 
 jobs:
-  release:
+  gate:
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://pkg.go.dev/github.com/qeetgroup/qeet-id-go
+    timeout-minutes: 20
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # full history to find the latest tag
+          fetch-depth: 0 # tags must be visible
+          persist-credentials: false
 
-      - name: Determine next version
-        id: version
-        env:
-          # `type: choice` constrains this server-side, but keep it out of the
-          # script body anyway so the run block never interpolates input.
-          BUMP: ${{ inputs.bump || 'patch' }}
+      - id: version
+        name: is there anything to release?
         run: |
-          latest=$(git tag --list 'v*' --sort=-version:refname | head -1)
-          latest=${latest:-v0.0.0}
-          IFS='.' read -r major minor patch <<< "${latest#v}"
-          case "$BUMP" in
-            major) new_tag="v$((major + 1)).0.0" ;;
-            minor) new_tag="v${major}.$((minor + 1)).0" ;;
-            *)     new_tag="v${major}.${minor}.$((patch + 1))" ;;
-          esac
-          echo "Latest: $latest  ->  new: $new_tag"
-          echo "tag=$new_tag" >> "$GITHUB_OUTPUT"
+          set -uo pipefail
+          version=$(sed -nE 's/^const SDK = "([0-9]+\.[0-9]+\.[0-9]+)"$/\1/p' internal/version/version.go)
+          if [ -z "$version" ]; then
+            echo "::error::internal/version/version.go has no const SDK = \"X.Y.Z\"."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already released — nothing to do."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "v$version is new — releasing."
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      - uses: actions/setup-go@v7
+      # The same gate as CI. Nothing below runs when the version is unchanged.
+      - if: steps.version.outputs.release == 'true'
+        uses: actions/setup-go@v7
         with:
           go-version: '1.27.x'
           cache-dependency-path: go.mod
+      - if: steps.version.outputs.release == 'true'
+        run: go vet ./...
+      - if: steps.version.outputs.release == 'true'
+        run: go build ./...
+      - if: steps.version.outputs.release == 'true'
+        run: go test -race -count=1 ./...
 
-      # A Go module has nothing to "build" for release — go.mod/go.sum plus the
-      # tag are the published artifact (go get resolves it straight from the
-      # tag). So the gate below is the only thing standing between main and a
-      # public version: it must be green before we tag.
-      - run: go vet ./...
-      - run: go build ./...
-      - run: go test -race -count=1 ./...
-
-      # Tag AFTER a green gate so every tag == a version that actually builds.
-      - name: Push version tag and create GitHub release
+      - if: steps.version.outputs.release == 'false'
+        name: report that there is nothing to release
         env:
-          VERSION: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "## Nothing to release"
+            echo
+            echo "\`v$VERSION\` is already tagged."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    needs: gate
+    if: needs.gate.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write # push the version tag and create the release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: tag the release and open a GitHub Release
+        env:
+          TAG: v${{ needs.gate.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$VERSION"
-          git push origin "$VERSION"
-          gh release create "$VERSION" \
-            --title "$VERSION" \
-            --generate-notes \
-            --repo "${{ github.repository }}"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" --title "$TAG" --generate-notes --repo "${{ github.repository }}"
 
-      # Ask the module proxy to fetch the new version now, so `go get` and
-      # pkg.go.dev pick it up immediately instead of on first external request.
-      - name: Warm the Go module proxy
+      # The proxy fetches a version on first request; asking now makes pkg.go.dev list it promptly.
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.x'
+          cache: false
+      - name: warm the Go module proxy
         env:
-          VERSION: ${{ steps.version.outputs.tag }}
-          GOPROXY: https://proxy.golang.org
-        run: go list -m "github.com/qeetgroup/qeet-id-go@${VERSION}" || true
+          TAG: v${{ needs.gate.outputs.version }}
+        run: GOPROXY=https://proxy.golang.org GOFLAGS=-mod=mod go list -m "github.com/qeetgroup/qeet-id-go@$TAG" || true

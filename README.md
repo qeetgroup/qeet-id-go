@@ -391,7 +391,6 @@ Every command is in [CONTRIBUTING.md](CONTRIBUTING.md); what changed between ver
 | 🤝 [Contributing](CONTRIBUTING.md) | Setting up, commands, adding a method |
 | 📝 [Changelog](CHANGELOG.md) | What's in each version |
 | 🔒 [Security](SECURITY.md) | How to report a vulnerability |
-| 📄 [Licence](LICENSE) | The terms of use |
 
 ---
 

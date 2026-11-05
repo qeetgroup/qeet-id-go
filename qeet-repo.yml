@@ -7,7 +7,7 @@ context:
   type: repository
   level: L2
   canonical: true
-  last_verified: "2026-08-28"
+  last_verified: "2026-11-05"
 
 inheritance:
   organization: {repository: qeetgroup/qeet-context, level: L0}
@@ -18,68 +18,79 @@ repository:
   product: qeet-id
   type: sdk
   role: sdk
-  status: development        # v0.1.0; NEVER FETCHED by the Go module proxy
+  status: development        # version string 0.1.0; no tag pushed, never fetched by the module proxy
   visibility: public
   default_branch: main
 
 runtime:
   language: Go
-  version: "1.23"            # needs iter.Seq2
-  third_party_deps: none     # stdlib only — no go.sum exists
+  version: "1.26"            # go directive 1.26.0; CI tests 1.26.x and 1.27.x
+  support_policy: the two most recent Go releases
+  third_party_deps: none     # standard library only; no go.sum
 
 module:
   name: github.com/qeetgroup/qeet-id-go
-  package: qeetid
+  package: qeetid            # imported as: qeetid "github.com/qeetgroup/qeet-id-go"
+  subpackages:
+    webhook: verify and parse webhook deliveries
+    jwt: verify access tokens against the JWKS, net/http middleware
 
 architecture:
-  style: single-package-file-per-resource   # ADR-0001
-  client_shape: flat-service-fields         # ADR-0002 — 44 *Service fields on Client
-  shared_machinery: internal/               # ADR-0003
+  style: root-package-file-per-service        # ADR-0004
+  client_shape: flat-service-fields           # client.Users, client.Webhooks, ...
+  services: 48
+  machinery: unexported in the root package   # transport.go, errors.go, pagination.go, auth.go, options.go
   internal:
-    transport:  internal/transport   # HTTP, retry, form posts, errors
-    auth:       internal/auth        # JWKS cache + ES256 verify
-    constants:  internal/constants   # all defaults + header names
-    pagination: internal/pagination  # generic Paginate[T] -> iter.Seq2
-    marshal:    internal/marshal     # Envelope[T] items/data resolution
-    validation: internal/validation
-    version:    internal/version
-    testutil:   internal/testutil
+    version: internal/version                 # version string and User-Agent
 
 contracts:
   consumes:
-    api: qeet-id-server        # api/openapi/ — this SDK implements that contract
+    api: qeet-id-server        # api/openapi/{auth,management,federation,developer,operations}.yaml
     base_url: https://api.id.qeet.in
-  auth_scheme: "Authorization: ApiKey <qk_...>"
-  oauth_form_auth: "Basic <base64>"
+    jwks_url: https://api.id.qeet.in/.well-known/jwks.json
+  auth_schemes:
+    - "Authorization: ApiKey <key>"
+    - "Authorization: Bearer <token>   # service principal (client credentials) or token source"
+    - "Basic <client_id:client_secret>  # OAuth endpoints only"
+  webhook_signature: "X-Qeet-Signature: sha256=hex(HMAC-SHA256(secret, X-Qeet-Timestamp + '.' + body)); two values during rotation"
 
 defaults:
-  timeout: 10s
+  timeout_per_attempt: 30s
   max_retries: 2
-  max_response_bytes: 1MiB
-  jwks_cache_ttl: 5m
-  jwks_refresh_cooldown: 1m
-  retry_policy: 429 always; 5xx only when idempotent (GET/DELETE)
+  retry_backoff: 500ms..8s, exponential, jitter
+  max_retry_after: 60s
+  max_response_bytes: 32MiB
+  webhook_tolerance: 5m
+  jwt_leeway: 30s
+  jwks_cache_ttl: 10m
+  jwks_min_refresh_interval: 1m
+  retry_policy: >-
+    network/408/500/502/503/504 only for GET, HEAD, DELETE or a request with an Idempotency-Key;
+    429 or 503 with Retry-After for any request; never 401 or auth.session_revoked
 
 commands:
   build: make build
   test:  make test        # go test -race -count=1 ./...
   vet:   make vet
   fmt:   make fmt         # fails if gofmt -l is non-empty
-  lint:  make lint        # golangci-lint run
+  lint:  make lint        # golangci-lint v2.15.0
+  vuln:  make vuln        # govulncheck v1.9.0
   tidy:  make tidy
+  ci:    make ci
 
 ci:
   workflows: [ci.yml, codeql.yml, lint.yml, release.yml, security.yml]
-  matrix: ["1.23", "1.24"]
-  gates: [go vet, go build, go test -race + coverage, gofmt check, golangci-lint, govulncheck, gitleaks, CodeQL]
-  release: push main -> gate -> auto-tag vX.Y.Z + GitHub release (the tag IS the artifact)
+  matrix: ["1.26.x", "1.27.x"]
+  gates: [gofmt, go vet, go build, go test -race + coverage, golangci-lint, govulncheck, gitleaks, CodeQL]
+  release: push main -> gate -> auto-tag next patch vX.Y.Z + GitHub release (the tag IS the artifact)
 
 security:
   sensitive_paths:
-    - internal/auth/jwks.go       # ES256 verification
-    - webhooks_verify.go          # HMAC signature verification
-    - internal/transport/         # header + auth injection
-  never: [log an API key, skip signature verification, weaken retry idempotency rules]
+    - webhook/webhook.go     # HMAC verification, tolerance
+    - jwt/                   # ES256 verification, JWKS cache
+    - auth.go                # credentials and token caching
+    - transport.go           # auth headers, retry rules
+  never: [log a credential, skip signature or kid verification, retry a 401, widen retry rules]
 
 llm_context:
   primary_instructions: AGENTS.md

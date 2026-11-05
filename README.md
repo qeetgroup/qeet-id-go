@@ -1,72 +1,54 @@
 # qeet-id-go
 
-[![Go Version](https://img.shields.io/badge/go-1.23%2B-00ADD8?logo=go)](go.mod)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/qeetgroup/qeet-id-go.svg)](https://pkg.go.dev/github.com/qeetgroup/qeet-id-go)
+[![Go](https://img.shields.io/badge/go-1.26%20%7C%201.27-00ADD8?logo=go)](go.mod)
 
-The official server-side Go SDK for [Qeet ID](https://qeet.in) — the passkeys-first identity platform. One client, ~90 typed methods across users, organizations, roles, federation (OIDC/SAML/SCIM/LDAP), fine-grained authorization (RBAC/ReBAC/AuthZEN), AI-agent identities, compliance, and billing — with local JWT verification, automatic retries, auto-pagination, and webhook signature verification built in, on zero third-party dependencies.
+The Go SDK for [Qeet ID](https://qeet.in), the passkeys-first identity platform. Use it on your
+servers to manage tenants, users, groups, roles, applications, single sign-on, webhooks and the
+rest of Qeet ID, to receive webhook deliveries safely, and to verify Qeet ID access tokens in your
+own APIs.
 
-```go
-client := qeetid.New(qeetid.Config{APIKey: os.Getenv("QEETID_API_KEY")})
+- One client, `qeetid.NewClient`, with a service per area of the API: `client.Users`,
+  `client.Roles`, `client.Webhooks` and 45 more.
+- Typed errors that work with `errors.Is` and `errors.As`, carrying the server's error code and
+  request ID.
+- Safe automatic retries with backoff, `Retry-After` support and idempotency keys.
+- Pagination with Go iterators.
+- Package [`webhook`](#receiving-webhooks) to verify and parse webhook deliveries.
+- Package [`jwt`](#verifying-access-tokens) to verify access tokens locally, with HTTP middleware.
+- No dependencies outside the Go standard library.
 
-user, err := client.Users.Create(ctx, qeetid.CreateUserInput{Email: "ada@example.com"})
-claims, err := client.Sessions.Verify(ctx, token)
-allowed, err := client.Permissions.Check(ctx, qeetid.PermissionCheck{
-	User: claims.UserID, Tenant: claims.TenantID, Permission: "billing:write",
-})
-```
+> **Status:** the module has not had its first tagged release yet. Until v1.0.0 its API may change
+> between minor versions; see [CHANGELOG.md](CHANGELOG.md).
 
-New to Qeet ID, or to CIAM SDKs in general? Read [Concepts](#concepts) first — it explains every acronym below in plain English before you touch any code.
+## Contents
 
----
-
-## Table of contents
-
-- [Concepts](#concepts) — start here if any of the jargon above is unfamiliar
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick start](#quick-start)
-- [Without vs. with this SDK](#without-vs-with-this-sdk)
 - [Configuration](#configuration)
-- [Resource reference](#resource-reference)
-- [Core concepts, in code](#core-concepts-in-code)
-  - [Session verification (local JWKS)](#session-verification-local-jwks)
-  - [Choosing an authorization model](#choosing-an-authorization-model)
-  - [Pagination](#pagination)
-  - [Webhooks](#webhooks)
-  - [Zero-config discovery](#zero-config-discovery)
-  - [Error handling](#error-handling)
-  - [Observability](#observability)
-- [Architecture](#architecture)
-- [Testing your integration](#testing-your-integration)
+- [Authentication](#authentication)
+- [Errors](#errors)
+- [Retries and timeouts](#retries-and-timeouts)
+- [Idempotency](#idempotency)
+- [Pagination](#pagination)
+- [Receiving webhooks](#receiving-webhooks)
+- [Verifying access tokens](#verifying-access-tokens)
+- [OAuth flows](#oauth-flows)
+- [Services](#services)
+- [What the SDK does not cover](#what-the-sdk-does-not-cover)
+- [Logging](#logging)
 - [Examples](#examples)
-- [Documentation](#documentation)
-- [FAQ](#faq)
-- [Versioning and compatibility](#versioning-and-compatibility)
-- [Contributing](#contributing)
-- [Security](#security)
-- [Support](#support)
-- [License](#license)
-
-## Concepts
-
-A quick glossary before the code, for anyone new to identity platforms — skip ahead if these are all familiar.
-
-| Term | What it means here |
-|---|---|
-| **Tenant / Organization** | A customer account on Qeet ID. Every user, role, and resource belongs to exactly one. This SDK calls it `Organization`; the wire format still says `tenant_id` — same thing, two names. |
-| **API key** (`qk_…`) | A long-lived secret your *backend* uses to call the management API (create users, assign roles, ...). Never sent to a browser. |
-| **Session token** | A short-lived token issued to an *end user* after they log in. Your backend receives it on incoming requests and verifies it — that's what `Sessions.Verify` does. |
-| **JWT / ES256** | Session tokens are [JSON Web Tokens](https://jwt.io) signed with ES256 (an elliptic-curve algorithm). Signing means the token can't be forged; it doesn't mean it's secret — anyone can read the claims inside, only Qeet ID can produce a validly-signed one. |
-| **JWKS** | JSON Web Key Set — the *public* keys Qeet ID uses to sign tokens, published at a well-known URL. Verifying a token means checking its signature against a key in this set — no call back to Qeet ID needed once the keys are cached. |
-| **RBAC** | Role-Based Access Control — "does this user have the `admin` role, which grants `billing:write`?" The model most apps start with. |
-| **ReBAC** | Relationship-Based Access Control (Zanzibar/Google-Docs-style) — "can this user view this document *because* they're in the `eng` group, which was granted `viewer`?" Answers questions RBAC can't: per-resource sharing, nested group inheritance. |
-| **AuthZEN** | An open standard (OpenID) for a single authorization-check request/response shape that can be answered by *either* RBAC or ReBAC underneath — useful if you want one call site that doesn't need to know which model decided. |
-| **Webhook** | Qeet ID calling *your* server when something happens (`user.created`, ...). You must verify the signature before trusting the payload — see [Webhooks](#webhooks). |
+- [Versioning and Go support](#versioning-and-go-support)
+- [Contributing, security and license](#contributing-security-and-license)
 
 ## Requirements
 
-- **Go 1.23+** (the SDK uses `iter.Seq2` range-over-func iterators for pagination).
-- A Qeet ID account and a server-side API key (`qk_…`) — see [qeet.in](https://qeet.in) to create one.
+Go 1.26 or 1.27, the two Go releases currently supported by the Go team. The SDK follows Go's
+support policy: when a new Go release comes out, the oldest one is dropped.
+
+You need a Qeet ID tenant and a server-side credential: an API key, or a service principal's client
+ID and secret.
 
 ## Installation
 
@@ -74,8 +56,10 @@ A quick glossary before the code, for anyone new to identity platforms — skip 
 go get github.com/qeetgroup/qeet-id-go
 ```
 
+The package name is `qeetid`. `goimports` writes the import with that name:
+
 ```go
-import "github.com/qeetgroup/qeet-id-go"
+import qeetid "github.com/qeetgroup/qeet-id-go"
 ```
 
 ## Quick start
@@ -85,25 +69,30 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/qeetgroup/qeet-id-go"
+	qeetid "github.com/qeetgroup/qeet-id-go"
 )
 
 func main() {
-	// 1. Build one client, backed by your secret API key. Reuse it for the lifetime of your process — it's safe for concurrent use.
-	client := qeetid.New(qeetid.Config{
-		APIKey: os.Getenv("QEETID_API_KEY"), // a server-side qk_… key
-	})
-
-	// 2. Every method takes a context and returns (result, error) — no exceptions, no hidden panics on a 404 or a bad request.
+	// Create one client and share it; it is safe for concurrent use.
+	client, err := qeetid.NewClient(qeetid.WithAPIKey(os.Getenv("QEETID_API_KEY")))
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx := context.Background()
-	user, err := client.Users.Create(ctx, qeetid.CreateUserInput{
-		Email:       "ada@example.com",
+
+	user, err := client.Users.Create(ctx, qeetid.CreateUserParams{
+		TenantID:    os.Getenv("QEETID_TENANT_ID"),
+		Email:       "ada@brightleaffoods.in",
 		DisplayName: "Ada Lovelace",
 	})
+	if errors.Is(err, qeetid.ErrConflict) {
+		log.Fatal("a user with this email already exists")
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,235 +100,180 @@ func main() {
 }
 ```
 
+Every method takes a `context.Context` first and returns an `error` last. Path parameters come
+next, in the order the API path names them, then a parameter struct when the call has one, and
+optional `RequestOption` values last.
+
 > [!WARNING]
-> **Never** embed an API key in client-side code (browser, mobile). This SDK is for servers, workers, and CLIs only — it authenticates with a secret key that must never leave your backend.
-
-## Without vs. with this SDK
-
-The most common real-world task — verifying a session token on every incoming request — makes the difference concrete. Both snippets do the same thing; only one of them is safe to ship.
-
-<table>
-<tr><th>Without this SDK</th><th>With this SDK</th></tr>
-<tr valign="top">
-<td>
-
-```go
-// You'd have to: fetch JWKS, cache it, find the right key by kid, refresh on rotation, decode the JWT, verify the ES256 signature, check exp/nbf/iss/aud, and reject alg:"none"/"HS256" tokens (a real vulnerability class) — all before you even look at the claims.
-resp, _ := http.Get(issuer + "/.well-known/jwks.json")
-// ...decode JWKS...
-// ...parse JWT header, find matching kid...
-// ...verify ES256 signature by hand...
-// ...check exp, nbf, iss, aud manually...
-// ...decide what to do on an unknown kid...
-```
-
-~40-80 lines, and every one of those steps is a place to get a security-relevant detail wrong.
-
-</td>
-<td>
-
-```go
-claims, err := client.Sessions.Verify(
-	ctx, token, qeetid.VerifyOptions{
-		Issuer:   issuer,
-		Audience: audience,
-	},
-)
-if err != nil {
-	// invalid, expired, wrong issuer/audience, or an unsupported alg — all rejected
-	http.Error(w, "unauthorized", 401)
-	return
-}
-```
-
-One call. JWKS caching, key rotation, and the alg-confusion guard are handled for you.
-
-</td>
-</tr>
-</table>
+> API keys and client secrets belong on servers. Never ship one to a browser or a mobile app.
 
 ## Configuration
 
+Pass options to `NewClient`:
+
 ```go
-client := qeetid.New(qeetid.Config{
-	APIKey:     os.Getenv("QEETID_API_KEY"), // required
-	BaseURL:    "https://api.id.qeet.in",    // default; override for self-hosted
-	Timeout:    10 * time.Second,             // default; used only if HTTPClient is nil
-	MaxRetries: 2,                            // default; 429 + 5xx on idempotent calls
-	Headers:    http.Header{"X-Trace-Id": {traceID}}, // sent on every request
-	UserAgent:  "myapp/1.2.0",                // prepended to the SDK's own User-Agent
-	HTTPClient: &http.Client{ /* custom transport, proxy, mTLS, ... */ },
-	Logger:     myLogger{},                    // optional per-request observability hook
-})
+client, err := qeetid.NewClient(
+	qeetid.WithAPIKey(os.Getenv("QEETID_API_KEY")),
+	qeetid.WithTimeout(10*time.Second),             // per attempt; default 30s
+	qeetid.WithMaxRetries(3),                       // default 2; 0 turns retries off
+	qeetid.WithRetryDelay(time.Second, 15*time.Second),
+	qeetid.WithLogger(slog.Default()),              // default: no logging
+	qeetid.WithUserAgentSuffix("billing-worker/2.3.0"),
+	qeetid.WithHeader("X-Correlation-Id", corrID),  // sent with every request
+	qeetid.WithHTTPClient(&http.Client{Transport: myTransport}),
+)
 ```
 
-| Field | Default | Notes |
+| Option | Default | Notes |
 |---|---|---|
-| `APIKey` | — (required) | Server-side secret key |
-| `BaseURL` | `https://api.id.qeet.in` | Override for self-hosted deployments |
-| `Timeout` | `10s` | Ignored if `HTTPClient` is set — configure the timeout on your own client instead |
-| `MaxRetries` | `2` | Retry budget for `429`/`5xx` on idempotent requests |
-| `Headers` | none | Sent on every request; cannot override `Authorization`/`Accept`/`Content-Type`/`User-Agent` |
-| `UserAgent` | none | Prepended to (not replacing) the SDK's own UA string |
-| `HTTPClient` | internal default | Full transport override — proxying, custom TLS, etc. |
-| `Logger` | none (no-op) | Per-request observability hook, see [Observability](#observability) |
+| `WithAPIKey(key)` | none | Sends `Authorization: ApiKey <key>`. |
+| `WithClientCredentials(id, secret, scopes...)` | none | Fetches and renews service principal tokens. |
+| `WithTokenSource(ts)` | none | Sends `Authorization: Bearer <token>` from your own source. |
+| `WithBaseURL(url)` | `https://api.id.qeet.in` | Must be https; http is allowed only for a loopback host such as a local development server. |
+| `WithHTTPClient(c)` | a new `http.Client` | Custom transport, proxy or TLS settings. |
+| `WithTimeout(d)` | 30 seconds | Bounds each attempt. The context bounds the whole call. |
+| `WithMaxRetries(n)` | 2 | Retries happen only when they are safe; see below. |
+| `WithRetryDelay(min, max)` | 500 ms, 8 s | Bounds of the exponential backoff. |
+| `WithLogger(l)` | none | A `*slog.Logger`; see [Logging](#logging). |
+| `WithUserAgentSuffix(s)` | none | Appended to `qeet-id-go/<version> (<go version>; <os>/<arch>)`. |
+| `WithHeader(k, v)` | none | Cannot override the headers the client manages. |
 
-Build once, reuse everywhere — `*Client` is safe for concurrent use.
+Use exactly one credential option. A client without one can still call the public endpoints, such
+as `client.OAuth`, `client.Credentials.Verify` and `client.LDAP.Authenticate`; any other call
+returns `qeetid.ErrNoCredentials` without sending a request.
 
-## Resource reference
+## Authentication
 
-Every resource is a `*XService` field directly on `Client` — one field access away, no nesting required. The categories below are documentation groupings only (comment banners in `client.go`), not distinct Go types — they exist so this table (and your mental model) has a shape, not because the compiler enforces one.
-
-<details open>
-<summary><strong>Identity</strong> — who exists</summary>
-
-| Field | Manages |
-|---|---|
-| `Users` | Human user accounts — CRUD, bulk create/import, recycle bin, MFA reset, email/phone verification |
-| `Organizations` | Multi-tenant organizations |
-| `ServicePrincipals` | Machine identities for client-credentials (M2M) auth |
-| `Agents` | AI-agent identities — ephemeral tokens, suspend/resume/decommission lifecycle, kill-switch, sponsor transfer |
-| `Domains` | Custom domain verification |
-
-</details>
-
-<details open>
-<summary><strong>Authentication</strong> — proving who's calling</summary>
-
-| Field | Manages |
-|---|---|
-| `Sessions` | Local ES256 JWT verification against cached JWKS |
-| `OAuth` | RFC 8693 token exchange, RFC 7662 introspection, RFC 7009 revocation, RFC 8628 device flow, CIBA, signing keys, grants |
-| `OIDC` | OIDC client CRUD, shadow-AI discovery/review |
-| `SAML` | SAML SSO connections (Qeet ID as the SP, connecting out to a tenant's IdP) |
-| `SAMLProviders` | External SPs registered against this tenant's SAML IdP (Qeet ID as the IdP — the mirror image of `SAML`) |
-| `SCIM` | Tenant-admin SCIM provisioning config |
-| `LDAP` | LDAP/AD connections, bind test, direct-authenticate passthrough |
-| `Social` | Social-login provider config, linked identities |
-| `MFA` | Admin-initiated MFA factor reset |
-| `Credentials` | W3C Verifiable Credentials — issue, list, revoke, verify |
-| `AuthHooks` | HMAC-signed pre/post-login custom logic hooks (a multi-record collection) |
-| `AuthPolicy` | Password rules, MFA requirement, session duration |
-| `Policy` | Combined per-tenant security policy (IP lists, password rules, session/MFA settings) — an older, broader record alongside `AuthPolicy`/`IPRules` |
-| `IPRules` | IP allow/deny rules, a dry-run `Check`, and enforcement on/off |
-
-</details>
-
-<details open>
-<summary><strong>Authorization</strong> — what they can do</summary>
-
-| Field | Manages |
-|---|---|
-| `Roles` | RBAC roles |
-| `Permissions` | The RBAC permission catalog, a user's effective permissions, plus `Check`/`CheckAll`/`Explain` |
-| `Groups` | Group membership and group→role bindings |
-| `Relationships` | Zanzibar-style ReBAC — relation tuples, recursive `Check`, identity-graph `Graph` |
-| `Decisions` | AuthZEN unified `/evaluation` — one shape fronting both RBAC and ReBAC |
-
-</details>
-
-<details open>
-<summary><strong>Administration</strong> — tenant operations</summary>
-
-| Field | Manages |
-|---|---|
-| `Branding` | Hosted-login branding |
-| `Invitations` | Org invitations |
-| `EmailTemplates` | Transactional email templates |
-| `APIKeys` | Server-side API keys |
-| `Vault` | Encrypted secrets store |
-| `Webhooks` | Webhook subscriptions, deliveries, retries |
-| `AuditLogs` | Hash-chained audit log — read, free-text search, chain `Verify`, anomaly detection |
-| `Analytics` | Dashboard KPI overview |
-| `GDPR` | Erasure and data-export requests |
-| `Billing` | Plans, subscription, invoices, checkout |
-| `Retention` | Data-retention policy |
-| `RateLimits` | Per-tenant rate-limit overrides |
-| `LogSinks` | SIEM log forwarding |
-| `AdminLinks` | Delegated admin-portal links |
-
-</details>
+**API key.** The simplest choice for a backend:
 
 ```go
-role, _ := client.Roles.Create(ctx, qeetid.CreateRoleInput{Name: "editor", TenantID: tenantID})
-_ = client.Roles.AssignToUser(ctx, role.ID, user.ID, tenantID)
+client, err := qeetid.NewClient(qeetid.WithAPIKey(os.Getenv("QEETID_API_KEY")))
 ```
 
-## Core concepts, in code
-
-### Session verification (local JWKS)
-
-`Sessions.Verify` checks a Qeet-issued token's ES256 signature against the issuer's JWKS, then validates expiry/issuer/audience. The point of doing this *locally* rather than calling Qeet ID on every request: once the keys are cached, verification is a CPU operation, not a network round trip.
-
-```mermaid
-sequenceDiagram
-    participant App as Your server
-    participant SDK as qeet-id-go
-    participant Qeet as Qeet ID JWKS endpoint
-
-    App->>SDK: Sessions.Verify(ctx, token)
-    alt keys not cached, or unknown kid
-        SDK->>Qeet: GET /.well-known/jwks.json
-        Qeet-->>SDK: public keys
-        Note over SDK: cached 5 minutes
-    end
-    SDK->>SDK: verify ES256 signature<br/>check exp / nbf / iss / aud
-    SDK-->>App: Claims, or an error
-```
+**Service principal.** Short-lived tokens instead of a long-lived key. The client obtains a token
+with the OAuth client credentials grant, shares it across goroutines, and fetches a new one a
+minute before it expires:
 
 ```go
-claims, err := client.Sessions.Verify(ctx, token, qeetid.VerifyOptions{
-	Issuer:   "https://api.id.qeet.in",
-	Audience: "https://your-api.example.com",
-})
-if err != nil {
-	http.Error(w, "unauthorized", http.StatusUnauthorized)
-	return
+client, err := qeetid.NewClient(qeetid.WithClientCredentials(
+	os.Getenv("QEETID_CLIENT_ID"), os.Getenv("QEETID_CLIENT_SECRET"),
+	"user.read", "user.write", // optional: narrow the token's scopes
+))
+```
+
+**Any other token.** `WithTokenSource` takes anything with a
+`Token(ctx context.Context) (string, error)` method, such as an AI agent's token. A
+[`golang.org/x/oauth2`](https://pkg.go.dev/golang.org/x/oauth2) token source fits in a few lines,
+so the SDK does not depend on that module:
+
+```go
+qeetid.WithTokenSource(qeetid.TokenSourceFunc(func(context.Context) (string, error) {
+	t, err := ts.Token() // ts is an oauth2.TokenSource
+	if err != nil {
+		return "", err
+	}
+	return t.AccessToken, nil
+}))
+```
+
+## Errors
+
+When the API answers with an error status, methods return an `*qeetid.APIError`:
+
+```go
+user, err := client.Users.Get(ctx, userID)
+switch {
+case errors.Is(err, qeetid.ErrNotFound):
+	// no such user, or not visible to this credential
+case errors.Is(err, qeetid.ErrRateLimited):
+	// slow down; the client already retried
+case err != nil:
+	if apiErr, ok := errors.AsType[*qeetid.APIError](err); ok {
+		log.Printf("qeet id: %d %s: %s (request ID %s)",
+			apiErr.StatusCode, apiErr.Code, apiErr.Message, apiErr.RequestID)
+	}
+	return err
 }
-fmt.Println(claims.UserID, claims.TenantID, claims.Scope)
 ```
 
-### Choosing an authorization model
+`APIError` carries the whole error envelope: `StatusCode`, the stable machine `Code` (branch on
+it, never on `Message`), `Message`, `Detail`, `Fields` (per-field validation errors),
+`Metadata`, `RequestID` (quote it to support) and `RetryAfter`.
 
-You don't have to pick one — most apps use RBAC for coarse admin/member roles and add ReBAC only where per-resource sharing shows up (documents, projects, tickets). Use this table to decide where a given check belongs:
+| Sentinel | Matches |
+|---|---|
+| `ErrInvalidRequest` | 400 and 422, and OAuth errors other than `invalid_client` |
+| `ErrUnauthorized` | 401, and OAuth `invalid_client` |
+| `ErrSessionRevoked` | 401 with code `auth.session_revoked`: the session has ended; sign the person in again |
+| `ErrPaymentRequired` | 402: the tenant's plan does not cover the request |
+| `ErrForbidden` | 403 |
+| `ErrNotFound` | 404 |
+| `ErrConflict` | 409 |
+| `ErrRateLimited` | 429 |
+| `ErrUnavailable` | 503 |
+| `ErrNoCredentials` | an authenticated call on a client without a credential |
 
-| Question you're answering | Model | Method |
-|---|---|---|
-| "Does this user's *role* grant this permission?" | RBAC | `Permissions.Check` |
-| "...and *why* — which role, direct or via a group?" | RBAC | `Permissions.Explain` |
-| "Can this user access *this specific* document/project?" | ReBAC | `Relationships.Check` |
-| "Who — or what group — can reach this resource, and how?" | ReBAC | `Relationships.Graph` |
-| "One call site, don't care which model answers it" | AuthZEN | `Decisions.Evaluate` |
+The OAuth token endpoints answer in the RFC 6749 shape `{"error", "error_description"}`. Those
+failures are `*qeetid.OAuthError` values with a typed `Code` such as `qeetid.OAuthInvalidGrant`.
+
+A failure to reach the API wraps its cause, so `errors.Is(err, context.DeadlineExceeded)` and
+`errors.As(err, &netErr)` work. Error text never contains credentials.
+
+## Retries and timeouts
+
+The client retries a failed request only when retrying cannot apply it twice:
+
+| Failure | Retried for |
+|---|---|
+| Network error, 408, 500, 502, 503, 504 | GET and DELETE, and create calls that carry an idempotency key |
+| 429 or 503 **with** `Retry-After` (the server refused before acting) | every request |
+| 409 `idempotency.in_progress` | requests that carry an idempotency key |
+| 401, including `auth.session_revoked` | never |
+| any other 4xx | never |
+
+Retries use exponential backoff with jitter (between half and all of 500 ms × 2ⁿ, capped at 8 s by
+default). When the server sends `Retry-After`, the client waits exactly that long, up to
+`qeetid.MaxRetryAfter` (60 seconds); a longer wait is returned to you in `APIError.RetryAfter`. The
+client never sleeps past the context's deadline. Each attempt gets its own `WithTimeout`; the
+context you pass bounds the call as a whole.
+
+## Idempotency
+
+Nine calls accept an `Idempotency-Key`: `Users.Create`, `Groups.Create`, `Invitations.Create`,
+`ServicePrincipals.Create`, `APIKeys.Create`, `Agents.Create`, `Webhooks.Create`,
+`Billing.Checkout` and `Billing.PayInvoice`. A request sent again with the same key within 24 hours
+gets the first answer instead of acting twice.
+
+The client sends a random key with these calls by itself, so its own retries are safe. To make
+retries across process restarts or message redeliveries safe too, derive the key from your own
+data:
 
 ```go
-// RBAC — role-based checks, with an explainable grant path.
-ok, err := client.Permissions.Check(ctx, qeetid.PermissionCheck{
-	User: claims.UserID, Tenant: claims.TenantID, Permission: "billing:write",
-})
-explanation, err := client.Permissions.Explain(ctx, qeetid.PermissionCheck{ /* ... */ })
-
-// ReBAC — Zanzibar-style relationship tuples, resolved recursively.
-_, err = client.Relationships.Create(ctx, tenantID, qeetid.CreateTupleInput{
-	Object: "document:readme", Relation: "viewer", Subject: "group:eng#member",
-})
-result, err := client.Relationships.Check(ctx, tenantID, qeetid.CheckRelationInput{
-	Object: "document:readme", Relation: "viewer", UserID: userID,
-}, true) // explain=true
-
-// AuthZEN — one standard request/response shape fronting both models.
-decision, err := client.Decisions.Evaluate(ctx, tenantID, qeetid.EvaluateInput{
-	Subject:  qeetid.AuthZENSubject{Type: "user", ID: userID},
-	Resource: qeetid.AuthZENResource{Type: "document", ID: "readme"},
-	Action:   qeetid.AuthZENAction{Name: "view"},
-})
+user, err := client.Users.Create(ctx, params,
+	qeetid.WithIdempotencyKey("hr-import-2026-11-05-row-17"))
 ```
 
-### Pagination
+The same key with a different body is refused with `idempotency.key_reused`. Any other call refuses
+`WithIdempotencyKey` with an error, without sending the request, because the server would ignore the
+key.
 
-Every listable resource has an `All(...)` iterator that walks pages lazily. Break out early and paging stops immediately — no wasted requests for collections you only need the first few items from.
+## Pagination
+
+List methods return a `*qeetid.Page[T]`:
 
 ```go
-for user, err := range client.Users.All(ctx, qeetid.ListParams{Tenant: tenantID}) {
+page, err := client.Users.List(ctx, &qeetid.ListUsersParams{Limit: 50, Status: qeetid.UserStatusActive})
+for _, u := range page.Items { /* ... */ }
+if page.HasMore() {
+	next, err := client.Users.List(ctx, &qeetid.ListUsersParams{Limit: 50, Cursor: page.NextCursor})
+}
+```
+
+Lists the server pages with cursors also have an `All` method that returns a Go iterator over every
+item. It fetches a page only when the loop needs it; breaking out of the loop stops paging:
+
+```go
+for user, err := range client.Users.All(ctx, &qeetid.ListUsersParams{Limit: 100}) {
 	if err != nil {
 		return err
 	}
@@ -347,164 +281,206 @@ for user, err := range client.Users.All(ctx, qeetid.ListParams{Tenant: tenantID}
 }
 ```
 
-The lower-level `List(...)` returning `{ Data, NextCursor }` is still available if you want to drive the cursor yourself (e.g. rendering one page per HTTP request in your own API).
+Some lists come back whole but are capped by the server. When such a list is longer than the cap,
+`Page.Truncated` is true: narrow the request with a filter to see the rest. `Page.Total` reports
+the number of matches for lists that count them.
 
-### Webhooks
+## Receiving webhooks
 
-Qeet ID calling your server is only trustworthy once you've checked the signature — anyone can `POST` a fake payload to a public URL. Always verify against the **raw** request body, before any JSON re-serialization (which can reorder keys and invalidate the signature check).
+Package [`webhook`](https://pkg.go.dev/github.com/qeetgroup/qeet-id-go/webhook) verifies the
+deliveries Qeet ID sends and parses them into typed events. Each delivery is a POST whose body is
+the envelope `{id, type, tenant_id, occurred_at, data}`. `X-Qeet-Signature` holds `sha256=` and the
+hex HMAC-SHA256, keyed by the subscription's secret, of `X-Qeet-Timestamp`, a `.`, and the raw
+body.
 
 ```go
-func handleWebhook(w http.ResponseWriter, r *http.Request) {
-	event, err := qeetid.ConstructEventFromRequest(r, os.Getenv("QEETID_WEBHOOK_SECRET"))
-	if err != nil {
-		http.Error(w, "bad signature", http.StatusBadRequest)
-		return
-	}
-	switch event.Type {
-	case "user.created":
-		var payload map[string]any
-		_ = event.Data(&payload)
-	}
-	w.WriteHeader(http.StatusOK)
+import "github.com/qeetgroup/qeet-id-go/webhook"
+
+v, err := webhook.NewVerifier(os.Getenv("QEETID_WEBHOOK_SECRET"))
+if err != nil {
+	log.Fatal(err)
 }
-```
-
-`VerifyWebhookSignature(body, sigHeader, secret)` and `ConstructEvent(body, sigHeader, eventHeader, secret)` are available when you already have the raw bytes outside an `*http.Request`.
-
-### Zero-config discovery
-
-If you self-host Qeet ID and don't want to hardcode where JWKS lives, fetch it from the standard OIDC discovery document instead:
-
-```go
-doc, _ := qeetid.Discover(ctx, "https://api.id.qeet.in", nil)
-
-// Or build a client that self-wires JWKS from discovery — useful for self-hosted instances serving JWKS on a non-default path.
-client, doc, err := qeetid.NewFromDiscovery(ctx, qeetid.Config{
-	APIKey:  os.Getenv("QEETID_API_KEY"),
-	BaseURL: "https://id.acme.internal",
-})
-```
-
-### Error handling
-
-Every failed API call returns a `*qeetid.Error` — never a generic `fmt.Errorf`, never a panic. Inspect it with `errors.As`:
-
-```go
-var e *qeetid.Error
-if errors.As(err, &e) {
-	switch {
-	case e.IsUnauthorized():
-		// 401 — bad or expired API key
-	case e.IsForbidden():
-		// 403 — API key lacks scope for this call
-	case e.IsNotFound():
-		// 404 — the resource ID doesn't exist
-	case e.IsRateLimited():
-		time.Sleep(time.Duration(e.RetryAfterSeconds) * time.Second)
+http.Handle("POST /webhooks/qeet-id", v.Handler(func(ctx context.Context, e *webhook.Event) error {
+	switch e.Type {
+	case webhook.UserCreated:
+		var d webhook.UserData
+		if err := e.DecodeData(&d); err != nil {
+			return err
+		}
+		// provision d.UserID in your system
+	case webhook.SessionRevoked:
+		var d webhook.SessionRevokedData
+		if err := e.DecodeData(&d); err != nil {
+			return err
+		}
+		// stop accepting tokens with sid == d.SessionID
 	}
-	log.Printf("qeetid error %d %s (request %s)", e.Status, e.Code, e.RequestID)
-}
-```
-
-`e.RequestID` is the value to quote in a support ticket — it's echoed from the `X-Request-Id` response header on every call.
-
-### Observability
-
-`Config.Logger` is an optional hook invoked once per request, after retries settle, with method/path/status/duration/request-ID. Implement it with whatever structured logger you already use — the SDK core has zero logging dependencies, so adopting it never pulls in `slog`/`zap`/`zerolog` on your behalf.
-
-```go
-type slogLogger struct{}
-
-func (slogLogger) LogRequest(method, path string, status int, d time.Duration, requestID string) {
-	slog.Info("qeetid request",
-		"method", method, "path", path, "status", status,
-		"duration_ms", d.Milliseconds(), "request_id", requestID)
-}
-```
-
-## Architecture
-
-```mermaid
-flowchart LR
-    A[Your application] --> B["qeetid.Client<br/>(~35 *XService fields)"]
-    B --> C["*XService<br/>(UsersService, WebhooksService, ...)"]
-    C --> D["internal/transport<br/>auth header · retry/backoff · JSON · typed errors"]
-    D --> E[Qeet ID API]
-```
-
-The public API is one flat package; the implementation is layered into focused `internal/` packages (`transport`, `auth`, `pagination`, `marshal`, ...), each independently unit-tested and inaccessible from outside this module — Go's compiler enforces that boundary, not just convention. See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for the full breakdown, and [docs/design-decisions/](docs/design-decisions/) for the trade-offs behind the flat (not nested, not per-resource-package) API.
-
-## Testing your integration
-
-The SDK doesn't ship a mock client — `Config.HTTPClient` and `Config.BaseURL` are the extension points. Point at an `httptest.Server` for unit tests, or swap `BaseURL` for a sandbox/staging Qeet ID instance for integration tests:
-
-```go
-srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// assert on r.Method / r.URL.Path / r.Body, then write canned JSON
-	w.Write([]byte(`{"id":"u1","email":"a@b.com","status":"active"}`))
+	return nil // 204; returning an error answers 500 and Qeet ID retries later
 }))
-defer srv.Close()
-
-client := qeetid.New(qeetid.Config{APIKey: "qk_test", BaseURL: srv.URL})
 ```
+
+The verifier:
+
+- compares signatures in constant time;
+- refuses a timestamp more than five minutes from its clock, so a captured delivery cannot be
+  replayed (`webhook.WithTolerance` changes the window);
+- accepts a delivery when any of the comma-separated signatures matches. For 24 hours after a secret
+  rotation Qeet ID signs with both secrets, so endpoints keep working while you deploy the new one;
+  `webhook.WithSecret` lets one verifier accept both on your side too.
+
+If you handle the request yourself, read the raw body and pass it unchanged; re-encoding the JSON
+breaks the signature:
+
+```go
+body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
+event, err := v.ConstructEvent(body, r.Header)
+if errors.Is(err, webhook.ErrInvalidDelivery) {
+	http.Error(w, "invalid signature", http.StatusUnauthorized)
+	return
+}
+```
+
+Deliveries are at least once and in no guaranteed order: deduplicate on `Event.ID`. Use
+`webhook.Sign` to build signed deliveries in tests of your own handlers.
+
+## Verifying access tokens
+
+Package [`jwt`](https://pkg.go.dev/github.com/qeetgroup/qeet-id-go/jwt) verifies Qeet ID access
+tokens in your own API without a call to Qeet ID per request. It accepts only ES256, requires a
+`kid` that names a published key, and checks the signature, `exp` and `nbf` (with 30 seconds of
+leeway), the issuer and the audience.
+
+```go
+import "github.com/qeetgroup/qeet-id-go/jwt"
+
+// The issuer is in Qeet ID's discovery document.
+meta, err := client.OAuth.Discover(ctx)
+v, err := jwt.NewVerifier(meta.Issuer, "https://api.example.com", jwt.WithJWKSURL(meta.JWKSURI))
+
+mux.Handle("GET /invoices", v.Middleware(jwt.RequireScope("invoices.read")(invoicesHandler)))
+
+func invoicesHandler(w http.ResponseWriter, r *http.Request) {
+	claims, _ := jwt.ClaimsFromContext(r.Context())
+	// claims.UserID, claims.TenantID, claims.SessionID, claims.Scope ...
+}
+```
+
+The verifier caches the signing keys for ten minutes and fetches them again when a token names a key
+it has not seen, so key rotations need no restart. Unknown key IDs trigger at most one fetch a
+minute, and cached keys keep working through an outage of the key endpoint. The middleware answers
+401 for a missing or invalid token, 403 when `RequireScope` fails, and 503 when the keys cannot be
+fetched.
+
+Local verification cannot see a session that ended before its token expired. Access tokens are
+short-lived; where revocation must take effect at once, handle the `session.revoked` webhook event
+or call `client.OAuth.Introspect`.
+
+## OAuth flows
+
+`client.OAuth` runs the requests in which your application is the OAuth client of Qeet ID. These
+calls authenticate the application with its client ID and secret, not with the client's own
+credential:
+
+```go
+tok, err := client.OAuth.ExchangeCode(ctx, qeetid.ExchangeCodeParams{
+	ClientID: appID, ClientSecret: appSecret,
+	Code: code, RedirectURI: "https://app.example.com/callback", CodeVerifier: verifier,
+})
+if oauthErr, ok := errors.AsType[*qeetid.OAuthError](err); ok && oauthErr.Code == qeetid.OAuthInvalidGrant {
+	// the code was used, expired or does not match
+}
+fmt.Println(tok.ExpiresIn, tok.Expiry())
+```
+
+| Method | Endpoint |
+|---|---|
+| `ClientCredentials` | `POST /v1/oauth/token` |
+| `ExchangeCode`, `RefreshToken`, `ExchangeToken` (RFC 8693), `PollDeviceToken`, `PollBackchannelToken` | `POST /v1/oauth/token-code` |
+| `AuthorizeDevice` (RFC 8628) | `POST /v1/oauth/device_authorization` |
+| `AuthorizeBackchannel` (CIBA) | `POST /v1/oauth/bc-authorize` |
+| `Introspect` (RFC 7662), `Revoke` (RFC 7009) | `POST /oauth/introspect`, `POST /oauth/revoke` |
+| `UserInfo`, `Discover` | `GET /v1/oauth/userinfo`, `GET /.well-known/openid-configuration` |
+
+`Token.ExpiresIn` is the lifetime in seconds; `Token.Expiry()` turns it into a time.
+
+## Services
+
+| Area | Services |
+|---|---|
+| Tenants and people | `Tenants`, `Users`, `Groups`, `Invitations`, `Domains`, `Branding` |
+| Access control | `Roles`, `Permissions`, `ABACPolicies`, `Relationships`, `AuthZEN` |
+| Sign-in and security | `AuthPolicy`, `SecurityPolicy`, `IPRules`, `Threats` |
+| Applications and federation | `OAuth`, `OIDCClients`, `OAuthResources`, `OAuthGrants`, `DeviceAuthorizations`, `SigningKeys`, `ServicePrincipals`, `SocialProviders`, `SAMLConnections`, `SAMLServiceProviders`, `OIDCConnections`, `LDAP`, `Directory`, `SCIM`, `AdminPortalLinks` |
+| Developer | `APIKeys`, `Agents`, `Credentials`, `AuthHooks`, `Webhooks`, `Secrets`, `TokenVault` |
+| Operations | `Audit`, `Analytics`, `Compliance`, `Retention`, `GDPR`, `LogSinks`, `RateLimits`, `EmailTemplates`, `EmailDelivery`, `Billing`, `Entitlements` |
+
+Each method's documentation names the API endpoint it calls. A few examples:
+
+```go
+// Give a user a role in a tenant.
+err := client.Roles.AssignToUser(ctx, userID, tenantID, roleID)
+
+// Ask whether the user holds a permission, and why.
+check, err := client.Permissions.Check(ctx, &qeetid.CheckPermissionParams{
+	UserID: userID, TenantID: tenantID, Permission: "billing.write", Explain: true,
+})
+
+// Relationship-based access: may Ada view the document?
+rel, err := client.Relationships.Check(ctx, tenantID, qeetid.CheckRelationParams{
+	Object: "document:readme", Relation: "viewer", UserID: userID,
+}, nil)
+
+// Sign a person in through an LDAP connection: a token pair or a second-factor challenge.
+res, err := client.LDAP.Authenticate(ctx, connectionID, qeetid.LDAPAuthenticateParams{
+	Username: "ada", Password: password,
+})
+switch r := res.(type) {
+case *qeetid.TokenPair:
+	// signed in
+case *qeetid.MFAChallenge:
+	// complete r.MFAToken at POST /v1/auth/mfa
+}
+```
+
+## What the SDK does not cover
+
+The SDK is for servers acting for a tenant. It leaves out, on purpose:
+
+- end-user self-service calls that act on the signed-in person (`/v1/me`, `/v1/auth/*`, passkey
+  registration, MFA enrolment, account export and deletion), which belong in the browser and
+  mobile SDKs;
+- browser redirect and form-post flows (OAuth authorize and logout, social and SAML sign-in, admin
+  portal pages) and the SCIM protocol endpoints that identity providers call;
+- console features: activity history and its live stream, universal search, notifications, the
+  Qeet AI assistant, contact-sales leads and pre-signup checkout.
+
+## Logging
+
+`WithLogger` takes a `*slog.Logger`. The client logs each HTTP attempt at debug level (method, path,
+status, duration, attempt number and the server's request ID) and each retry at warn level (reason
+and wait). It never logs credentials, headers, query strings or bodies.
 
 ## Examples
 
-Runnable examples live in [`examples/`](./examples), grouped the same way as the resources above:
+Runnable examples are in the package documentation on
+[pkg.go.dev](https://pkg.go.dev/github.com/qeetgroup/qeet-id-go#pkg-examples), and complete
+programs are in [examples/](examples/):
 
-| Example | Demonstrates |
+| Program | Shows |
 |---|---|
-| [`authentication/verify-session`](./examples/authentication/verify-session) | Verify a token + check a permission |
-| [`authentication/mfa`](./examples/authentication/mfa) | List/reset a user's MFA factors |
-| [`authorization/check-permission`](./examples/authorization/check-permission) | RBAC check with `Explain` |
-| [`authorization/relation-tuples`](./examples/authorization/relation-tuples) | ReBAC tuple + Identity Graph |
-| [`identity/users`](./examples/identity/users) | Auto-paginate a large collection |
-| [`identity/organizations`](./examples/identity/organizations) | Create + list organizations |
-| [`administration/webhooks`](./examples/administration/webhooks) | Verify inbound webhooks |
-| [`administration/auditlogs`](./examples/administration/auditlogs) | Free-text search + chain verify |
-| [`enterprise`](./examples/enterprise) | Auth middleware + `Logger` + production `Config`, all together |
+| [quickstart](examples/quickstart) | API key, creating a user, assigning a role, paging through users |
+| [service-principal](examples/service-principal) | Client credentials and debug logging |
+| [webhook-receiver](examples/webhook-receiver) | Verifying and handling webhook deliveries |
+| [resource-server](examples/resource-server) | Protecting an API with access-token middleware |
 
-## Documentation
+## Versioning and Go support
 
-- [docs/architecture/ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) — internal package layering, why the API is flat
-- [docs/design-decisions/](./docs/design-decisions/) — ADRs for the non-obvious calls
-- [docs/FUTURE.md](./docs/FUTURE.md) — capabilities other CIAM SDKs have that Qeet ID's backend doesn't yet
-- [pkg.go.dev/github.com/qeetgroup/qeet-id-go](https://pkg.go.dev/github.com/qeetgroup/qeet-id-go) — generated API reference
+The module follows [semantic versioning](https://semver.org). Releases are Git tags; until v1.0.0
+a minor version may change the API, and [CHANGELOG.md](CHANGELOG.md) lists every breaking change.
+The SDK supports the two most recent Go releases, matching the Go team's own
+[release policy](https://go.dev/doc/devel/release#policy).
 
-## FAQ
+## Contributing, security and license
 
-**Do I need this SDK on my frontend?** No. This is a server-side SDK — it holds a secret API key that must never reach a browser. Frontend/mobile apps talk to Qeet ID's hosted-login flow directly; your backend uses this SDK to verify the resulting session token and manage your account data.
-
-**What's the difference between an API key and a session token?** An API key (`qk_…`) is *yours* — long-lived, identifies your backend to the management API. A session token is issued to *one of your end users* after they log in — short-lived, verified with `Sessions.Verify`. See [Concepts](#concepts).
-
-**Why does verification happen locally instead of calling Qeet ID?** Speed and resilience: once JWKS keys are cached (5 minutes, auto-refreshed on rotation), verifying a token is pure CPU — no added latency on your request path, and no outage risk if Qeet ID's API is briefly unreachable.
-
-**What happens if my API key is compromised?** Rotate it immediately via `client.APIKeys.Rotate(ctx, id)` or the Qeet ID console. See [SECURITY.md](./SECURITY.md) if the compromise is from a vulnerability in this SDK itself.
-
-**Does this SDK retry on every error?** No — only `429` (rate limited) and `5xx` on idempotent requests (`GET`/`DELETE`). A `POST` that fails with a `5xx` is *not* retried automatically, since the server may have already applied the mutation before failing — retrying blindly could double-create a resource. See [Configuration](#configuration) for `MaxRetries`.
-
-**Can I use this against a self-hosted Qeet ID instance?** Yes — set `Config.BaseURL`, or use [`NewFromDiscovery`](#zero-config-discovery) if your instance serves JWKS at a non-default path.
-
-## Versioning and compatibility
-
-This SDK follows [Semantic Versioning](https://semver.org/). It is currently **pre-1.0** — minor versions may include breaking changes, documented in [CHANGELOG.md](./CHANGELOG.md). Once a resource's request/response shape stabilizes against the live backend, breaking it is treated as a real cost, not a free rename.
-
-Supported Go versions: the two most recent major Go releases (currently 1.23 and 1.24), matching the CI matrix in [.github/workflows/ci.yml](.github/workflows/ci.yml).
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, code conventions, and how to add a new resource.
-
-## Security
-
-See [SECURITY.md](./SECURITY.md) to report a vulnerability. Please don't open a public issue for security reports.
-
-## Support
-
-- **Bugs / feature requests:** [open an issue](https://github.com/qeetgroup/qeet-id-go/issues)
-- **Qeet ID platform questions:** [qeet.in](https://qeet.in)
-- **Security reports:** see [SECURITY.md](./SECURITY.md) — do not use public issues
-
-## License
-
-[MIT](./LICENSE)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development commands. Report vulnerabilities privately as
+[SECURITY.md](SECURITY.md) describes. The SDK is released under the terms in [LICENSE](LICENSE).

@@ -1,8 +1,9 @@
 name: Release
 
+# Run by hand from main (Actions > Release > Run workflow), choosing the part of
+# the version to bump; the tag it pushes is the release. Merging into main never
+# tags by itself: the version is decided when a release is run.
 on:
-  push:
-    branches: [main] # every merge to main gates, then tags — the tag IS the release
   workflow_dispatch:
     inputs:
       bump:

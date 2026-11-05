@@ -80,8 +80,9 @@ signing changes, record new fixtures from its signing code into `webhook/testdat
 ```text
 1  update CHANGELOG.md: move [Unreleased] under the new version
 2  set the version in internal/version/version.go to match
-3  merge to main — release.yml runs the gate and pushes the next patch tag (bump with the
-   workflow's manual dispatch for a minor or major)
+3  merge develop into main (pull request), which tags nothing
+4  run release.yml on main by hand, choosing patch, minor or major: it runs the gate and pushes
+   the next tag
 ```
 
 A tag publishes a module version that cannot be changed, only retracted with a newer version. The

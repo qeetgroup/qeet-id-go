@@ -39,12 +39,12 @@ linters:
     rules:
       # Test helpers and fixtures may use insecure-looking values on purpose.
       - path: _test\.go
-        linters: [gosec, bodyclose]
-      # Error and reason codes such as "authpolicy.password_too_short" are not
-      # credentials.
+        linters: [gosec, bodyclose, noctx]
+      # Codes such as "authpolicy.password_too_short", "credential.issued" or
+      # an OAuth token type URN are identifiers, not credentials.
       - linters: [gosec]
         text: G101
-        source: '(ReasonCode|ErrorCode)[A-Za-z]* += "[a-z_.]+"'
+        source: '= "(urn:ietf:params:oauth:[a-z:_-]+|[a-z_]+(\.[a-z_]+)+)"'
 
 formatters:
   enable:

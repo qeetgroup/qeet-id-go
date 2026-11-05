@@ -108,7 +108,7 @@ type jwksServer struct {
 func newJWKSServer(t *testing.T, signers ...*signer) *jwksServer {
 	t.Helper()
 	js := &jwksServer{signers: signers}
-	js.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	js.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		js.fetches.Add(1)
 		if js.down.Load() {
 			http.Error(w, "unavailable", http.StatusServiceUnavailable)

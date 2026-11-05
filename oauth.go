@@ -571,6 +571,7 @@ func setIf(form url.Values, key, value string) {
 // stringList decodes a JSON string or array of strings.
 type stringList []string
 
+// UnmarshalJSON accepts a string or an array of strings.
 func (l *stringList) UnmarshalJSON(b []byte) error {
 	var one string
 	if err := json.Unmarshal(b, &one); err == nil {

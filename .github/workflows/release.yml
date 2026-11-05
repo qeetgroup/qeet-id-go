@@ -25,7 +25,7 @@ jobs:
       name: production
       url: https://pkg.go.dev/github.com/qeetgroup/qeet-id-go
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # full history to find the latest tag
 
@@ -47,10 +47,10 @@ jobs:
           echo "Latest: $latest  ->  new: $new_tag"
           echo "tag=$new_tag" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
-          go-version: '1.24'
-          cache-dependency-path: go.sum
+          go-version: '1.27.x'
+          cache-dependency-path: go.mod
 
       # A Go module has nothing to "build" for release — go.mod/go.sum plus the
       # tag are the published artifact (go get resolves it straight from the

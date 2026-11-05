@@ -42,8 +42,8 @@ type ClientCredentialsParams struct {
 	ClientID string
 	// ClientSecret is the service principal's secret.
 	ClientSecret string
-	// Scope narrows the token to these space-separated scopes. Empty asks for
-	// every scope the service principal holds.
+	// Scope is sent as the grant's scope parameter. The server ignores it
+	// today: the token always carries every scope the service principal holds.
 	Scope string
 }
 

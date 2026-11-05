@@ -93,8 +93,9 @@ func WithAPIKey(key string) Option {
 // WithClientCredentials authenticates every request with an access token that
 // the client obtains for a service principal with the OAuth client credentials
 // grant (POST /v1/oauth/token). The client caches the token and fetches a new
-// one shortly before it expires. scopes, when given, narrows the token to those
-// scopes.
+// one shortly before it expires. scopes, when given, are sent with the grant,
+// but the server ignores them today: the token carries every scope the service
+// principal holds.
 func WithClientCredentials(clientID, clientSecret string, scopes ...string) Option {
 	return optionFunc(func(c *clientConfig) {
 		if clientID == "" || clientSecret == "" {

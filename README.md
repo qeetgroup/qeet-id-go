@@ -128,7 +128,6 @@ without sending the request.
 // Service principal: one token shared across goroutines, renewed a minute before it expires.
 client, err := qeetid.NewClient(qeetid.WithClientCredentials(
 	os.Getenv("QEETID_CLIENT_ID"), os.Getenv("QEETID_CLIENT_SECRET"),
-	"user.read", "user.write", // optional: narrow the token's scopes
 ))
 ```
 

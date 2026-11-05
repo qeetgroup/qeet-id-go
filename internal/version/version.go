@@ -1,8 +1,17 @@
-// Package version holds the SDK's release version, isolated from the root
-// package so internal/transport can reference it (via internal/constants)
-// without importing the root package and creating an import cycle.
+// Package version holds the module's release version and the User-Agent built
+// from it, so the root package and its sub-packages report the same value.
 package version
 
-// SDKVersion is the released version of this SDK. The root package
-// re-exports it as qeetid.Version.
-const SDKVersion = "0.1.0"
+import (
+	"runtime"
+)
+
+// SDK is the release version of the module. Keep it equal to the tag being
+// released; it is sent in the User-Agent header.
+const SDK = "0.1.0"
+
+// UserAgent identifies the SDK, its version, the Go runtime and the platform,
+// for example "qeet-id-go/0.1.0 (go1.27.1; linux/amd64)".
+func UserAgent() string {
+	return "qeet-id-go/" + SDK + " (" + runtime.Version() + "; " + runtime.GOOS + "/" + runtime.GOARCH + ")"
+}

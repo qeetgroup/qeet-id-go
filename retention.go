@@ -2,54 +2,76 @@ package qeetid
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/qeetgroup/qeet-id-go/internal/transport"
+	"net/http"
+	"time"
 )
 
-// RetentionPolicy controls automatic purging of soft-deleted users.
+// RetentionService manages how long a tenant keeps soft-deleted users.
+type RetentionService struct{ c *Client }
+
+// Get returns the tenant's retention policy.
+//
+// API: GET /v1/tenants/{tenantID}/retention
+func (s *RetentionService) Get(ctx context.Context, tenantID string, opts ...RequestOption) (*RetentionPolicy, error) {
+	return call[RetentionPolicy](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/retention",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// Update replaces the tenant's retention policy.
+//
+// API: PUT /v1/tenants/{tenantID}/retention
+func (s *RetentionService) Update(ctx context.Context, tenantID string, params RetentionPolicy, opts ...RequestOption) (*RetentionPolicy, error) {
+	return call[RetentionPolicy](ctx, s.c, &request{
+		method:   http.MethodPut,
+		path:     "/v1/tenants/{tenantID}/retention",
+		pathArgs: []string{tenantID},
+		body:     params,
+	}, opts)
+}
+
+// Preview counts the users the policy would purge now, without deleting anything.
+//
+// API: POST /v1/tenants/{tenantID}/retention/preview
+func (s *RetentionService) Preview(ctx context.Context, tenantID string, opts ...RequestOption) (*RetentionPreview, error) {
+	return call[RetentionPreview](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/retention/preview",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// Run purges the users the policy makes ripe now, ahead of the scheduled sweep.
+//
+// API: POST /v1/tenants/{tenantID}/retention/run
+func (s *RetentionService) Run(ctx context.Context, tenantID string, opts ...RequestOption) (*RetentionRun, error) {
+	return call[RetentionRun](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/retention/run",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// RetentionPolicy sets how long a tenant keeps soft-deleted users before purging them.
 type RetentionPolicy struct {
+	DeletedUsersDays    int  `json:"deleted_users_days"`
 	DeletedUsersEnabled bool `json:"deleted_users_enabled"`
-	DeletedUsersDays    int  `json:"deleted_users_days"` // clamped server-side to [1, 3650]
+	// When the policy was last changed; absent until it is set.
+	UpdatedAt time.Time `json:"updated_at,omitzero"`
+	// Who last changed it.
+	UpdatedBy      string `json:"updated_by,omitempty"`
+	UpdatedByEmail string `json:"updated_by_email,omitempty"`
 }
 
-// RetentionPreviewResult is a dry-run count — nothing is deleted.
-type RetentionPreviewResult struct {
-	RipeDeletedUsers int `json:"ripe_deleted_users"`
+// RetentionPreview is the result of RetentionService.Preview.
+type RetentionPreview struct {
 	DeletedUsersDays int `json:"deleted_users_days"`
+	RipeDeletedUsers int `json:"ripe_deleted_users"`
 }
 
-// RetentionRunResult reports how many records Run actually purged.
-type RetentionRunResult struct {
+// RetentionRun is the result of RetentionService.Run.
+type RetentionRun struct {
 	Purged int `json:"purged"`
-}
-
-// RetentionService manages the tenant's data-retention policy.
-type RetentionService struct{ t *transport.Transport }
-
-func (s *RetentionService) Get(ctx context.Context, tenantID string) (*RetentionPolicy, error) {
-	var out RetentionPolicy
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/retention", transport.RequestOptions{}, &out)
-	return &out, err
-}
-
-func (s *RetentionService) Put(ctx context.Context, tenantID string, in RetentionPolicy) (*RetentionPolicy, error) {
-	var out RetentionPolicy
-	err := s.t.Put(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/retention", in, &out)
-	return &out, err
-}
-
-// Preview reports how many records are currently ripe for purge, without
-// deleting anything.
-func (s *RetentionService) Preview(ctx context.Context, tenantID string) (*RetentionPreviewResult, error) {
-	var out RetentionPreviewResult
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/retention/preview", nil, &out)
-	return &out, err
-}
-
-// Run purges ripe records immediately, ahead of the scheduled sweep.
-func (s *RetentionService) Run(ctx context.Context, tenantID string) (*RetentionRunResult, error) {
-	var out RetentionRunResult
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/retention/run", nil, &out)
-	return &out, err
 }

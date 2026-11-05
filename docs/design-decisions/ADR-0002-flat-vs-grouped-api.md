@@ -1,7 +1,7 @@
 # ADR-0002: Flat `Client` fields, not nested namespace groups
 
-**Status:** Accepted (superseded an earlier grouped design in the same
-implementation pass)
+**Status:** Accepted; still in force under [ADR-0004](ADR-0004-sdk-design.md). The service list
+has changed since (for example `Sessions` moved to package `jwt`); `client.go` is the current list.
 
 ## Context
 

@@ -1,6 +1,7 @@
 # ADR-0001: Single package, file-per-resource
 
-**Status:** Accepted
+**Status:** Amended by [ADR-0004](ADR-0004-sdk-design.md) (2026-11-05): the API resources stay in
+one package, and two leaf packages, `webhook` and `jwt`, now serve programs that need no API client.
 
 ## Context
 

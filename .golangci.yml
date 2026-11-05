@@ -1,0 +1,52 @@
+version: "2"
+
+run:
+  tests: true
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gosec
+    - intrange
+    - misspell
+    - noctx
+    - nolintlint
+    - revive
+    - unconvert
+    - usestdlibvars
+  settings:
+    revive:
+      rules:
+        # Every exported identifier carries a doc comment that starts with its name.
+        - name: exported
+          arguments: [checkPrivateReceivers, sayRepetitiveInsteadOfStutters]
+        - name: package-comments
+        - name: var-naming
+        - name: receiver-naming
+        - name: error-strings
+        - name: error-naming
+        - name: errorf
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: indent-error-flow
+        - name: unused-parameter
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      # Test helpers and fixtures may use insecure-looking values on purpose.
+      - path: _test\.go
+        linters: [gosec, bodyclose]
+      # Error and reason codes such as "authpolicy.password_too_short" are not
+      # credentials.
+      - linters: [gosec]
+        text: G101
+        source: '(ReasonCode|ErrorCode)[A-Za-z]* += "[a-z_.]+"'
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

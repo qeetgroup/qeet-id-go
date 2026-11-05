@@ -2,114 +2,114 @@ package qeetid
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/qeetgroup/qeet-id-go/internal/marshal"
-	"github.com/qeetgroup/qeet-id-go/internal/transport"
-	"github.com/qeetgroup/qeet-id-go/internal/validation"
+	"net/http"
+	"time"
 )
 
-// Provider is a tenant's registered OAuth2 endpoint config for one third-party
-// service. ClientSecret is never returned by the API.
-type Provider struct {
-	ID           string `json:"id"`
-	Provider     string `json:"provider"`
-	ClientID     string `json:"client_id"`
-	AuthorizeURL string `json:"authorize_url"`
-	TokenURL     string `json:"token_url"`
-	Scopes       string `json:"scopes"`
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
+// TokenVaultService stores third-party OAuth tokens for people and hands out live access tokens on
+// their behalf.
+type TokenVaultService struct{ c *Client }
+
+// RegisterProvider registers, or replaces, a third-party OAuth provider for the tenant.
+//
+// API: POST /v1/tenants/{tenantID}/vault/tokens/providers
+func (s *TokenVaultService) RegisterProvider(ctx context.Context, tenantID string, params RegisterTokenVaultProviderParams, opts ...RequestOption) (*TokenVaultProvider, error) {
+	return call[TokenVaultProvider](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/vault/tokens/providers",
+		pathArgs: []string{tenantID},
+		body:     params,
+	}, opts)
 }
 
-type RegisterProviderInput struct {
-	Provider     string `json:"provider"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
-	AuthorizeURL string `json:"authorize_url"`
-	TokenURL     string `json:"token_url"`
+// ListProviders lists the tenant's registered providers.
+//
+// API: GET /v1/tenants/{tenantID}/vault/tokens/providers
+func (s *TokenVaultService) ListProviders(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[TokenVaultProvider], error) {
+	return call[Page[TokenVaultProvider]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/vault/tokens/providers",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// DeleteProvider removes a provider.
+//
+// API: DELETE /v1/tenants/{tenantID}/vault/tokens/providers/{provider}
+func (s *TokenVaultService) DeleteProvider(ctx context.Context, tenantID string, provider string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/tenants/{tenantID}/vault/tokens/providers/{provider}",
+		pathArgs: []string{tenantID, provider},
+	}, nil, opts)
+}
+
+// ListConnections lists the third-party accounts the calling person connected.
+//
+// API: GET /v1/vault/tokens
+func (s *TokenVaultService) ListConnections(ctx context.Context, opts ...RequestOption) (*Page[TokenVaultConnection], error) {
+	return call[Page[TokenVaultConnection]](ctx, s.c, &request{method: http.MethodGet, path: "/v1/vault/tokens"}, opts)
+}
+
+// AccessToken returns a live access token for the calling person's connected account, refreshing it
+// first when needed. The refresh token is never returned.
+//
+// API: GET /v1/vault/tokens/{provider}/access-token
+func (s *TokenVaultService) AccessToken(ctx context.Context, provider string, opts ...RequestOption) (*TokenVaultAccessToken, error) {
+	return call[TokenVaultAccessToken](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/vault/tokens/{provider}/access-token",
+		pathArgs: []string{provider},
+	}, opts)
+}
+
+// Disconnect disconnects the calling person's account at a provider.
+//
+// API: DELETE /v1/vault/tokens/{provider}
+func (s *TokenVaultService) Disconnect(ctx context.Context, provider string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/vault/tokens/{provider}",
+		pathArgs: []string{provider},
+	}, nil, opts)
+}
+
+// RegisterTokenVaultProviderParams is the request body of TokenVaultService.RegisterProvider.
+type RegisterTokenVaultProviderParams struct {
+	// A short key naming the third-party service, e.g. "slack", "github", "google", or any custom name.
+	Provider     string `json:"provider,omitempty"`
+	ClientID     string `json:"client_id,omitempty"`
+	ClientSecret string `json:"client_secret,omitempty"`
+	AuthorizeURL string `json:"authorize_url,omitempty"`
+	TokenURL     string `json:"token_url,omitempty"`
 	Scopes       string `json:"scopes,omitempty"`
 }
 
-// GrantMeta is the non-secret view of a connected account.
-type GrantMeta struct {
-	Provider          string `json:"provider"`
-	ExternalAccountID string `json:"external_account_id,omitempty"`
-	Scope             string `json:"scope,omitempty"`
-	ExpiresAt         string `json:"expires_at,omitempty"`
-	CreatedAt         string `json:"created_at"`
-	UpdatedAt         string `json:"updated_at"`
+// TokenVaultProvider is a third-party OAuth provider registered with the token vault. Its client
+// secret is never returned.
+type TokenVaultProvider struct {
+	AuthorizeURL string    `json:"authorize_url,omitempty"`
+	ClientID     string    `json:"client_id,omitempty"`
+	CreatedAt    time.Time `json:"created_at,omitzero"`
+	ID           string    `json:"id,omitempty"`
+	Provider     string    `json:"provider,omitempty"`
+	Scopes       string    `json:"scopes,omitempty"`
+	TokenURL     string    `json:"token_url,omitempty"`
+	UpdatedAt    time.Time `json:"updated_at,omitzero"`
 }
 
-// AccessTokenResult is the wire shape of the live-access-token response.
-type AccessTokenResult struct {
-	AccessToken string `json:"access_token"`
+// TokenVaultConnection is a third-party account a person connected to the token vault, without its
+// tokens.
+type TokenVaultConnection struct {
+	CreatedAt         time.Time `json:"created_at,omitzero"`
+	ExpiresAt         time.Time `json:"expires_at,omitzero"`
+	ExternalAccountID string    `json:"external_account_id,omitempty"`
+	Provider          string    `json:"provider,omitempty"`
+	Scope             string    `json:"scope,omitempty"`
+	UpdatedAt         time.Time `json:"updated_at,omitzero"`
 }
 
-// TokenVaultService is a per-tenant encrypted store for third-party OAuth
-// tokens (Slack, GitHub, Google, or any custom OAuth2 provider an admin
-// registers) — distinct from VaultService, which is a generic encrypted-secrets
-// store. A user connects their account once via a standard authorization-code
-// ceremony; from then on a caller (typically an AI agent or backend
-// integration acting on that user's behalf) asks for a live access token via
-// GetAccessToken and never sees — or needs to handle — the underlying refresh
-// token.
-//
-// The browser-redirect OAuth-dance endpoints (GET
-// /v1/vault/tokens/{provider}/connect, which starts the ceremony, and the GET
-// /v1/vault/tokens/callback return leg) are end-user browser flows and are
-// intentionally not wrapped here — the same exclusion reasoning used throughout
-// this SDK for login/signup/consent-redirect endpoints.
-type TokenVaultService struct{ t *transport.Transport }
-
-// RegisterProvider registers (or, on conflict, updates) a third-party OAuth
-// provider config for the tenant.
-func (s *TokenVaultService) RegisterProvider(ctx context.Context, tenantID string, in RegisterProviderInput) (*Provider, error) {
-	var out Provider
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/vault/tokens/providers", in, &out)
-	return &out, err
-}
-
-// ListProviders lists the tenant's registered third-party OAuth providers.
-func (s *TokenVaultService) ListProviders(ctx context.Context, tenantID string) ([]Provider, error) {
-	var env marshal.Envelope[Provider]
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/vault/tokens/providers", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-// DeleteProvider removes a third-party OAuth provider config from the tenant.
-func (s *TokenVaultService) DeleteProvider(ctx context.Context, tenantID, provider string) error {
-	return s.t.Delete(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/vault/tokens/providers/"+url.PathEscape(provider), nil)
-}
-
-// ListGrants lists the caller's own connected-account grants. Tenant and user
-// are resolved from the authenticated principal (never from a path segment or
-// body), matching the implicit-scoping pattern used elsewhere (e.g.
-// WebhooksService.Create/Get/Delete).
-func (s *TokenVaultService) ListGrants(ctx context.Context) ([]GrantMeta, error) {
-	var env marshal.Envelope[GrantMeta]
-	err := s.t.Get(ctx, "/v1/vault/tokens", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-// GetAccessToken returns a live access token for provider, scoped to the
-// authenticated caller's own tenant/user context, transparently refreshing it
-// first if it's expired (or about to be) and a refresh token is on file. The
-// raw refresh token itself is never returned.
-func (s *TokenVaultService) GetAccessToken(ctx context.Context, provider string) (*AccessTokenResult, error) {
-	if err := validation.Required("provider", provider); err != nil {
-		return nil, err
-	}
-	var out AccessTokenResult
-	err := s.t.Get(ctx, "/v1/vault/tokens/"+url.PathEscape(provider)+"/access-token", transport.RequestOptions{}, &out)
-	return &out, err
-}
-
-// Disconnect disconnects the authenticated caller's own connected account for
-// provider.
-func (s *TokenVaultService) Disconnect(ctx context.Context, provider string) error {
-	if err := validation.Required("provider", provider); err != nil {
-		return err
-	}
-	return s.t.Delete(ctx, "/v1/vault/tokens/"+url.PathEscape(provider), nil)
+// TokenVaultAccessToken is the result of TokenVaultService.AccessToken.
+type TokenVaultAccessToken struct {
+	AccessToken string `json:"access_token,omitempty"`
 }

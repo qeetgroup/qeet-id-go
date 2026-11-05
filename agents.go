@@ -2,146 +2,250 @@ package qeetid
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/qeetgroup/qeet-id-go/internal/marshal"
-	"github.com/qeetgroup/qeet-id-go/internal/transport"
+	"net/http"
+	"time"
 )
 
-type Agent struct {
-	ID              string   `json:"id"`
-	TenantID        string   `json:"tenant_id"`
-	Name            string   `json:"name"`
-	Scopes          []string `json:"scopes"`
-	TokenTTLSeconds int      `json:"token_ttl_seconds"`
-	Disabled        bool     `json:"disabled"`
-	CreatedAt       string   `json:"created_at"`
-	Secret          string   `json:"secret,omitempty"` // only on create
+// AgentsService manages AI agent identities, their sponsors and their lifecycle.
+type AgentsService struct{ c *Client }
+
+// Create registers an agent. The result carries its secret, shown only once.
+//
+// It accepts WithIdempotencyKey. Without one, the client sends a random key so that a retry cannot
+// apply the request twice.
+//
+// API: POST /v1/tenants/{tenantID}/agents
+func (s *AgentsService) Create(ctx context.Context, tenantID string, params CreateAgentParams, opts ...RequestOption) (*Agent, error) {
+	return call[Agent](ctx, s.c, &request{
+		method:     http.MethodPost,
+		path:       "/v1/tenants/{tenantID}/agents",
+		pathArgs:   []string{tenantID},
+		body:       params,
+		idempotent: true,
+	}, opts)
 }
 
-type CreateAgentInput struct {
-	Name            string   `json:"name"`
+// List lists a tenant's agents. Page.Truncated reports a list cut short by the server's cap.
+//
+// API: GET /v1/tenants/{tenantID}/agents
+func (s *AgentsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[Agent], error) {
+	return call[Page[Agent]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/agents",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// Update enables or disables an agent.
+//
+// API: PATCH /v1/tenants/{tenantID}/agents/{id}
+func (s *AgentsService) Update(ctx context.Context, tenantID string, agentID string, params UpdateAgentParams, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodPatch,
+		path:     "/v1/tenants/{tenantID}/agents/{agentID}",
+		pathArgs: []string{tenantID, agentID},
+		body:     params,
+	}, nil, opts)
+}
+
+// Delete deletes an agent.
+//
+// API: DELETE /v1/tenants/{tenantID}/agents/{id}
+func (s *AgentsService) Delete(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) error {
+	return s.c.do(ctx, &request{
+		method:   http.MethodDelete,
+		path:     "/v1/tenants/{tenantID}/agents/{agentID}",
+		pathArgs: []string{tenantID, agentID},
+	}, nil, opts)
+}
+
+// Suspend suspends an agent. Its tokens stop working until Resume.
+//
+// API: POST /v1/tenants/{tenantID}/agents/{id}/suspend
+func (s *AgentsService) Suspend(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
+	return call[AgentStatusResult](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/{agentID}/suspend",
+		pathArgs: []string{tenantID, agentID},
+	}, opts)
+}
+
+// Resume makes a suspended agent active again.
+//
+// API: POST /v1/tenants/{tenantID}/agents/{id}/resume
+func (s *AgentsService) Resume(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
+	return call[AgentStatusResult](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/{agentID}/resume",
+		pathArgs: []string{tenantID, agentID},
+	}, opts)
+}
+
+// Decommission decommissions an agent for good. It cannot be resumed.
+//
+// API: POST /v1/tenants/{tenantID}/agents/{id}/decommission
+func (s *AgentsService) Decommission(ctx context.Context, tenantID string, agentID string, opts ...RequestOption) (*AgentStatusResult, error) {
+	return call[AgentStatusResult](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/{agentID}/decommission",
+		pathArgs: []string{tenantID, agentID},
+	}, opts)
+}
+
+// SuspendAll suspends every active agent of the tenant at once (the kill switch).
+//
+// API: POST /v1/tenants/{tenantID}/agents/kill-all
+func (s *AgentsService) SuspendAll(ctx context.Context, tenantID string, opts ...RequestOption) (*SuspendedAgents, error) {
+	return call[SuspendedAgents](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/kill-all",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// ResumeAll makes every suspended agent of the tenant active again.
+//
+// API: POST /v1/tenants/{tenantID}/agents/resume-all
+func (s *AgentsService) ResumeAll(ctx context.Context, tenantID string, opts ...RequestOption) (*ResumedAgents, error) {
+	return call[ResumedAgents](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/resume-all",
+		pathArgs: []string{tenantID},
+	}, opts)
+}
+
+// RotateSecret replaces an agent's secret. The old secret keeps working for the overlap given.
+//
+// API: POST /v1/tenants/{tenantID}/agents/{id}/rotate-secret
+func (s *AgentsService) RotateSecret(ctx context.Context, tenantID string, agentID string, params RotateSecretParams, opts ...RequestOption) (*RotatedAgentSecret, error) {
+	return call[RotatedAgentSecret](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/{agentID}/rotate-secret",
+		pathArgs: []string{tenantID, agentID},
+		body:     params,
+	}, opts)
+}
+
+// ListSponsoredBy lists the agents a person sponsors. Page.Truncated reports a list cut short by the
+// server's cap.
+//
+// API: GET /v1/tenants/{tenantID}/agents/sponsored-by/{userID}
+func (s *AgentsService) ListSponsoredBy(ctx context.Context, tenantID string, userID string, opts ...RequestOption) (*Page[Agent], error) {
+	return call[Page[Agent]](ctx, s.c, &request{
+		method:   http.MethodGet,
+		path:     "/v1/tenants/{tenantID}/agents/sponsored-by/{userID}",
+		pathArgs: []string{tenantID, userID},
+	}, opts)
+}
+
+// TransferSponsorship gives every agent a person sponsors to another sponsor, as when the person
+// leaves.
+//
+// API: POST /v1/tenants/{tenantID}/agents/sponsored-by/{userID}/transfer
+func (s *AgentsService) TransferSponsorship(ctx context.Context, tenantID string, userID string, params TransferSponsorshipParams, opts ...RequestOption) (*SponsorshipTransfer, error) {
+	return call[SponsorshipTransfer](ctx, s.c, &request{
+		method:   http.MethodPost,
+		path:     "/v1/tenants/{tenantID}/agents/sponsored-by/{userID}/transfer",
+		pathArgs: []string{tenantID, userID},
+		body:     params,
+	}, opts)
+}
+
+// Token mints a short-lived access token for an agent from its ID and secret. Agent tokens are minted
+// again, never refreshed.
+//
+// The endpoint is public: the client sends no credentials with this request.
+//
+// API: POST /v1/agents/token
+func (s *AgentsService) Token(ctx context.Context, params AgentTokenParams, opts ...RequestOption) (*AgentToken, error) {
+	return call[AgentToken](ctx, s.c, &request{method: http.MethodPost, path: "/v1/agents/token", body: params, public: true}, opts)
+}
+
+// CreateAgentParams is the request body of AgentsService.Create.
+type CreateAgentParams struct {
+	Name            string   `json:"name,omitempty"`
 	Scopes          []string `json:"scopes,omitempty"`
-	TokenTTLSeconds int      `json:"token_ttl_seconds,omitempty"`
+	TokenTTLSeconds *int     `json:"token_ttl_seconds,omitempty"`
+	// The named human owner accountable for this agent. Must be a member of this tenant.
+	SponsorUserID string `json:"sponsor_user_id,omitempty"`
 }
 
-// UpdateAgentInput's only mutable field, per the backend, is Disabled.
-type UpdateAgentInput struct {
-	Disabled bool `json:"disabled"`
+// Agent is an AI agent identity. Its secret is returned only when it is created.
+type Agent struct {
+	CreatedAt       time.Time `json:"created_at,omitzero"`
+	Disabled        bool      `json:"disabled"`
+	ID              string    `json:"id,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	Scopes          []string  `json:"scopes,omitempty"`
+	Secret          string    `json:"secret,omitempty"`
+	SponsorUserID   string    `json:"sponsor_user_id,omitempty"`
+	Status          string    `json:"status,omitempty"`
+	TokenTTLSeconds int       `json:"token_ttl_seconds"`
+	// When the agent was last issued a token, to the minute.
+	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
+	// Present while the secret replaced at its last rotation still works, until then.
+	PreviousSecretExpiresAt time.Time `json:"previous_secret_expires_at,omitzero"`
 }
 
-type AgentTokenResult struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	Scope       string `json:"scope,omitempty"`
+// UpdateAgentParams is the request body of AgentsService.Update.
+type UpdateAgentParams struct {
+	Disabled *bool `json:"disabled,omitempty"`
 }
 
-// AgentStatus is the lifecycle state returned by Suspend/Resume/Decommission.
-type AgentStatus struct {
-	Status string `json:"status"` // active | suspended | decommissioned
+// AgentStatusResult is the result of AgentsService.Suspend.
+type AgentStatusResult struct {
+	Status AgentStatus `json:"status,omitempty"`
 }
 
-// KillAllResult reports how many agents an incident-response kill-switch
-// suspended.
-type KillAllResult struct {
+// AgentStatus is a string enumeration used by AgentStatusResult.Status.
+type AgentStatus string
+
+// Values of AgentStatus. The server may add values; handle an unknown one gracefully.
+const (
+	AgentStatusActive         AgentStatus = "active"
+	AgentStatusSuspended      AgentStatus = "suspended"
+	AgentStatusDecommissioned AgentStatus = "decommissioned"
+)
+
+// SuspendedAgents is the result of AgentsService.SuspendAll.
+type SuspendedAgents struct {
 	Suspended int `json:"suspended"`
 }
 
-// TransferSponsorshipInput names the new sponsor for an offboarded user's
-// agents.
-type TransferSponsorshipInput struct {
-	ToUserID string `json:"to_user_id"`
+// ResumedAgents is the result of AgentsService.ResumeAll.
+type ResumedAgents struct {
+	Resumed int `json:"resumed"`
 }
 
-// TransferSponsorshipResult reports how many agents were transferred.
-type TransferSponsorshipResult struct {
+// RotatedAgentSecret is the result of AgentsService.RotateSecret.
+type RotatedAgentSecret struct {
+	ID     string `json:"id,omitempty"`
+	Secret string `json:"secret,omitempty"`
+	// When the old secret stops working.
+	PreviousSecretExpiresAt time.Time `json:"previous_secret_expires_at,omitzero"`
+}
+
+// TransferSponsorshipParams is the request body of AgentsService.TransferSponsorship.
+type TransferSponsorshipParams struct {
+	// Must be a member of this tenant.
+	ToUserID string `json:"to_user_id,omitempty"`
+}
+
+// SponsorshipTransfer is the result of AgentsService.TransferSponsorship.
+type SponsorshipTransfer struct {
 	Transferred int `json:"transferred"`
 }
 
-// AgentsService manages AI-agent identities: ephemeral tokens and the
-// suspend/resume/decommission lifecycle.
-type AgentsService struct{ t *transport.Transport }
-
-func (s *AgentsService) Create(ctx context.Context, tenantID string, in CreateAgentInput) (*Agent, error) {
-	var out Agent
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents", in, &out)
-	return &out, err
+// AgentTokenParams is the request body of AgentsService.Token.
+type AgentTokenParams struct {
+	AgentID string `json:"agent_id,omitempty"`
+	Secret  string `json:"secret,omitempty"`
 }
 
-func (s *AgentsService) Delete(ctx context.Context, tenantID, id string) error {
-	return s.t.Delete(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents/"+url.PathEscape(id), nil)
-}
-
-func (s *AgentsService) List(ctx context.Context, tenantID string) ([]Agent, error) {
-	var env marshal.Envelope[Agent]
-	err := s.t.Get(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents", transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-// Update toggles Disabled — the only field the backend allows mutating here.
-func (s *AgentsService) Update(ctx context.Context, tenantID, id string, in UpdateAgentInput) (*Agent, error) {
-	var out Agent
-	err := s.t.Patch(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents/"+url.PathEscape(id), in, &out)
-	return &out, err
-}
-
-// Token mints a short-lived access token for an AI agent.
-func (s *AgentsService) Token(ctx context.Context, tenantID, agentID, secret, scope string) (*AgentTokenResult, error) {
-	body := map[string]string{
-		"tenant_id": tenantID,
-		"agent_id":  agentID,
-		"secret":    secret,
-	}
-	if scope != "" {
-		body["scope"] = scope
-	}
-	var out AgentTokenResult
-	err := s.t.Post(ctx, "/v1/agents/token", body, &out)
-	return &out, err
-}
-
-// Suspend reversibly disables an agent — it can be Resumed.
-func (s *AgentsService) Suspend(ctx context.Context, tenantID, id string) (*AgentStatus, error) {
-	var out AgentStatus
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents/"+url.PathEscape(id)+"/suspend", nil, &out)
-	return &out, err
-}
-
-// Resume reverses a Suspend.
-func (s *AgentsService) Resume(ctx context.Context, tenantID, id string) (*AgentStatus, error) {
-	var out AgentStatus
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents/"+url.PathEscape(id)+"/resume", nil, &out)
-	return &out, err
-}
-
-// Decommission is terminal — a decommissioned agent cannot be Resumed.
-func (s *AgentsService) Decommission(ctx context.Context, tenantID, id string) (*AgentStatus, error) {
-	var out AgentStatus
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents/"+url.PathEscape(id)+"/decommission", nil, &out)
-	return &out, err
-}
-
-// KillAll is an incident-response switch: suspends every agent in the tenant.
-func (s *AgentsService) KillAll(ctx context.Context, tenantID string) (*KillAllResult, error) {
-	var out KillAllResult
-	err := s.t.Post(ctx, "/v1/tenants/"+url.PathEscape(tenantID)+"/agents/kill-all", nil, &out)
-	return &out, err
-}
-
-// ListSponsoredBy lists every agent a given human user sponsors.
-func (s *AgentsService) ListSponsoredBy(ctx context.Context, tenantID, userID string) ([]Agent, error) {
-	path := "/v1/tenants/" + url.PathEscape(tenantID) + "/agents/sponsored-by/" + url.PathEscape(userID)
-	var env marshal.Envelope[Agent]
-	err := s.t.Get(ctx, path, transport.RequestOptions{}, &env)
-	return env.Resolve(), err
-}
-
-// TransferSponsorship reassigns every agent sponsored by userID to a new
-// sponsor — the standard step when offboarding a human sponsor.
-func (s *AgentsService) TransferSponsorship(ctx context.Context, tenantID, userID string, in TransferSponsorshipInput) (*TransferSponsorshipResult, error) {
-	path := "/v1/tenants/" + url.PathEscape(tenantID) + "/agents/sponsored-by/" + url.PathEscape(userID) + "/transfer"
-	var out TransferSponsorshipResult
-	err := s.t.Post(ctx, path, in, &out)
-	return &out, err
+// AgentToken is a short-lived access token minted for an agent.
+type AgentToken struct {
+	AccessToken string `json:"access_token,omitempty"`
+	ExpiresIn   int    `json:"expires_in"`
+	Scope       string `json:"scope,omitempty"`
+	TokenType   string `json:"token_type,omitempty"`
 }

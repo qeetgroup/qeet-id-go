@@ -94,12 +94,9 @@ for `jwt`, runnable examples.
 
 | Workflow | Runs |
 |---|---|
-| `ci.yml` | Go 1.26.x and 1.27.x: gofmt, vet, build, `go test -race` with coverage |
-| `lint.yml` | golangci-lint v2.15.0 |
-| `security.yml` | govulncheck v1.9.0, gitleaks; weekly |
-| `codeql.yml` | CodeQL |
-| `version.yml` | pull requests into `main`: bumps the patch of `SDK` in `internal/version/version.go` |
-| `release.yml` | push to `main`: when that version has no tag, the gate, then the `vX.Y.Z` tag and a GitHub release |
+| `ci.yml` (Verify) | pull requests into `develop` and `main`: build, vet, golangci-lint v2.15.0, govulncheck v1.9.0, gitleaks |
+| `release.yml` | push to `main`: when that version has no tag, the `vX.Y.Z` tag and a GitHub release |
+| local (`make ci`) | gofmt, vet, build, `go test -race`, golangci-lint, govulncheck, on both supported Go releases |
 
 ## Documentation authority
 

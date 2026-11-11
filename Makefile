@@ -1,4 +1,4 @@
-# Tool versions. Keep them in step with .github/workflows/lint.yml and security.yml.
+# Tool versions. Keep them in step with .github/workflows/ci.yml (Verify).
 GOLANGCI_LINT_VERSION ?= v2.15.0
 GOVULNCHECK_VERSION   ?= v1.9.0
 

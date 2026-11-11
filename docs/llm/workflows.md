@@ -69,9 +69,9 @@ signing changes, record new fixtures from its signing code into `webhook/testdat
 
 ```text
 1  go get -u ./... && go mod tidy          (there are no module dependencies today)
-2  go directive = the older of the two supported Go releases; CI matrix = both
-3  tool versions: Makefile (GOLANGCI_LINT_VERSION, GOVULNCHECK_VERSION),
-   lint.yml, security.yml — keep them equal
+2  go directive = the older of the two supported Go releases; test on both locally
+3  tool versions: Makefile (GOLANGCI_LINT_VERSION, GOVULNCHECK_VERSION) and
+   .github/workflows/ci.yml — keep them equal
 4  make ci
 ```
 
@@ -79,9 +79,9 @@ signing changes, record new fixtures from its signing code into `webhook/testdat
 
 ```text
 1  update CHANGELOG.md: move [Unreleased] under the new version
-2  open a pull request from develop into main: version.yml bumps the patch of SDK in
-   internal/version/version.go on the PR branch (for a minor or major, set it yourself)
-3  merge it: release.yml sees a version with no tag, runs the gate, pushes vX.Y.Z, opens a GitHub
+2  raise SDK in internal/version/version.go (patch, minor or major) on develop, then open a pull
+   request from develop into main; Verify runs on it
+3  merge it: release.yml sees a version with no tag, pushes vX.Y.Z, opens a GitHub
    Release and asks the Go module proxy for the new version
 ```
 

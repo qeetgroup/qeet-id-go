@@ -79,10 +79,9 @@ commands:
   ci:    make ci
 
 ci:
-  workflows: [ci.yml, codeql.yml, lint.yml, release.yml, security.yml, version.yml]
-  matrix: ["1.26.x", "1.27.x"]
-  gates: [gofmt, go vet, go build, go test -race + coverage, golangci-lint, govulncheck, gitleaks, CodeQL]
-  release: PR into main -> version.yml bumps SDK in internal/version; push main -> no tag yet -> gate -> tag vX.Y.Z + GitHub release (the tag IS the artifact)
+  workflows: [ci.yml, release.yml]
+  verify: [go build, go vet, golangci-lint, govulncheck, gitleaks]   # PRs into develop and main; go test -race on both Go releases runs locally (make ci)
+  release: PR develop -> main raises SDK in internal/version by hand; push main -> no tag yet -> tag vX.Y.Z + GitHub release (the tag IS the artifact)
 
 security:
   sensitive_paths:

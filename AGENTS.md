@@ -102,12 +102,12 @@ make ci      # fmt, vet, build, test, lint, vuln — what the workflows run
 
 ## What CI runs
 
-`ci.yml` (Go 1.26.x and 1.27.x): gofmt, `go vet`, `go build`, `go test -race` with coverage.
-`lint.yml`: golangci-lint v2.15.0. `security.yml`: govulncheck v1.9.0 and gitleaks, weekly too.
-`codeql.yml`: CodeQL. `version.yml` bumps the patch of `SDK` in `internal/version/version.go` on every pull request into
-`main` (raise minor or major by hand). `release.yml` runs on every push to `main`: when `vSDK` is not
-tagged yet, it runs the gate and **pushes the tag**, which publishes a module version, then opens a
-GitHub Release; otherwise it does nothing.
+`ci.yml`, **Verify**, on pull requests into `develop` and `main` (Go 1.27.x): `go build`, `go vet`, golangci-lint
+v2.15.0 (gofmt included), govulncheck v1.9.0 and gitleaks over the pull request's commits. The tests (`go test -race`
+on both supported Go releases) run locally before every push (`make ci`). `release.yml` runs on every push to
+`main`: when `vSDK` is not tagged yet, it **pushes the tag**, which publishes a module version, then opens a GitHub
+Release; otherwise it does nothing. Raise `SDK` in `internal/version/version.go` by hand in the pull request into
+`main`. Dependabot proposes updates monthly into `develop`.
 
 ## Branches
 

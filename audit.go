@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-// AuditService reads a tenant's tamper-evident audit log and manages its anomaly detection.
+// AuditService reads an organization's tamper-evident audit log and manages its anomaly detection.
 type AuditService struct{ c *Client }
 
 // List lists audit events, newest first, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/audit
-func (s *AuditService) List(ctx context.Context, tenantID string, params *ListAuditEventsParams, opts ...RequestOption) (*Page[AuditEvent], error) {
+// API: GET /v1/organizations/{organizationID}/audit
+func (s *AuditService) List(ctx context.Context, organizationID string, params *ListAuditEventsParams, opts ...RequestOption) (*Page[AuditEvent], error) {
 	return call[Page[AuditEvent]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/audit",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -27,87 +27,97 @@ func (s *AuditService) List(ctx context.Context, tenantID string, params *ListAu
 // All returns an iterator over every item List returns, across all pages. It fetches a page only when
 // the loop needs it, and breaking out of the loop stops paging. A failed request ends the iteration
 // with a non-nil error.
-func (s *AuditService) All(ctx context.Context, tenantID string, params *ListAuditEventsParams, opts ...RequestOption) iter.Seq2[*AuditEvent, error] {
+func (s *AuditService) All(ctx context.Context, organizationID string, params *ListAuditEventsParams, opts ...RequestOption) iter.Seq2[*AuditEvent, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[AuditEvent], error) {
-		return s.List(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.List(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 
-// Verify walks the tenant's hash chain and reports the first broken link, if any.
+// Verify walks the organization's hash chain and reports the first broken link, if any.
 //
-// API: GET /v1/tenants/{tenantID}/audit/verify
-func (s *AuditService) Verify(ctx context.Context, tenantID string, opts ...RequestOption) (*AuditChainVerification, error) {
+// API: GET /v1/organizations/{organizationID}/audit/verify
+func (s *AuditService) Verify(ctx context.Context, organizationID string, opts ...RequestOption) (*AuditChainVerification, error) {
 	return call[AuditChainVerification](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/audit/verify",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit/verify",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // LastVerification returns the outcome of the most recent chain verification.
 //
-// API: GET /v1/tenants/{tenantID}/audit/verification
-func (s *AuditService) LastVerification(ctx context.Context, tenantID string, opts ...RequestOption) (*AuditVerificationStatus, error) {
+// API: GET /v1/organizations/{organizationID}/audit/verification
+func (s *AuditService) LastVerification(ctx context.Context, organizationID string, opts ...RequestOption) (*AuditVerificationStatus, error) {
 	return call[AuditVerificationStatus](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/audit/verification",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit/verification",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// ListAnomalies lists behavioral anomalies found in the audit log.
+// ListAnomalies lists behavioral anomalies found in the audit log, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/audit/anomalies
-func (s *AuditService) ListAnomalies(ctx context.Context, tenantID string, params *ListAuditAnomaliesParams, opts ...RequestOption) (*Page[AuditAnomaly], error) {
+// API: GET /v1/organizations/{organizationID}/audit/anomalies
+func (s *AuditService) ListAnomalies(ctx context.Context, organizationID string, params *ListAuditAnomaliesParams, opts ...RequestOption) (*Page[AuditAnomaly], error) {
 	return call[Page[AuditAnomaly]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/audit/anomalies",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit/anomalies",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
 
+// AllAnomalies returns an iterator over every anomaly ListAnomalies returns, across all pages.
+// It fetches a page only when the loop needs it, and breaking out of the loop stops paging. A failed
+// request ends the iteration with a non-nil error.
+func (s *AuditService) AllAnomalies(ctx context.Context, organizationID string, params *ListAuditAnomaliesParams, opts ...RequestOption) iter.Seq2[*AuditAnomaly, error] {
+	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[AuditAnomaly], error) {
+		return s.ListAnomalies(ctx, organizationID, params.withCursor(cursor), opts...)
+	})
+}
+
 // AnomalySummary returns counts of open and resolved anomalies.
 //
-// API: GET /v1/tenants/{tenantID}/audit/anomalies/summary
-func (s *AuditService) AnomalySummary(ctx context.Context, tenantID string, opts ...RequestOption) (*AuditAnomalySummary, error) {
+// API: GET /v1/organizations/{organizationID}/audit/anomalies/summary
+func (s *AuditService) AnomalySummary(ctx context.Context, organizationID string, opts ...RequestOption) (*AuditAnomalySummary, error) {
 	return call[AuditAnomalySummary](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/audit/anomalies/summary",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit/anomalies/summary",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // ResolveAnomaly marks an anomaly resolved.
 //
-// API: POST /v1/tenants/{tenantID}/audit/anomalies/{id}/resolve
-func (s *AuditService) ResolveAnomaly(ctx context.Context, tenantID, anomalyID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/audit/anomalies/{id}/resolve
+func (s *AuditService) ResolveAnomaly(ctx context.Context, organizationID, anomalyID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/audit/anomalies/{anomalyID}/resolve",
-		pathArgs: []string{tenantID, anomalyID},
+		path:     "/v1/organizations/{organizationID}/audit/anomalies/{anomalyID}/resolve",
+		pathArgs: []string{organizationID, anomalyID},
 	}, nil, opts)
 }
 
 // AnomalySettings returns the anomaly-detection settings.
 //
-// API: GET /v1/tenants/{tenantID}/audit/anomaly-settings
-func (s *AuditService) AnomalySettings(ctx context.Context, tenantID string, opts ...RequestOption) (*AuditAnomalySettings, error) {
+// API: GET /v1/organizations/{organizationID}/audit/anomaly-settings
+func (s *AuditService) AnomalySettings(ctx context.Context, organizationID string, opts ...RequestOption) (*AuditAnomalySettings, error) {
 	return call[AuditAnomalySettings](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/audit/anomaly-settings",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit/anomaly-settings",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// UpdateAnomalySettings replaces the anomaly-detection settings.
+// UpdateAnomalySettings replaces the anomaly-detection settings. It replaces all three: a setting left at
+// its zero value is stored as false or 0.
 //
-// API: PUT /v1/tenants/{tenantID}/audit/anomaly-settings
-func (s *AuditService) UpdateAnomalySettings(ctx context.Context, tenantID string, params AuditAnomalySettings, opts ...RequestOption) (*AuditAnomalySettings, error) {
+// API: PUT /v1/organizations/{organizationID}/audit/anomaly-settings
+func (s *AuditService) UpdateAnomalySettings(ctx context.Context, organizationID string, params UpdateAuditAnomalySettingsParams, opts ...RequestOption) (*AuditAnomalySettings, error) {
 	return call[AuditAnomalySettings](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/audit/anomaly-settings",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/audit/anomaly-settings",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
@@ -192,24 +202,24 @@ func (p *ListAuditEventsParams) withCursor(cursor string) *ListAuditEventsParams
 	return &c
 }
 
-// AuditEvent is one entry of a tenant's tamper-evident audit log.
+// AuditEvent is one entry of an organization's tamper-evident audit log.
 type AuditEvent struct {
-	Action       string    `json:"action,omitempty"`
-	ActorType    string    `json:"actor_type,omitempty"`
-	ActorUserID  string    `json:"actor_user_id,omitempty"`
-	CreatedAt    time.Time `json:"created_at,omitzero"`
-	ID           string    `json:"id,omitempty"`
-	IP           string    `json:"ip,omitempty"`
-	RequestID    string    `json:"request_id,omitempty"`
-	ResourceID   string    `json:"resource_id,omitempty"`
-	ResourceType string    `json:"resource_type,omitempty"`
-	TenantID     string    `json:"tenant_id,omitempty"`
-	UserAgent    string    `json:"user_agent,omitempty"`
+	Action         string    `json:"action,omitempty"`
+	ActorType      string    `json:"actor_type,omitempty"`
+	ActorUserID    string    `json:"actor_user_id,omitempty"`
+	CreatedAt      time.Time `json:"created_at,omitzero"`
+	ID             string    `json:"id,omitempty"`
+	IP             string    `json:"ip,omitempty"`
+	RequestID      string    `json:"request_id,omitempty"`
+	ResourceID     string    `json:"resource_id,omitempty"`
+	ResourceType   string    `json:"resource_type,omitempty"`
+	OrganizationID string    `json:"organization_id,omitempty"`
+	UserAgent      string    `json:"user_agent,omitempty"`
 	// What the event recorded beside its fields; geo is where the request came from.
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
-// AuditChainVerification is the outcome of walking a tenant's audit hash chain.
+// AuditChainVerification is the outcome of walking an organization's audit hash chain.
 type AuditChainVerification struct {
 	BrokenAtID string `json:"broken_at_id,omitempty"`
 	// Why the chain is broken at broken_at_id, in English. Show reason_code's meaning instead.
@@ -224,13 +234,17 @@ type AuditChainVerification struct {
 
 // AuditChainVerificationReasonCode is a string enumeration used by AuditChainVerification.ReasonCode.
 // Set when the chain is broken: the row's link to the one before it is wrong, or its contents no
-// longer match its hash.
+// longer match its hash; the row the chain's last verification checkpoint names is gone; or a
+// checkpoint the chain relies on doesn't carry the server's signature, as when the chain and its
+// checkpoint were rewritten together.
 type AuditChainVerificationReasonCode string
 
 // Values of AuditChainVerificationReasonCode. The server may add values; handle an unknown one gracefully.
 const (
-	AuditChainVerificationReasonCodeAuditChainPrevHashMismatch AuditChainVerificationReasonCode = "audit.chain_prev_hash_mismatch"
-	AuditChainVerificationReasonCodeAuditChainRowHashMismatch  AuditChainVerificationReasonCode = "audit.chain_row_hash_mismatch"
+	AuditChainVerificationReasonCodeAuditChainPrevHashMismatch   AuditChainVerificationReasonCode = "audit.chain_prev_hash_mismatch"
+	AuditChainVerificationReasonCodeAuditChainRowHashMismatch    AuditChainVerificationReasonCode = "audit.chain_row_hash_mismatch"
+	AuditChainVerificationReasonCodeAuditChainCheckpointGone     AuditChainVerificationReasonCode = "audit.chain_checkpoint_gone"
+	AuditChainVerificationReasonCodeAuditChainCheckpointUnsigned AuditChainVerificationReasonCode = "audit.chain_checkpoint_unsigned"
 )
 
 // AuditVerificationStatus is the result of AuditService.LastVerification.
@@ -263,6 +277,8 @@ const (
 type ListAuditAnomaliesParams struct {
 	Status AuditAnomalyStatus
 	Limit  int
+	// The previous page's next_cursor.
+	Cursor string
 }
 
 func (p *ListAuditAnomaliesParams) values() url.Values {
@@ -276,16 +292,35 @@ func (p *ListAuditAnomaliesParams) values() url.Values {
 	if p.Limit != 0 {
 		q.Set("limit", strconv.FormatInt(int64(p.Limit), 10))
 	}
+	if p.Cursor != "" {
+		q.Set("cursor", p.Cursor)
+	}
 	return q
+}
+
+func (p *ListAuditAnomaliesParams) cursor() string {
+	if p == nil {
+		return ""
+	}
+	return p.Cursor
+}
+
+func (p *ListAuditAnomaliesParams) withCursor(cursor string) *ListAuditAnomaliesParams {
+	var c ListAuditAnomaliesParams
+	if p != nil {
+		c = *p
+	}
+	c.Cursor = cursor
+	return &c
 }
 
 // AuditAnomaly is an audit event that departs from its actor's usual behavior.
 type AuditAnomaly struct {
-	ID          string `json:"id,omitempty"`
-	TenantID    string `json:"tenant_id,omitempty"`
-	EventID     string `json:"event_id,omitempty"`
-	ActorUserID string `json:"actor_user_id,omitempty"`
-	ActorEmail  string `json:"actor_email,omitempty"`
+	ID             string `json:"id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	EventID        string `json:"event_id,omitempty"`
+	ActorUserID    string `json:"actor_user_id,omitempty"`
+	ActorEmail     string `json:"actor_email,omitempty"`
 	// 0..1 weighted-novelty anomaly score.
 	Score        float64              `json:"score"`
 	Reasons      []AuditAnomalyReason `json:"reasons,omitempty"`
@@ -316,10 +351,20 @@ type AuditAnomalySummary struct {
 	Resolved7d    int `json:"resolved_7d"`
 }
 
+// UpdateAuditAnomalySettingsParams is the request body of AuditService.UpdateAnomalySettings. Every
+// field is sent: the call replaces all three settings.
+type UpdateAuditAnomalySettingsParams struct {
+	Enabled bool `json:"enabled"`
+	// 0..1; an event scoring at or above this is flagged.
+	ScoreThreshold float64 `json:"score_threshold"`
+	// Cold-start guard — an actor needs this many historical events before anything is flagged for them.
+	MinBaselineEvents int `json:"min_baseline_events"`
+}
+
 // AuditAnomalySettings is the result of AuditService.AnomalySettings.
 type AuditAnomalySettings struct {
-	TenantID string `json:"tenant_id,omitempty"`
-	Enabled  bool   `json:"enabled"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	Enabled        bool   `json:"enabled"`
 	// 0..1; an event scoring at or above this is flagged.
 	ScoreThreshold float64 `json:"score_threshold"`
 	// Cold-start guard — an actor needs this many historical events before anything is flagged for them.

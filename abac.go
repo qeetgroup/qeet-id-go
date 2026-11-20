@@ -10,93 +10,93 @@ import (
 // ABACPoliciesService manages attribute-based access policies and evaluates them.
 type ABACPoliciesService struct{ c *Client }
 
-// List lists a tenant's policies.
+// List lists an organization's policies.
 //
-// API: GET /v1/tenants/{tenantID}/abac/policies
-func (s *ABACPoliciesService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[ABACPolicy], error) {
+// API: GET /v1/organizations/{organizationID}/abac/policies
+func (s *ABACPoliciesService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[ABACPolicy], error) {
 	return call[Page[ABACPolicy]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/abac/policies",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/abac/policies",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create creates a policy.
 //
-// API: POST /v1/tenants/{tenantID}/abac/policies
-func (s *ABACPoliciesService) Create(ctx context.Context, tenantID string, params ABACPolicyParams, opts ...RequestOption) (*ABACPolicy, error) {
+// API: POST /v1/organizations/{organizationID}/abac/policies
+func (s *ABACPoliciesService) Create(ctx context.Context, organizationID string, params ABACPolicyParams, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/abac/policies",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/abac/policies",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Get returns a policy.
 //
-// API: GET /v1/tenants/{tenantID}/abac/policies/{id}
-func (s *ABACPoliciesService) Get(ctx context.Context, tenantID, policyID string, opts ...RequestOption) (*ABACPolicy, error) {
+// API: GET /v1/organizations/{organizationID}/abac/policies/{id}
+func (s *ABACPoliciesService) Get(ctx context.Context, organizationID, policyID string, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}",
-		pathArgs: []string{tenantID, policyID},
+		path:     "/v1/organizations/{organizationID}/abac/policies/{policyID}",
+		pathArgs: []string{organizationID, policyID},
 	}, opts)
 }
 
 // Update changes a policy and records a new version.
 //
-// API: PATCH /v1/tenants/{tenantID}/abac/policies/{id}
-func (s *ABACPoliciesService) Update(ctx context.Context, tenantID, policyID string, params ABACPolicyParams, opts ...RequestOption) (*ABACPolicy, error) {
+// API: PATCH /v1/organizations/{organizationID}/abac/policies/{id}
+func (s *ABACPoliciesService) Update(ctx context.Context, organizationID, policyID string, params ABACPolicyParams, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}",
-		pathArgs: []string{tenantID, policyID},
+		path:     "/v1/organizations/{organizationID}/abac/policies/{policyID}",
+		pathArgs: []string{organizationID, policyID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a policy.
 //
-// API: DELETE /v1/tenants/{tenantID}/abac/policies/{id}
-func (s *ABACPoliciesService) Delete(ctx context.Context, tenantID, policyID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/abac/policies/{id}
+func (s *ABACPoliciesService) Delete(ctx context.Context, organizationID, policyID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}",
-		pathArgs: []string{tenantID, policyID},
+		path:     "/v1/organizations/{organizationID}/abac/policies/{policyID}",
+		pathArgs: []string{organizationID, policyID},
 	}, nil, opts)
 }
 
 // ListVersions lists the saved versions of a policy.
 //
-// API: GET /v1/tenants/{tenantID}/abac/policies/{id}/versions
-func (s *ABACPoliciesService) ListVersions(ctx context.Context, tenantID, policyID string, opts ...RequestOption) (*Page[ABACPolicyVersion], error) {
+// API: GET /v1/organizations/{organizationID}/abac/policies/{id}/versions
+func (s *ABACPoliciesService) ListVersions(ctx context.Context, organizationID, policyID string, opts ...RequestOption) (*Page[ABACPolicyVersion], error) {
 	return call[Page[ABACPolicyVersion]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}/versions",
-		pathArgs: []string{tenantID, policyID},
+		path:     "/v1/organizations/{organizationID}/abac/policies/{policyID}/versions",
+		pathArgs: []string{organizationID, policyID},
 	}, opts)
 }
 
 // RestoreVersion makes a saved version of a policy current again.
 //
-// API: POST /v1/tenants/{tenantID}/abac/policies/{id}/versions/{version}/restore
-func (s *ABACPoliciesService) RestoreVersion(ctx context.Context, tenantID, policyID, version string, opts ...RequestOption) (*ABACPolicy, error) {
+// API: POST /v1/organizations/{organizationID}/abac/policies/{id}/versions/{version}/restore
+func (s *ABACPoliciesService) RestoreVersion(ctx context.Context, organizationID, policyID, version string, opts ...RequestOption) (*ABACPolicy, error) {
 	return call[ABACPolicy](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/abac/policies/{policyID}/versions/{version}/restore",
-		pathArgs: []string{tenantID, policyID, version},
+		path:     "/v1/organizations/{organizationID}/abac/policies/{policyID}/versions/{version}/restore",
+		pathArgs: []string{organizationID, policyID, version},
 	}, opts)
 }
 
-// Evaluate evaluates the tenant's policies for a subject, resource and action.
+// Evaluate evaluates the organization's policies for a subject, resource and action.
 //
-// API: POST /v1/tenants/{tenantID}/abac/evaluate
-func (s *ABACPoliciesService) Evaluate(ctx context.Context, tenantID string, params ABACEvaluateParams, options *ABACEvaluateOptions, opts ...RequestOption) (*ABACDecision, error) {
+// API: POST /v1/organizations/{organizationID}/abac/evaluate
+func (s *ABACPoliciesService) Evaluate(ctx context.Context, organizationID string, params ABACEvaluateParams, options *ABACEvaluateOptions, opts ...RequestOption) (*ABACDecision, error) {
 	return call[ABACDecision](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/abac/evaluate",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/abac/evaluate",
+		pathArgs: []string{organizationID},
 		query:    options.values(),
 		body:     params,
 	}, opts)
@@ -105,11 +105,11 @@ func (s *ABACPoliciesService) Evaluate(ctx context.Context, tenantID string, par
 // ABACPolicy is an attribute-based access policy: an effect that applies to a resource type and action
 // when its condition holds.
 type ABACPolicy struct {
-	ID          string     `json:"id,omitempty"`
-	TenantID    string     `json:"tenant_id,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Effect      ABACEffect `json:"effect,omitempty"`
+	ID             string     `json:"id,omitempty"`
+	OrganizationID string     `json:"organization_id,omitempty"`
+	Name           string     `json:"name,omitempty"`
+	Description    string     `json:"description,omitempty"`
+	Effect         ABACEffect `json:"effect,omitempty"`
 	// Resource type matched by this policy; '*' matches any.
 	ResourceType string `json:"resource_type,omitempty"`
 	// Action matched by this policy; '*' matches any.
@@ -131,10 +131,10 @@ type ABACPolicy struct {
 	// string value and match only string attributes; any other value is refused with 422
 	// abac.condition_invalid, as is contains or regex with an empty value. Two more leaves combine roles
 	// and relationships with attributes: {"role":"<name>"} holds when the subject has the role, by name,
-	// in the organisation (directly or through a group), as the platform supplies subject.roles when it
+	// in the organization (directly or through a group), as the platform supplies subject.roles when it
 	// decides for a person itself; it is unknown when no roles are supplied.
 	// {"relation":{"relation":"viewer", "object":"document:1"}} holds when the subject (subject.id, a
-	// user) has the relationship on the object in the organisation's ReBAC tuples, the object given as
+	// user) has the relationship on the object in the organization's ReBAC tuples, the object given as
 	// type:id or as an attribute reference {"attr":"resource.object"}; it is unknown with no subject id
 	// or no object. Like a missing attribute, an unknown role or relation applies a deny and grants
 	// nothing.
@@ -244,7 +244,7 @@ type ABACEvaluateParamsDraft struct {
 	Priority *int `json:"priority,omitempty"`
 	// Whether the policy is evaluated; left out, it is saved disabled.
 	Enabled *bool `json:"enabled,omitempty"`
-	// The stored policy the draft stands in for; one the organisation doesn't have is 404.
+	// The stored policy the draft stands in for; one the organization doesn't have is 404.
 	Replaces string `json:"replaces,omitempty"`
 }
 
@@ -266,7 +266,7 @@ func (p *ABACEvaluateOptions) values() url.Values {
 	return q
 }
 
-// ABACDecision is the outcome of evaluating a tenant's attribute-based policies.
+// ABACDecision is the outcome of evaluating an organization's attribute-based policies.
 type ABACDecision struct {
 	// True when an allow policy matched and no deny policy matched.
 	Allow  bool       `json:"allow"`

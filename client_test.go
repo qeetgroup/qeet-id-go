@@ -112,7 +112,7 @@ func TestRequestHeaders(t *testing.T) {
 func TestEmptyPathArgumentIsRefused(t *testing.T) {
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(http.StatusOK, `{}`)}}
 	c := newFakeClient(t, f)
-	_, err := c.Roles.Update(context.Background(), "tenant-1", "", UpdateRoleParams{})
+	_, err := c.Roles.Update(context.Background(), "organization-1", "", UpdateRoleParams{})
 	if err == nil || !strings.Contains(err.Error(), "roleID must not be empty") {
 		t.Fatalf("err = %v, want roleID must not be empty", err)
 	}
@@ -149,7 +149,7 @@ func TestTokenSourceCredential(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := c2.Tenants.Get(context.Background(), "t1"); err != nil {
+	if _, err := c2.Organizations.Get(context.Background(), "t1"); err != nil {
 		t.Fatal(err)
 	}
 	if got := f.calls()[0].header.Get("Authorization"); got != "Bearer eyJ.agent.token" {
@@ -161,7 +161,7 @@ func TestTokenSourceCredential(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = c3.Tenants.Get(context.Background(), "t1")
+	_, err = c3.Organizations.Get(context.Background(), "t1")
 	if err == nil || !strings.Contains(err.Error(), "vault sealed") {
 		t.Fatalf("err = %v, want the token source's error", err)
 	}

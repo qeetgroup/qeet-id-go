@@ -16,7 +16,7 @@ func TestAPIErrorFromEnvelope(t *testing.T) {
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(http.StatusUnprocessableEntity, body, "X-Request-Id", "req-header")}}
 	c := newFakeClient(t, f)
 
-	_, err := c.Users.Create(context.Background(), CreateUserParams{TenantID: "t1", Email: "not-an-email"})
+	_, err := c.Users.Create(context.Background(), CreateUserParams{OrganizationID: "t1", Email: "not-an-email"})
 	var apiErr *APIError
 	if !errors.As(err, &apiErr) {
 		t.Fatalf("err = %T %v, want *APIError", err, err)

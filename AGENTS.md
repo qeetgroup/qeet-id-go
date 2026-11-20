@@ -8,19 +8,19 @@ here and add nothing architectural.
 
 The **server-side Go SDK for Qeet ID**. Module `github.com/qeetgroup/qeet-id-go`, package `qeetid`
 (imported as `qeetid "github.com/qeetgroup/qeet-id-go"`), plus two leaf packages: `webhook`
-(receiving deliveries) and `jwt` (verifying access tokens). Version string 0.1.0, **not yet
-tagged**. Go 1.26+ (the two supported Go releases). **No dependencies outside the standard
+(receiving deliveries) and `jwt` (verifying access tokens). Version string 0.2.0 (v0.1.0 is the
+latest tag). Go 1.26+ (the two supported Go releases). **No dependencies outside the standard
 library** (there is no `go.sum`).
 
 It is a **client of a contract it does not own.** The contract is the five OpenAPI documents in
-`qeet-id-server/api/openapi/` (`auth`, `management`, `federation`, `developer`, `operations`); the
+`qeet-id-server/api/openapi/` (`access`, `identity`, `federation`, `developer`, `operations`); the
 server's handlers under `internal/` decide where the documents are ambiguous. The SDK never adds
 behaviour the API does not have.
 
 ## Context hierarchy
 
 ```text
-qeet-context (L0)  →  qeet-id-context (L1)  →  qeet-id-server (the contract)
+qeet-context (L0)  →  qeet-id-files (L1)  →  qeet-id-server (the contract)
                                             →  qeet-id-go (L2 — this repository)
 ```
 

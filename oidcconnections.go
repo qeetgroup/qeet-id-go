@@ -6,71 +6,71 @@ import (
 	"time"
 )
 
-// OIDCConnectionsService manages OpenID Connect connections to a tenant's identity providers.
+// OIDCConnectionsService manages OpenID Connect connections to an organization's identity providers.
 type OIDCConnectionsService struct{ c *Client }
 
-// List lists a tenant's OpenID Connect connections.
+// List lists an organization's OpenID Connect connections.
 //
-// API: GET /v1/tenants/{tenantID}/oidc-connections
-func (s *OIDCConnectionsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[OIDCConnection], error) {
+// API: GET /v1/organizations/{organizationID}/oidc-connections
+func (s *OIDCConnectionsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[OIDCConnection], error) {
 	return call[Page[OIDCConnection]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oidc-connections",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oidc-connections",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create creates a connection.
 //
-// API: POST /v1/tenants/{tenantID}/oidc-connections
-func (s *OIDCConnectionsService) Create(ctx context.Context, tenantID string, params CreateOIDCConnectionParams, opts ...RequestOption) (*OIDCConnection, error) {
+// API: POST /v1/organizations/{organizationID}/oidc-connections
+func (s *OIDCConnectionsService) Create(ctx context.Context, organizationID string, params CreateOIDCConnectionParams, opts ...RequestOption) (*OIDCConnection, error) {
 	return call[OIDCConnection](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/oidc-connections",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oidc-connections",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Get returns a connection.
 //
-// API: GET /v1/tenants/{tenantID}/oidc-connections/{id}
-func (s *OIDCConnectionsService) Get(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*OIDCConnection, error) {
+// API: GET /v1/organizations/{organizationID}/oidc-connections/{id}
+func (s *OIDCConnectionsService) Get(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) (*OIDCConnection, error) {
 	return call[OIDCConnection](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oidc-connections/{connectionID}",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/oidc-connections/{connectionID}",
+		pathArgs: []string{organizationID, connectionID},
 	}, opts)
 }
 
 // Update changes a connection. Fields left nil are not changed.
 //
-// API: PATCH /v1/tenants/{tenantID}/oidc-connections/{id}
-func (s *OIDCConnectionsService) Update(ctx context.Context, tenantID, connectionID string, params UpdateOIDCConnectionParams, opts ...RequestOption) (*OIDCConnection, error) {
+// API: PATCH /v1/organizations/{organizationID}/oidc-connections/{id}
+func (s *OIDCConnectionsService) Update(ctx context.Context, organizationID, connectionID string, params UpdateOIDCConnectionParams, opts ...RequestOption) (*OIDCConnection, error) {
 	return call[OIDCConnection](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/oidc-connections/{connectionID}",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/oidc-connections/{connectionID}",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a connection.
 //
-// API: DELETE /v1/tenants/{tenantID}/oidc-connections/{id}
-func (s *OIDCConnectionsService) Delete(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/oidc-connections/{id}
+func (s *OIDCConnectionsService) Delete(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/oidc-connections/{connectionID}",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/oidc-connections/{connectionID}",
+		pathArgs: []string{organizationID, connectionID},
 	}, nil, opts)
 }
 
-// OIDCConnection connects a tenant to an OpenID Connect identity provider.
+// OIDCConnection connects an organization to an OpenID Connect identity provider.
 type OIDCConnection struct {
-	ID       string `json:"id,omitempty"`
-	TenantID string `json:"tenant_id,omitempty"`
-	Name     string `json:"name,omitempty"`
+	ID             string `json:"id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	Name           string `json:"name,omitempty"`
 	// The iss an ID token must carry.
 	Issuer string `json:"issuer,omitempty"`
 	// Where the discovery document is read; empty for the issuer's /.well-known/openid-configuration.

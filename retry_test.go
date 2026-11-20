@@ -106,7 +106,7 @@ func TestRetryPolicy(t *testing.T) {
 				answer(201, `{"id":"u1"}`),
 			},
 			call: func(ctx context.Context, c *Client) error {
-				_, err := c.Users.Create(ctx, CreateUserParams{TenantID: "t1", Email: "a@example.com"}, WithIdempotencyKey("import-row-17"))
+				_, err := c.Users.Create(ctx, CreateUserParams{OrganizationID: "t1", Email: "a@example.com"}, WithIdempotencyKey("import-row-17"))
 				return err
 			},
 			calls: 2,

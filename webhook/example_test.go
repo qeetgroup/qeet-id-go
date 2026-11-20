@@ -48,8 +48,8 @@ func ExampleVerifier_Handler() {
 		return nil
 	})
 
-	body := `{"id":"evt-1","type":"user.created","tenant_id":"t1","occurred_at":"2026-11-05T10:00:00Z",` +
-		`"data":{"user_id":"u1","tenant_id":"t1","email":"ada@example.com","source":"admin"}}`
+	body := `{"id":"evt-1","type":"user.created","organization_id":"t1","occurred_at":"2026-11-05T10:00:00Z",` +
+		`"data":{"user_id":"u1","organization_id":"t1","email":"ada@example.com","source":"admin"}}`
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, signedRequest(secret, body))
 	fmt.Println(w.Code)
@@ -66,7 +66,7 @@ func ExampleVerifier_Handler() {
 
 func ExampleVerifier_ConstructEvent() {
 	secret := "whsec_example"
-	body := `{"id":"evt-2","type":"test.ping","tenant_id":"t1","occurred_at":"2026-11-05T10:00:00Z","data":{"subscription_id":"w1"}}`
+	body := `{"id":"evt-2","type":"test.ping","organization_id":"t1","occurred_at":"2026-11-05T10:00:00Z","data":{"subscription_id":"w1"}}`
 	r := signedRequest(secret, body)
 
 	v, err := webhook.NewVerifier(secret)

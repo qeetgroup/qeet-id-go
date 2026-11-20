@@ -19,25 +19,25 @@ func (s *APIKeysService) Create(ctx context.Context, params CreateAPIKeyParams, 
 	return call[CreateAPIKeyResult](ctx, s.c, &request{method: http.MethodPost, path: "/v1/api-keys", body: params, idempotent: true}, opts)
 }
 
-// List lists a tenant's API keys.
+// List lists an organization's API keys.
 //
-// API: GET /v1/tenants/{tenantID}/api-keys
-func (s *APIKeysService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[APIKey], error) {
+// API: GET /v1/organizations/{organizationID}/api-keys
+func (s *APIKeysService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[APIKey], error) {
 	return call[Page[APIKey]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/api-keys",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/api-keys",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Rotate replaces an API key with a new one. The old key keeps working for the overlap given.
 //
-// API: POST /v1/tenants/{tenantID}/api-keys/{id}/rotate
-func (s *APIKeysService) Rotate(ctx context.Context, tenantID, keyID string, params RotateSecretParams, opts ...RequestOption) (*CreateAPIKeyResult, error) {
+// API: POST /v1/organizations/{organizationID}/api-keys/{id}/rotate
+func (s *APIKeysService) Rotate(ctx context.Context, organizationID, keyID string, params RotateSecretParams, opts ...RequestOption) (*CreateAPIKeyResult, error) {
 	return call[CreateAPIKeyResult](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/api-keys/{keyID}/rotate",
-		pathArgs: []string{tenantID, keyID},
+		path:     "/v1/organizations/{organizationID}/api-keys/{keyID}/rotate",
+		pathArgs: []string{organizationID, keyID},
 		body:     params,
 	}, opts)
 }
@@ -51,11 +51,11 @@ func (s *APIKeysService) Revoke(ctx context.Context, keyID string, opts ...Reque
 
 // CreateAPIKeyParams is the request body of APIKeysService.Create.
 type CreateAPIKeyParams struct {
-	TenantID  string     `json:"tenant_id,omitempty"`
-	UserID    string     `json:"user_id,omitempty"`
-	Name      string     `json:"name,omitempty"`
-	Scopes    []string   `json:"scopes,omitempty"`
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	OrganizationID string     `json:"organization_id,omitempty"`
+	UserID         string     `json:"user_id,omitempty"`
+	Name           string     `json:"name,omitempty"`
+	Scopes         []string   `json:"scopes,omitempty"`
+	ExpiresAt      *time.Time `json:"expires_at,omitempty"`
 }
 
 // CreateAPIKeyResult carries an API key and its secret, which is shown only once.
@@ -67,16 +67,16 @@ type CreateAPIKeyResult struct {
 
 // APIKey is an API key. Its secret is shown only when it is created or rotated.
 type APIKey struct {
-	ID         string     `json:"id,omitempty"`
-	TenantID   string     `json:"tenant_id,omitempty"`
-	UserID     string     `json:"user_id,omitempty"`
-	Name       string     `json:"name,omitempty"`
-	Prefix     string     `json:"prefix,omitempty"`
-	Scopes     []string   `json:"scopes,omitempty"`
-	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
-	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
-	RevokedAt  *time.Time `json:"revoked_at,omitempty"`
-	CreatedAt  time.Time  `json:"created_at,omitzero"`
+	ID             string     `json:"id,omitempty"`
+	OrganizationID string     `json:"organization_id,omitempty"`
+	UserID         string     `json:"user_id,omitempty"`
+	Name           string     `json:"name,omitempty"`
+	Prefix         string     `json:"prefix,omitempty"`
+	Scopes         []string   `json:"scopes,omitempty"`
+	ExpiresAt      *time.Time `json:"expires_at,omitempty"`
+	LastUsedAt     *time.Time `json:"last_used_at,omitempty"`
+	RevokedAt      *time.Time `json:"revoked_at,omitempty"`
+	CreatedAt      time.Time  `json:"created_at,omitzero"`
 	// The person who created the key, or rotated it into being; null for a key made by a machine or
 	// before this was kept.
 	CreatedBy string `json:"created_by,omitempty"`

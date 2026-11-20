@@ -6,79 +6,79 @@ import (
 	"time"
 )
 
-// LogSinksService manages the streams that forward a tenant's audit events to a SIEM.
+// LogSinksService manages the streams that forward an organization's audit events to a SIEM.
 type LogSinksService struct{ c *Client }
 
-// List lists a tenant's log sinks.
+// List lists an organization's log sinks.
 //
-// API: GET /v1/tenants/{tenantID}/log-sinks
-func (s *LogSinksService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[LogSink], error) {
+// API: GET /v1/organizations/{organizationID}/log-sinks
+func (s *LogSinksService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[LogSink], error) {
 	return call[Page[LogSink]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/log-sinks",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/log-sinks",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create creates a log sink.
 //
-// API: POST /v1/tenants/{tenantID}/log-sinks
-func (s *LogSinksService) Create(ctx context.Context, tenantID string, params LogSinkParams, opts ...RequestOption) (*LogSink, error) {
+// API: POST /v1/organizations/{organizationID}/log-sinks
+func (s *LogSinksService) Create(ctx context.Context, organizationID string, params LogSinkParams, opts ...RequestOption) (*LogSink, error) {
 	return call[LogSink](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/log-sinks",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/log-sinks",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // SetEnabled enables or disables a log sink.
 //
-// API: PATCH /v1/tenants/{tenantID}/log-sinks/{id}
-func (s *LogSinksService) SetEnabled(ctx context.Context, tenantID, sinkID string, params SetLogSinkEnabledParams, opts ...RequestOption) error {
+// API: PATCH /v1/organizations/{organizationID}/log-sinks/{id}
+func (s *LogSinksService) SetEnabled(ctx context.Context, organizationID, sinkID string, params SetLogSinkEnabledParams, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/log-sinks/{sinkID}",
-		pathArgs: []string{tenantID, sinkID},
+		path:     "/v1/organizations/{organizationID}/log-sinks/{sinkID}",
+		pathArgs: []string{organizationID, sinkID},
 		body:     params,
 	}, nil, opts)
 }
 
 // Delete deletes a log sink.
 //
-// API: DELETE /v1/tenants/{tenantID}/log-sinks/{id}
-func (s *LogSinksService) Delete(ctx context.Context, tenantID, sinkID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/log-sinks/{id}
+func (s *LogSinksService) Delete(ctx context.Context, organizationID, sinkID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/log-sinks/{sinkID}",
-		pathArgs: []string{tenantID, sinkID},
+		path:     "/v1/organizations/{organizationID}/log-sinks/{sinkID}",
+		pathArgs: []string{organizationID, sinkID},
 	}, nil, opts)
 }
 
 // Test sends a test event to a saved log sink.
 //
-// API: POST /v1/tenants/{tenantID}/log-sinks/{id}/test
-func (s *LogSinksService) Test(ctx context.Context, tenantID, sinkID string, opts ...RequestOption) (*LogSinkTest, error) {
+// API: POST /v1/organizations/{organizationID}/log-sinks/{id}/test
+func (s *LogSinksService) Test(ctx context.Context, organizationID, sinkID string, opts ...RequestOption) (*LogSinkTest, error) {
 	return call[LogSinkTest](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/log-sinks/{sinkID}/test",
-		pathArgs: []string{tenantID, sinkID},
+		path:     "/v1/organizations/{organizationID}/log-sinks/{sinkID}/test",
+		pathArgs: []string{organizationID, sinkID},
 	}, opts)
 }
 
 // TestSettings sends a test event to a log sink before it is saved.
 //
-// API: POST /v1/tenants/{tenantID}/log-sinks/test
-func (s *LogSinksService) TestSettings(ctx context.Context, tenantID string, params LogSinkParams, opts ...RequestOption) (*LogSinkTest, error) {
+// API: POST /v1/organizations/{organizationID}/log-sinks/test
+func (s *LogSinksService) TestSettings(ctx context.Context, organizationID string, params LogSinkParams, opts ...RequestOption) (*LogSinkTest, error) {
 	return call[LogSinkTest](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/log-sinks/test",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/log-sinks/test",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// LogSink forwards a tenant's audit events to a SIEM. Its token is never returned.
+// LogSink forwards an organization's audit events to a SIEM. Its token is never returned.
 type LogSink struct {
 	CreatedAt       time.Time `json:"created_at,omitzero"`
 	Enabled         bool      `json:"enabled"`

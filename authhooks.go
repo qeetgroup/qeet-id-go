@@ -8,62 +8,67 @@ import (
 
 // AuthHooksService manages hooks: HTTPS endpoints Qeet ID calls during sign-in to allow, deny or
 // enrich it.
+//
+// Qeet ID signs each call to a hook as it signs a webhook delivery: X-Qeet-Timestamp and an
+// X-Qeet-Signature over the timestamp, a "." and the body, with two signatures for 24 hours after the
+// hook's secret changes. Verify a call in the hook's endpoint with webhook.Verifier.Verify, which
+// refuses a stale timestamp and accepts either signature.
 type AuthHooksService struct{ c *Client }
 
-// List lists a tenant's hooks.
+// List lists an organization's hooks.
 //
-// API: GET /v1/tenants/{tenantID}/auth-hooks
-func (s *AuthHooksService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[AuthHook], error) {
+// API: GET /v1/organizations/{organizationID}/auth-hooks
+func (s *AuthHooksService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[AuthHook], error) {
 	return call[Page[AuthHook]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/auth-hooks",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/auth-hooks",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create creates a hook.
 //
-// API: POST /v1/tenants/{tenantID}/auth-hooks
-func (s *AuthHooksService) Create(ctx context.Context, tenantID string, params CreateAuthHookParams, opts ...RequestOption) (*AuthHook, error) {
+// API: POST /v1/organizations/{organizationID}/auth-hooks
+func (s *AuthHooksService) Create(ctx context.Context, organizationID string, params CreateAuthHookParams, opts ...RequestOption) (*AuthHook, error) {
 	return call[AuthHook](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/auth-hooks",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/auth-hooks",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Update changes a hook. Fields left nil are not changed.
 //
-// API: PATCH /v1/tenants/{tenantID}/auth-hooks/{id}
-func (s *AuthHooksService) Update(ctx context.Context, tenantID, hookID string, params UpdateAuthHookParams, opts ...RequestOption) (*AuthHookState, error) {
+// API: PATCH /v1/organizations/{organizationID}/auth-hooks/{id}
+func (s *AuthHooksService) Update(ctx context.Context, organizationID, hookID string, params UpdateAuthHookParams, opts ...RequestOption) (*AuthHookState, error) {
 	return call[AuthHookState](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/auth-hooks/{hookID}",
-		pathArgs: []string{tenantID, hookID},
+		path:     "/v1/organizations/{organizationID}/auth-hooks/{hookID}",
+		pathArgs: []string{organizationID, hookID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a hook.
 //
-// API: DELETE /v1/tenants/{tenantID}/auth-hooks/{id}
-func (s *AuthHooksService) Delete(ctx context.Context, tenantID, hookID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/auth-hooks/{id}
+func (s *AuthHooksService) Delete(ctx context.Context, organizationID, hookID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/auth-hooks/{hookID}",
-		pathArgs: []string{tenantID, hookID},
+		path:     "/v1/organizations/{organizationID}/auth-hooks/{hookID}",
+		pathArgs: []string{organizationID, hookID},
 	}, nil, opts)
 }
 
 // Test calls a hook with a sample request and reports its answer.
 //
-// API: POST /v1/tenants/{tenantID}/auth-hooks/{id}/test
-func (s *AuthHooksService) Test(ctx context.Context, tenantID, hookID string, opts ...RequestOption) (*AuthHookTest, error) {
+// API: POST /v1/organizations/{organizationID}/auth-hooks/{id}/test
+func (s *AuthHooksService) Test(ctx context.Context, organizationID, hookID string, opts ...RequestOption) (*AuthHookTest, error) {
 	return call[AuthHookTest](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/auth-hooks/{hookID}/test",
-		pathArgs: []string{tenantID, hookID},
+		path:     "/v1/organizations/{organizationID}/auth-hooks/{hookID}/test",
+		pathArgs: []string{organizationID, hookID},
 	}, opts)
 }
 
@@ -84,6 +89,9 @@ type AuthHook struct {
 	Calls  int `json:"calls"`
 	Skips  int `json:"skips"`
 	Denies int `json:"denies"`
+	// Until when the secret the last change of secret replaced also signs the hook's calls; nil when
+	// only one secret signs them.
+	PreviousSecretExpiresAt *time.Time `json:"previous_secret_expires_at,omitempty"`
 }
 
 // AuthHookLastOutcome is a string enumeration used by AuthHook.LastOutcome. How that call ended;
@@ -95,7 +103,6 @@ const (
 	AuthHookLastOutcomeAllowed AuthHookLastOutcome = "allowed"
 	AuthHookLastOutcomeDenied  AuthHookLastOutcome = "denied"
 	AuthHookLastOutcomeSkipped AuthHookLastOutcome = "skipped"
-	AuthHookLastOutcomeNone    AuthHookLastOutcome = "None"
 )
 
 // CreateAuthHookParams is the request body of AuthHooksService.Create.
@@ -105,7 +112,7 @@ type CreateAuthHookParams struct {
 	// What a sign-in does when the hook gives no answer: it can't be read, its signing secret can't be
 	// opened, the call fails or times out, or its answer can't be read. True (the default on create) lets
 	// the sign-in proceed; false refuses it as temporarily unavailable. Where the hook can't be read, the
-	// setting last read for the organisation is followed. Every such skip is recorded (audit
+	// setting last read for the organization is followed. Every such skip is recorded (audit
 	// auth_hook.skipped with the reason and outcome; metric auth_hook_skipped_total).
 	FailOpen *bool `json:"fail_open,omitempty"`
 }
@@ -119,7 +126,7 @@ type UpdateAuthHookParams struct {
 	// What a sign-in does when the hook gives no answer: it can't be read, its signing secret can't be
 	// opened, the call fails or times out, or its answer can't be read. True (the default on create) lets
 	// the sign-in proceed; false refuses it as temporarily unavailable. Where the hook can't be read, the
-	// setting last read for the organisation is followed. Every such skip is recorded (audit
+	// setting last read for the organization is followed. Every such skip is recorded (audit
 	// auth_hook.skipped with the reason and outcome; metric auth_hook_skipped_total).
 	FailOpen *bool `json:"fail_open,omitempty"`
 }

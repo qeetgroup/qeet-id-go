@@ -14,70 +14,70 @@ type ThreatsService struct{ c *Client }
 
 // Bots returns recent bot-scoring verdicts and their totals, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/security/bots
-func (s *ThreatsService) Bots(ctx context.Context, tenantID string, params *BotTelemetryParams, opts ...RequestOption) (*BotTelemetry, error) {
+// API: GET /v1/organizations/{organizationID}/security/bots
+func (s *ThreatsService) Bots(ctx context.Context, organizationID string, params *BotTelemetryParams, opts ...RequestOption) (*BotTelemetry, error) {
 	return call[BotTelemetry](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/security/bots",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/bots",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
 
-// BotSettings returns a tenant's bot-detection settings.
+// BotSettings returns an organization's bot-detection settings.
 //
-// API: GET /v1/tenants/{tenantID}/security/bots/settings
-func (s *ThreatsService) BotSettings(ctx context.Context, tenantID string, opts ...RequestOption) (*BotSettings, error) {
+// API: GET /v1/organizations/{organizationID}/security/bots/settings
+func (s *ThreatsService) BotSettings(ctx context.Context, organizationID string, opts ...RequestOption) (*BotSettings, error) {
 	return call[BotSettings](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/security/bots/settings",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/bots/settings",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// UpdateBotSettings replaces a tenant's bot-detection settings.
+// UpdateBotSettings replaces an organization's bot-detection settings.
 //
-// API: PUT /v1/tenants/{tenantID}/security/bots/settings
-func (s *ThreatsService) UpdateBotSettings(ctx context.Context, tenantID string, params BotSettings, opts ...RequestOption) (*BotSettings, error) {
+// API: PUT /v1/organizations/{organizationID}/security/bots/settings
+func (s *ThreatsService) UpdateBotSettings(ctx context.Context, organizationID string, params BotSettings, opts ...RequestOption) (*BotSettings, error) {
 	return call[BotSettings](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/security/bots/settings",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/bots/settings",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// RiskSettings returns a tenant's risk-based sign-in settings.
+// RiskSettings returns an organization's risk-based sign-in settings.
 //
-// API: GET /v1/tenants/{tenantID}/security/risk-settings
-func (s *ThreatsService) RiskSettings(ctx context.Context, tenantID string, opts ...RequestOption) (*RiskSettings, error) {
+// API: GET /v1/organizations/{organizationID}/security/risk-settings
+func (s *ThreatsService) RiskSettings(ctx context.Context, organizationID string, opts ...RequestOption) (*RiskSettings, error) {
 	return call[RiskSettings](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/security/risk-settings",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/risk-settings",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// UpdateRiskSettings replaces a tenant's risk-based sign-in settings.
+// UpdateRiskSettings replaces an organization's risk-based sign-in settings.
 //
-// API: PUT /v1/tenants/{tenantID}/security/risk-settings
-func (s *ThreatsService) UpdateRiskSettings(ctx context.Context, tenantID string, params RiskSettings, opts ...RequestOption) (*RiskSettings, error) {
+// API: PUT /v1/organizations/{organizationID}/security/risk-settings
+func (s *ThreatsService) UpdateRiskSettings(ctx context.Context, organizationID string, params RiskSettings, opts ...RequestOption) (*RiskSettings, error) {
 	return call[RiskSettings](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/security/risk-settings",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/risk-settings",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // ListAnomalies lists detected sign-in anomalies, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/security/anomalies
-func (s *ThreatsService) ListAnomalies(ctx context.Context, tenantID string, params *ListSecurityAnomaliesParams, opts ...RequestOption) (*Page[SecurityAnomaly], error) {
+// API: GET /v1/organizations/{organizationID}/security/anomalies
+func (s *ThreatsService) ListAnomalies(ctx context.Context, organizationID string, params *ListSecurityAnomaliesParams, opts ...RequestOption) (*Page[SecurityAnomaly], error) {
 	return call[Page[SecurityAnomaly]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/security/anomalies",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/anomalies",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -85,31 +85,31 @@ func (s *ThreatsService) ListAnomalies(ctx context.Context, tenantID string, par
 // AllAnomalies returns an iterator over every item ListAnomalies returns, across all pages. It fetches
 // a page only when the loop needs it, and breaking out of the loop stops paging. A failed request ends
 // the iteration with a non-nil error.
-func (s *ThreatsService) AllAnomalies(ctx context.Context, tenantID string, params *ListSecurityAnomaliesParams, opts ...RequestOption) iter.Seq2[*SecurityAnomaly, error] {
+func (s *ThreatsService) AllAnomalies(ctx context.Context, organizationID string, params *ListSecurityAnomaliesParams, opts ...RequestOption) iter.Seq2[*SecurityAnomaly, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[SecurityAnomaly], error) {
-		return s.ListAnomalies(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.ListAnomalies(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 
 // AnomalySummary returns counts of open and resolved anomalies.
 //
-// API: GET /v1/tenants/{tenantID}/security/anomalies/summary
-func (s *ThreatsService) AnomalySummary(ctx context.Context, tenantID string, opts ...RequestOption) (*SecurityAnomalySummary, error) {
+// API: GET /v1/organizations/{organizationID}/security/anomalies/summary
+func (s *ThreatsService) AnomalySummary(ctx context.Context, organizationID string, opts ...RequestOption) (*SecurityAnomalySummary, error) {
 	return call[SecurityAnomalySummary](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/security/anomalies/summary",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/security/anomalies/summary",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // ResolveAnomaly marks an anomaly resolved.
 //
-// API: POST /v1/tenants/{tenantID}/security/anomalies/{id}/resolve
-func (s *ThreatsService) ResolveAnomaly(ctx context.Context, tenantID, anomalyID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/security/anomalies/{id}/resolve
+func (s *ThreatsService) ResolveAnomaly(ctx context.Context, organizationID, anomalyID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/security/anomalies/{anomalyID}/resolve",
-		pathArgs: []string{tenantID, anomalyID},
+		path:     "/v1/organizations/{organizationID}/security/anomalies/{anomalyID}/resolve",
+		pathArgs: []string{organizationID, anomalyID},
 	}, nil, opts)
 }
 
@@ -152,7 +152,7 @@ func (p *BotTelemetryParams) values() url.Values {
 // BotTelemetry is the result of ThreatsService.Bots.
 type BotTelemetry struct {
 	// A page of detections, newest first.
-	Recent []BotEvent `json:"recent,omitempty"`
+	Items []BotEvent `json:"items"`
 	// Present when there is a next page.
 	NextCursor string `json:"next_cursor,omitempty"`
 	// How many detections match.
@@ -160,7 +160,7 @@ type BotTelemetry struct {
 	Stats BotStats `json:"stats,omitzero"`
 }
 
-// BotEvent is one element of BotTelemetry.Recent.
+// BotEvent is one element of BotTelemetry.Items.
 type BotEvent struct {
 	// The account the sign-in attempt was for, when it exists.
 	UserID    string `json:"user_id,omitempty"`
@@ -193,7 +193,7 @@ type BotStats struct {
 	Threshold     float64 `json:"threshold"`
 }
 
-// BotSettings configures how a tenant scores sign-in traffic for bots.
+// BotSettings configures how an organization scores sign-in traffic for bots.
 type BotSettings struct {
 	Captcha        bool    `json:"captcha"`
 	Honeypot       bool    `json:"honeypot"`
@@ -306,9 +306,9 @@ type SecurityAnomaly struct {
 
 // SecurityAnomalySummary is the result of ThreatsService.AnomalySummary.
 type SecurityAnomalySummary struct {
-	// Distinct accounts of the organisation with an open event, counting the account an event names and
+	// Distinct accounts of the organization with an open event, counting the account an event names and
 	// every account a password spray targeted (a password_spraying event lists them in
-	// metadata.targeted_user_ids, only the organisation's own).
+	// metadata.targeted_user_ids, only the organization's own).
 	AffectedAccounts int `json:"affected_accounts"`
 	HighSeverity24h  int `json:"high_severity_24h"`
 	Open             int `json:"open"`

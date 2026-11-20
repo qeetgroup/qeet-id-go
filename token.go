@@ -2,9 +2,9 @@ package qeetid
 
 import "time"
 
-// Token is an OAuth 2.0 token response from the Qeet ID token endpoints.
+// Token is an OAuth 2.0 token response from the Qeet ID token endpoint.
 type Token struct {
-	// AccessToken is the access token, an ES256-signed JWT.
+	// AccessToken is the access token, a signed JWT.
 	AccessToken string `json:"access_token"`
 	// TokenType is "Bearer".
 	TokenType string `json:"token_type"`
@@ -12,7 +12,7 @@ type Token struct {
 	// the server issued it.
 	ExpiresIn int `json:"expires_in"`
 	// ExpiresAt is when the access token expires. Only the client credentials
-	// endpoint sends it; Expiry works for every grant.
+	// grant sends it; Expiry works for every grant.
 	ExpiresAt time.Time `json:"expires_at,omitzero"`
 	// RefreshToken renews the grant without the user, when one was issued.
 	RefreshToken string `json:"refresh_token,omitempty"`

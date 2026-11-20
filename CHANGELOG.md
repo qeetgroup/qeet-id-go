@@ -6,6 +6,106 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-21
+
+Follows the Qeet ID API as it is now: organization names throughout, and
+one token endpoint for every OAuth grant. The server accepts neither the old
+paths nor the old names, so code built on 0.1.0 has to move with it.
+Every request the SDK sends was checked against the server's five OpenAPI
+documents (`access`, `identity`, `federation`, `developer`, `operations`).
+
+### Breaking changes
+
+- **Organizations.** `Tenants` is `Organizations`: `OrganizationsService`,
+  `Organization`, `OrganizationStatus`, `OrganizationPlan`,
+  `ListOrganizationsParams`, `CreateOrganizationParams`,
+  `CreateOrganizationResult`, `UpdateOrganizationParams` and
+  `OrganizationDeletion`. Every `TenantID` field is `OrganizationID` (JSON
+  `organization_id`) and every `tenantID` argument is `organizationID`.
+  Requests go to `/v1/organizations/{organizationID}/…` and
+  `/v1/users/{userID}/organizations/{organizationID}/…` in place of the old
+  `/v1/tenants/…` paths. Enumerations follow: `EmailTemplateDeliveryScopeOrganization`
+  (`organization`), `AuthzDecidedByModelOrganization` (`organization`),
+  `AuthzDecidedByReasonCodeAuthzNoOrganization` (`authz.no_organization`), and
+  `User.HomeOrganizationName` (`home_organization_name`).
+- **Access tokens.** `jwt.Claims.TenantID` is `OrganizationID`, read from the
+  token's `organization_id` claim; so are `Introspection.OrganizationID`,
+  `UserInfo.OrganizationID` and `TokenPair.OrganizationID`.
+- **Webhooks.** `webhook.Event.TenantID` is `OrganizationID` (`organization_id`),
+  as are the `OrganizationID` fields of `UserData`, `GroupMemberData` and
+  `SessionRevokedData`. The events `TenantSuspended`, `TenantReactivated` and
+  `TenantDeleted` are `OrganizationSuspended` (`organization.suspended`),
+  `OrganizationReactivated` and `OrganizationDeleted`, and the session
+  revocation reasons are `ReasonOrganizationSwitch` (`organization_switch`),
+  `ReasonOrganizationSuspended` and `ReasonOrganizationDeleted`. The recorded
+  test deliveries were signed again by the server's signing code.
+- **One token endpoint.** `ExchangeCode`, `RefreshToken`, `ExchangeToken`,
+  `PollDeviceToken` and `PollBackchannelToken` post to `POST /v1/oauth/token`,
+  as `ClientCredentials` already did; `grant_type` chooses the flow.
+  `/v1/oauth/token-code` is gone.
+- **Agent tokens.** `Agents.Token` runs the client credentials grant at
+  `POST /v1/oauth/token`, with the agent's ID and secret sent by HTTP Basic,
+  and returns a `*Token` (with `ExpiresAt`); `AgentToken` is removed. Its
+  refusals are `*OAuthError` values: `OAuthInvalidClient` for a wrong ID or
+  secret, `OAuthUnauthorizedClient` for an agent that isn't active.
+  `WithClientCredentials` and `OAuth.ClientCredentials` take an agent's ID and
+  secret as well as a service principal's. `/v1/agents/token` is gone.
+- **Cursor paging.** `ListUsersParams.Offset` is removed. The suspended users,
+  directory errors and directory activity lists page by cursor:
+  `ListSuspendedUsersParams`, `ListDirectoryErrorsParams` and
+  `ListDirectoryActivityParams` take `Cursor` in place of `Offset`, and
+  `SuspendedUsers`, `DirectoryErrors` and `DirectoryActivity` carry
+  `NextCursor` in place of `Offset`.
+- `BotTelemetry.Recent` is `BotTelemetry.Items`, as the server answers it.
+- `UpdateOrganizationParams.Plan` is removed: the plan changes through
+  `Billing`, and the server refuses it on update.
+- `CreateGroupParams.OrganizationID` is removed: a group is created in the
+  caller's organization.
+- `SecurityPolicy.PasswordMinLength` and `PasswordComplexity` are removed: the
+  server ignored them and never returned them; password rules are the auth
+  policy's.
+- `Audit.UpdateAnomalySettings` takes `UpdateAuditAnomalySettingsParams`, which
+  sends all three settings and no organization ID.
+- `SAMLConnections.Update` takes `UpdateSAMLConnectionParams`, which adds
+  `AllowIDPInitiated`; `SAMLConnectionParams` stays for `Create`.
+- `Users.StartEmailVerification` takes no parameters and
+  `StartEmailVerificationParams` is removed: the server only ever verifies the
+  calling person's address on file.
+- `WebhookDisabledReasonNone` and `AuthHookLastOutcomeNone` are removed: the
+  server never sends "None"; a null value reads as "".
+
+### Added
+
+- `Organization.LogoURL`, and `LogoURL` on `CreateOrganizationParams` and
+  `UpdateOrganizationParams`; `OrganizationPlanStarter`.
+- `ListUsersParams`: `AdminsWithoutMFA`, `InGroup`, `IDs` and `Emails` (each
+  sent once per value, up to 200) and `IncludeDeleted`, with `User.DeletedAt`
+  and `UserStatusDeleted`. `UpdateUserParams.AvatarURL`. `UserStats.ByTeam`
+  and `UserStats.ByLocation`.
+- Cursor paging for the audit anomalies, email suppressions, email messages and
+  deleted users lists (`Cursor` parameters), with `Audit.AllAnomalies`,
+  `EmailDelivery.AllSuppressions`, `Users.AllDeleted` and
+  `EmailMessages.NextCursor`.
+- `AuthHook.PreviousSecretExpiresAt`. Auth-hook calls are signed as webhook
+  deliveries are (`X-Qeet-Timestamp`, a `.` and the body, two signatures while a
+  changed secret overlaps): `webhook.Verifier.Verify` checks them, refusing a
+  stale timestamp.
+- `SAMLServiceProviderParams.Status` (`SAMLServiceProviderStatus`).
+- `DirectoryMappings.Truncated` and `IPRules.Truncated`.
+- Audit chain reason codes `audit.chain_checkpoint_gone` and
+  `audit.chain_checkpoint_unsigned`.
+- Error code constants for `APIError.Code`: `CodeBadRequest`,
+  `CodeStepUpRequired`, `CodeMFAEnrollmentRequired`, `CodeAddressNotAllowed`,
+  `CodeOrganizationInactive`, `CodeOrganizationOwnerOnly`,
+  `CodeOrganizationDeletionScheduled`, `CodeOrganizationRegionUnavailable`,
+  `CodeOrganizationRegionReadOnly`, `CodeUpgradeRequired`,
+  `CodeCheckoutRequired`, `CodeGrantExceedsCaller`, `CodeTargetIsOwner`,
+  `CodeTargetOutranksCaller`, `CodeTrustChangeOutranksCaller`,
+  `CodeRelationCheckTooComplex`, `CodeVerificationAttemptsExceeded`,
+  `CodeVerificationCodeSendLimited`, `CodeVerificationDeliveryUnavailable`,
+  `CodeVerificationEmailManaged`, `CodeResourceDomainUnverified`,
+  `CodeResourceReserved` and `CodeTokenVaultProviderInUse`.
+
 ## [0.1.0] — 2026-11-05
 
 The first tagged version: a rebuild of the SDK against the Qeet ID 1.0 API
@@ -202,5 +302,6 @@ for the internal package layout and [docs/design-decisions/](docs/design-decisio
 for the API-shape trade-offs (single package vs. per-resource packages, flat
 vs. grouped `Client` fields).
 
-[Unreleased]: https://github.com/qeetgroup/qeet-id-go/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/qeetgroup/qeet-id-go/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/qeetgroup/qeet-id-go/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/qeetgroup/qeet-id-go/releases/tag/v0.1.0

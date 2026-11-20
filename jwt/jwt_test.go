@@ -90,7 +90,7 @@ func (s *signer) sign(t *testing.T, header map[string]any, claims map[string]any
 func accessClaims(now time.Time) map[string]any {
 	return map[string]any{
 		"iss": testIssuer, "aud": []string{testAudience}, "sub": "u-1",
-		"user_id": "u-1", "tenant_id": "t-1", "sid": "s-1", "scope": "openid invoices.read",
+		"user_id": "u-1", "organization_id": "t-1", "sid": "s-1", "scope": "openid invoices.read",
 		"iat": now.Unix(), "nbf": now.Unix(), "exp": now.Add(10 * time.Minute).Unix(), "jti": "j-1",
 		"claims": map[string]any{"plan": "pro"},
 	}
@@ -161,7 +161,7 @@ func TestVerifyAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.UserID != "u-1" || c.TenantID != "t-1" || c.SessionID != "s-1" || c.Issuer != testIssuer ||
+	if c.UserID != "u-1" || c.OrganizationID != "t-1" || c.SessionID != "s-1" || c.Issuer != testIssuer ||
 		!c.HasScope("invoices.read") || c.HasScope("invoices.write") || c.Custom["plan"] != "pro" || c.ID != "j-1" {
 		t.Errorf("claims = %+v", c)
 	}
@@ -183,7 +183,7 @@ func TestServiceAndDelegatedTokens(t *testing.T) {
 	clk := &clock{now: time.Now()}
 	v := newTestVerifier(t, js, clk)
 
-	svc := map[string]any{"iss": testIssuer, "aud": testAudience, "sub": "sp-1", "tenant_id": "t-1",
+	svc := map[string]any{"iss": testIssuer, "aud": testAudience, "sub": "sp-1", "organization_id": "t-1",
 		"scope": "user.read", "actor_type": "service", "exp": clk.Now().Add(time.Minute).Unix()}
 	c, err := v.Verify(context.Background(), s.sign(t, nil, svc))
 	if err != nil {

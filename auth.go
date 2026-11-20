@@ -117,7 +117,7 @@ func (c *Client) clientCredentialsToken(ctx context.Context, clientID, clientSec
 	}
 	tok, err := call[Token](ctx, c, &request{
 		method:       http.MethodPost,
-		path:         "/v1/oauth/token",
+		path:         grantPath,
 		form:         form,
 		clientID:     clientID,
 		clientSecret: clientSecret,

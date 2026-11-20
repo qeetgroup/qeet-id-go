@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// InvitationsService invites people to join a tenant.
+// InvitationsService invites people to join an organization.
 type InvitationsService struct{ c *Client }
 
 // Create invites a person by email. The accept link goes only to the invited address; the result
@@ -20,14 +20,14 @@ func (s *InvitationsService) Create(ctx context.Context, params CreateInvitation
 	return call[InvitationResult](ctx, s.c, &request{method: http.MethodPost, path: "/v1/invites", body: params, idempotent: true}, opts)
 }
 
-// List lists a tenant's invitations.
+// List lists an organization's invitations.
 //
-// API: GET /v1/tenants/{tenantID}/invites
-func (s *InvitationsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[Invitation], error) {
+// API: GET /v1/organizations/{organizationID}/invites
+func (s *InvitationsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[Invitation], error) {
 	return call[Page[Invitation]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/invites",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/invites",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
@@ -55,9 +55,9 @@ func (s *InvitationsService) Resend(ctx context.Context, invitationID string, op
 
 // CreateInvitationParams is the request body of InvitationsService.Create.
 type CreateInvitationParams struct {
-	Email    string  `json:"email,omitempty"`
-	RoleID   *string `json:"role_id,omitempty"`
-	TenantID string  `json:"tenant_id,omitempty"`
+	Email          string  `json:"email,omitempty"`
+	RoleID         *string `json:"role_id,omitempty"`
+	OrganizationID string  `json:"organization_id,omitempty"`
 }
 
 // InvitationResult carries the invitation an Invitations call created or sent again, with whether its
@@ -66,17 +66,17 @@ type InvitationResult struct {
 	Invite Invitation `json:"invite,omitzero"`
 }
 
-// Invitation is an invitation for a person to join a tenant.
+// Invitation is an invitation for a person to join an organization.
 type Invitation struct {
-	AcceptedAt *time.Time         `json:"accepted_at,omitempty"`
-	CreatedAt  time.Time          `json:"created_at,omitzero"`
-	Delivery   InvitationDelivery `json:"delivery,omitzero"`
-	Email      string             `json:"email,omitempty"`
-	ExpiresAt  time.Time          `json:"expires_at,omitzero"`
-	ID         string             `json:"id,omitempty"`
-	RoleID     string             `json:"role_id,omitempty"`
-	Status     string             `json:"status,omitempty"`
-	TenantID   string             `json:"tenant_id,omitempty"`
+	AcceptedAt     *time.Time         `json:"accepted_at,omitempty"`
+	CreatedAt      time.Time          `json:"created_at,omitzero"`
+	Delivery       InvitationDelivery `json:"delivery,omitzero"`
+	Email          string             `json:"email,omitempty"`
+	ExpiresAt      time.Time          `json:"expires_at,omitzero"`
+	ID             string             `json:"id,omitempty"`
+	RoleID         string             `json:"role_id,omitempty"`
+	Status         string             `json:"status,omitempty"`
+	OrganizationID string             `json:"organization_id,omitempty"`
 }
 
 // InvitationDelivery reports whether an invitation's email was sent. The invitation exists either way.

@@ -25,14 +25,14 @@ func (s *ServicePrincipalsService) Create(ctx context.Context, params CreateServ
 	}, opts)
 }
 
-// List lists a tenant's service principals.
+// List lists an organization's service principals.
 //
-// API: GET /v1/tenants/{tenantID}/service-principals
-func (s *ServicePrincipalsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[ServicePrincipal], error) {
+// API: GET /v1/organizations/{organizationID}/service-principals
+func (s *ServicePrincipalsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[ServicePrincipal], error) {
 	return call[Page[ServicePrincipal]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/service-principals",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/service-principals",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
@@ -49,34 +49,34 @@ func (s *ServicePrincipalsService) Disable(ctx context.Context, principalID stri
 
 // Enable enables a disabled service principal.
 //
-// API: POST /v1/tenants/{tenantID}/service-principals/{id}/enable
-func (s *ServicePrincipalsService) Enable(ctx context.Context, tenantID, principalID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/service-principals/{id}/enable
+func (s *ServicePrincipalsService) Enable(ctx context.Context, organizationID, principalID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/service-principals/{principalID}/enable",
-		pathArgs: []string{tenantID, principalID},
+		path:     "/v1/organizations/{organizationID}/service-principals/{principalID}/enable",
+		pathArgs: []string{organizationID, principalID},
 	}, nil, opts)
 }
 
 // RotateSecret replaces a service principal's secret. The old secret keeps working for the overlap
 // given.
 //
-// API: POST /v1/tenants/{tenantID}/service-principals/{id}/rotate-secret
-func (s *ServicePrincipalsService) RotateSecret(ctx context.Context, tenantID, principalID string, params RotateSecretParams, opts ...RequestOption) (*RotatedServicePrincipalSecret, error) {
+// API: POST /v1/organizations/{organizationID}/service-principals/{id}/rotate-secret
+func (s *ServicePrincipalsService) RotateSecret(ctx context.Context, organizationID, principalID string, params RotateSecretParams, opts ...RequestOption) (*RotatedServicePrincipalSecret, error) {
 	return call[RotatedServicePrincipalSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/service-principals/{principalID}/rotate-secret",
-		pathArgs: []string{tenantID, principalID},
+		path:     "/v1/organizations/{organizationID}/service-principals/{principalID}/rotate-secret",
+		pathArgs: []string{organizationID, principalID},
 		body:     params,
 	}, opts)
 }
 
 // CreateServicePrincipalParams is the request body of ServicePrincipalsService.Create.
 type CreateServicePrincipalParams struct {
-	TenantID    string   `json:"tenant_id,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Scopes      []string `json:"scopes,omitempty"`
+	OrganizationID string   `json:"organization_id,omitempty"`
+	Name           string   `json:"name,omitempty"`
+	Description    string   `json:"description,omitempty"`
+	Scopes         []string `json:"scopes,omitempty"`
 }
 
 // CreateServicePrincipalResult carries a new service principal and its client secret, which is shown
@@ -91,13 +91,13 @@ type CreateServicePrincipalResult struct {
 // ServicePrincipal is a machine identity that gets access tokens with the OAuth client credentials
 // grant.
 type ServicePrincipal struct {
-	CreatedAt   time.Time  `json:"created_at,omitzero"`
-	DisabledAt  *time.Time `json:"disabled_at,omitempty"`
-	ID          string     `json:"id,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Scopes      []string   `json:"scopes,omitempty"`
-	TenantID    string     `json:"tenant_id,omitempty"`
-	Description string     `json:"description,omitempty"`
+	CreatedAt      time.Time  `json:"created_at,omitzero"`
+	DisabledAt     *time.Time `json:"disabled_at,omitempty"`
+	ID             string     `json:"id,omitempty"`
+	Name           string     `json:"name,omitempty"`
+	Scopes         []string   `json:"scopes,omitempty"`
+	OrganizationID string     `json:"organization_id,omitempty"`
+	Description    string     `json:"description,omitempty"`
 	// When the principal was last issued a token, to the minute.
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	// Present while the secret replaced at its last rotation still works, until then.

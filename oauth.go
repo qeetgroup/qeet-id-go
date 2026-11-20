@@ -38,19 +38,23 @@ const (
 
 // ClientCredentialsParams are the parameters of OAuthService.ClientCredentials.
 type ClientCredentialsParams struct {
-	// ClientID is the service principal's client ID.
+	// ClientID is the service principal's or the AI agent's ID.
 	ClientID string
-	// ClientSecret is the service principal's secret.
+	// ClientSecret is the service principal's or the agent's secret.
 	ClientSecret string
-	// Scope is sent as the grant's scope parameter. The server ignores it
-	// today: the token always carries every scope the service principal holds.
+	// Scope is sent as the grant's scope parameter. The server ignores it:
+	// the token always carries every scope the principal or agent holds.
 	Scope string
 }
 
-// ClientCredentials obtains an access token for a service principal with the
-// client credentials grant. Token.ExpiresIn and Token.ExpiresAt give its
-// lifetime. To have the client fetch and renew such tokens for its own
-// requests, use WithClientCredentials instead.
+// ClientCredentials obtains an access token for a service principal or an AI
+// agent with the client credentials grant. Token.ExpiresIn and
+// Token.ExpiresAt give its lifetime: the access-token lifetime for a
+// principal, the agent's own TokenTTLSeconds for an agent. A wrong ID or
+// secret fails with an *OAuthError whose Code is OAuthInvalidClient; a
+// disabled principal or an agent that isn't active, with
+// OAuthUnauthorizedClient. To have the client fetch and renew such tokens for
+// its own requests, use WithClientCredentials instead.
 //
 // API: POST /v1/oauth/token
 func (s *OAuthService) ClientCredentials(ctx context.Context, params ClientCredentialsParams, opts ...RequestOption) (*Token, error) {
@@ -81,7 +85,7 @@ type ExchangeCodeParams struct {
 // ExchangeCode redeems an authorization code for tokens (the
 // authorization_code grant).
 //
-// API: POST /v1/oauth/token-code
+// API: POST /v1/oauth/token
 func (s *OAuthService) ExchangeCode(ctx context.Context, params ExchangeCodeParams, opts ...RequestOption) (*Token, error) {
 	if params.Code == "" {
 		return nil, errors.New("qeetid: ExchangeCode: Code is required")
@@ -110,7 +114,7 @@ type RefreshTokenParams struct {
 // RefreshToken renews a grant with its refresh token (the refresh_token
 // grant).
 //
-// API: POST /v1/oauth/token-code
+// API: POST /v1/oauth/token
 func (s *OAuthService) RefreshToken(ctx context.Context, params RefreshTokenParams, opts ...RequestOption) (*Token, error) {
 	if params.RefreshToken == "" {
 		return nil, errors.New("qeetid: RefreshToken: RefreshToken is required")
@@ -149,7 +153,7 @@ type TokenExchangeParams struct {
 // ExchangeToken exchanges a token for another, narrower or delegated one
 // (RFC 8693 token exchange).
 //
-// API: POST /v1/oauth/token-code
+// API: POST /v1/oauth/token
 func (s *OAuthService) ExchangeToken(ctx context.Context, params TokenExchangeParams, opts ...RequestOption) (*Token, error) {
 	if params.SubjectToken == "" {
 		return nil, errors.New("qeetid: ExchangeToken: SubjectToken is required")
@@ -235,7 +239,7 @@ type DeviceTokenParams struct {
 // seconds to the interval on OAuthSlowDown. OAuthAccessDenied and
 // OAuthExpiredToken end the flow.
 //
-// API: POST /v1/oauth/token-code
+// API: POST /v1/oauth/token
 func (s *OAuthService) PollDeviceToken(ctx context.Context, params DeviceTokenParams, opts ...RequestOption) (*Token, error) {
 	if params.DeviceCode == "" {
 		return nil, errors.New("qeetid: PollDeviceToken: DeviceCode is required")
@@ -253,7 +257,7 @@ type BackchannelAuthorizationParams struct {
 	// ClientSecret is the application's secret.
 	ClientSecret string
 	// LoginHint is the email address of the person to authenticate, a member
-	// of the application's tenant.
+	// of the application's organization.
 	LoginHint string
 	// Scope lists the space-separated scopes to ask for.
 	Scope string
@@ -309,7 +313,7 @@ type BackchannelTokenParams struct {
 // PollBackchannelToken asks once whether the person approved a backchannel
 // request. It fails like PollDeviceToken while the request is pending.
 //
-// API: POST /v1/oauth/token-code
+// API: POST /v1/oauth/token
 func (s *OAuthService) PollBackchannelToken(ctx context.Context, params BackchannelTokenParams, opts ...RequestOption) (*Token, error) {
 	if params.AuthReqID == "" {
 		return nil, errors.New("qeetid: PollBackchannelToken: AuthReqID is required")
@@ -356,8 +360,8 @@ type Introspection struct {
 	ExpiresAt time.Time
 	// IssuedAt is when the token was issued.
 	IssuedAt time.Time
-	// TenantID is the tenant the token is scoped to.
-	TenantID string
+	// OrganizationID is the organization the token is scoped to.
+	OrganizationID string
 	// SessionID is the session the token belongs to.
 	SessionID string
 	// ActorType is "service" or "agent" for a machine token; empty for a
@@ -379,21 +383,21 @@ type TokenActor struct {
 // may each be a string or a list and exp and iat are Unix seconds.
 func (in *Introspection) UnmarshalJSON(b []byte) error {
 	var raw struct {
-		Active    bool        `json:"active"`
-		TokenType string      `json:"token_type"`
-		Subject   string      `json:"sub"`
-		Scope     string      `json:"scope"`
-		Issuer    string      `json:"iss"`
-		Audience  stringList  `json:"aud"`
-		ClientID  string      `json:"client_id"`
-		Resource  stringList  `json:"resource"`
-		Exp       json.Number `json:"exp"`
-		Iat       json.Number `json:"iat"`
-		TenantID  string      `json:"tenant_id"`
-		SessionID string      `json:"sid"`
-		ActorType string      `json:"actor_type"`
-		AgentID   string      `json:"agent_id"`
-		Actor     *TokenActor `json:"act"`
+		Active         bool        `json:"active"`
+		TokenType      string      `json:"token_type"`
+		Subject        string      `json:"sub"`
+		Scope          string      `json:"scope"`
+		Issuer         string      `json:"iss"`
+		Audience       stringList  `json:"aud"`
+		ClientID       string      `json:"client_id"`
+		Resource       stringList  `json:"resource"`
+		Exp            json.Number `json:"exp"`
+		Iat            json.Number `json:"iat"`
+		OrganizationID string      `json:"organization_id"`
+		SessionID      string      `json:"sid"`
+		ActorType      string      `json:"actor_type"`
+		AgentID        string      `json:"agent_id"`
+		Actor          *TokenActor `json:"act"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
@@ -401,7 +405,7 @@ func (in *Introspection) UnmarshalJSON(b []byte) error {
 	*in = Introspection{
 		Active: raw.Active, TokenType: raw.TokenType, Subject: raw.Subject, Scope: raw.Scope,
 		Issuer: raw.Issuer, Audience: raw.Audience, ClientID: raw.ClientID, Resource: raw.Resource,
-		ExpiresAt: unixTime(raw.Exp), IssuedAt: unixTime(raw.Iat), TenantID: raw.TenantID,
+		ExpiresAt: unixTime(raw.Exp), IssuedAt: unixTime(raw.Iat), OrganizationID: raw.OrganizationID,
 		SessionID: raw.SessionID, ActorType: raw.ActorType, AgentID: raw.AgentID, Actor: raw.Actor,
 	}
 	return nil
@@ -465,8 +469,8 @@ func (s *OAuthService) Revoke(ctx context.Context, params RevokeParams, opts ...
 type UserInfo struct {
 	// Subject is the person's user ID.
 	Subject string `json:"sub"`
-	// TenantID is the person's tenant.
-	TenantID string `json:"tenant_id,omitempty"`
+	// OrganizationID is the person's organization.
+	OrganizationID string `json:"organization_id,omitempty"`
 	// Email and EmailVerified come with the email scope.
 	Email         string `json:"email,omitempty"`
 	EmailVerified bool   `json:"email_verified,omitempty"`
@@ -532,9 +536,13 @@ func (s *OAuthService) Discover(ctx context.Context, opts ...RequestOption) (*Pr
 	return call[ProviderMetadata](ctx, s.c, &request{method: http.MethodGet, path: "/.well-known/openid-configuration", public: true}, opts)
 }
 
-// token posts a grant to the interactive token endpoint.
+// grantPath is the OAuth token endpoint (RFC 6749 section 3.2), where every grant is posted;
+// grant_type chooses the flow.
+const grantPath = "/v1/oauth/token"
+
+// token posts a grant to the token endpoint.
 func (s *OAuthService) token(ctx context.Context, clientID, clientSecret string, form url.Values, opts []RequestOption) (*Token, error) {
-	req, err := oauthRequest("/v1/oauth/token-code", clientID, clientSecret, form)
+	req, err := oauthRequest(grantPath, clientID, clientSecret, form)
 	if err != nil {
 		return nil, err
 	}

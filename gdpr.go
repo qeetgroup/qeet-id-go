@@ -28,14 +28,14 @@ func (s *GDPRService) CancelPurge(ctx context.Context, requestID string, opts ..
 	}, nil, opts)
 }
 
-// ListPurges lists a tenant's erasure requests.
+// ListPurges lists an organization's erasure requests.
 //
-// API: GET /v1/tenants/{tenantID}/gdpr/purge
-func (s *GDPRService) ListPurges(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[PurgeRequest], error) {
+// API: GET /v1/organizations/{organizationID}/gdpr/purge
+func (s *GDPRService) ListPurges(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[PurgeRequest], error) {
 	return call[Page[PurgeRequest]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/gdpr/purge",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/gdpr/purge",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
@@ -46,46 +46,46 @@ func (s *GDPRService) CreateExport(ctx context.Context, params CreateExportReque
 	return call[ExportRequest](ctx, s.c, &request{method: http.MethodPost, path: "/v1/gdpr/export", body: params}, opts)
 }
 
-// ListExports lists a tenant's export requests.
+// ListExports lists an organization's export requests.
 //
-// API: GET /v1/tenants/{tenantID}/gdpr/export
-func (s *GDPRService) ListExports(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[ExportRequest], error) {
+// API: GET /v1/organizations/{organizationID}/gdpr/export
+func (s *GDPRService) ListExports(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[ExportRequest], error) {
 	return call[Page[ExportRequest]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/gdpr/export",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/gdpr/export",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // GetExport returns an export request, with its payload once ready.
 //
-// API: GET /v1/tenants/{tenantID}/gdpr/export/{id}
-func (s *GDPRService) GetExport(ctx context.Context, tenantID, requestID string, opts ...RequestOption) (*ExportRequest, error) {
+// API: GET /v1/organizations/{organizationID}/gdpr/export/{id}
+func (s *GDPRService) GetExport(ctx context.Context, organizationID, requestID string, opts ...RequestOption) (*ExportRequest, error) {
 	return call[ExportRequest](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/gdpr/export/{requestID}",
-		pathArgs: []string{tenantID, requestID},
+		path:     "/v1/organizations/{organizationID}/gdpr/export/{requestID}",
+		pathArgs: []string{organizationID, requestID},
 	}, opts)
 }
 
 // CreatePurgeRequestParams is the request body of GDPRService.CreatePurge.
 type CreatePurgeRequestParams struct {
-	Reason   string `json:"reason,omitempty"`
-	TenantID string `json:"tenant_id,omitempty"`
-	UserID   string `json:"user_id,omitempty"`
+	Reason         string `json:"reason,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	UserID         string `json:"user_id,omitempty"`
 }
 
 // PurgeRequest is a request to erase a person's data. It runs when its grace period ends unless
 // cancelled.
 type PurgeRequest struct {
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at,omitzero"`
-	GraceUntil  time.Time  `json:"grace_until,omitzero"`
-	ID          string     `json:"id,omitempty"`
-	Reason      string     `json:"reason,omitempty"`
-	RequestedBy string     `json:"requested_by,omitempty"`
-	Status      string     `json:"status,omitempty"`
-	TenantID    string     `json:"tenant_id,omitempty"`
+	CompletedAt    *time.Time `json:"completed_at,omitempty"`
+	CreatedAt      time.Time  `json:"created_at,omitzero"`
+	GraceUntil     time.Time  `json:"grace_until,omitzero"`
+	ID             string     `json:"id,omitempty"`
+	Reason         string     `json:"reason,omitempty"`
+	RequestedBy    string     `json:"requested_by,omitempty"`
+	Status         string     `json:"status,omitempty"`
+	OrganizationID string     `json:"organization_id,omitempty"`
 	// The account to erase; kept after the account itself is deleted.
 	UserID string `json:"user_id,omitempty"`
 	// The person's email as the request was filed; null once they are erased.
@@ -100,8 +100,8 @@ type PurgeRequest struct {
 
 // CreateExportRequestParams is the request body of GDPRService.CreateExport.
 type CreateExportRequestParams struct {
-	TenantID string `json:"tenant_id,omitempty"`
-	UserID   string `json:"user_id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	UserID         string `json:"user_id,omitempty"`
 }
 
 // ExportRequest is a request to export a person's data. Payload is set once Status is ready.
@@ -110,7 +110,7 @@ type ExportRequest struct {
 	CreatedAt   time.Time  `json:"created_at,omitzero"`
 	Error       string     `json:"error,omitempty"`
 	ID          string     `json:"id,omitempty"`
-	// The person's data in the organisation, while status is ready: profile (with metadata), sessions,
+	// The person's data in the organization, while status is ready: profile (with metadata), sessions,
 	// passkeys, roles, mfa_totp_enabled, identities (linked social and single sign-on accounts),
 	// otp_factors (destinations masked), app_consents, app_grants, groups, sign_ins (the latest 1000) and
 	// generated_at.
@@ -118,8 +118,8 @@ type ExportRequest struct {
 	RequestedBy string         `json:"requested_by,omitempty"`
 	// pending, ready, failed, or expired once the payload has been deleted (seven days after it was
 	// built, or when the person was erased or their account deleted).
-	Status   string `json:"status,omitempty"`
-	TenantID string `json:"tenant_id,omitempty"`
+	Status         string `json:"status,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
 	// The account exported; kept after the account itself is deleted.
 	UserID string `json:"user_id,omitempty"`
 }

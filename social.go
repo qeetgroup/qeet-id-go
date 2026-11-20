@@ -10,18 +10,18 @@ import (
 // users.
 type SocialProvidersService struct{ c *Client }
 
-// List lists a tenant's social providers.
+// List lists an organization's social providers.
 //
-// API: GET /v1/tenants/{tenantID}/social/providers
-func (s *SocialProvidersService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[SocialProvider], error) {
+// API: GET /v1/organizations/{organizationID}/social/providers
+func (s *SocialProvidersService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[SocialProvider], error) {
 	return call[Page[SocialProvider]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/social/providers",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/social/providers",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Upsert creates or replaces the caller's tenant configuration for a provider.
+// Upsert creates or replaces the caller's organization configuration for a provider.
 //
 // API: POST /v1/social/providers
 func (s *SocialProvidersService) Upsert(ctx context.Context, params UpsertSocialProviderParams, opts ...RequestOption) (*SocialProvider, error) {
@@ -62,20 +62,20 @@ func (s *SocialProvidersService) UnlinkIdentity(ctx context.Context, identityID 
 	}, nil, opts)
 }
 
-// SocialProvider is a tenant's configuration for signing in with a social provider such as Google or
+// SocialProvider is an organization's configuration for signing in with a social provider such as Google or
 // GitHub.
 type SocialProvider struct {
 	// oidc for a provider found by discovery_url, else the adapter its name picks.
-	Kind         SocialProviderKind `json:"kind,omitempty"`
-	AppleTeamID  string             `json:"apple_team_id,omitempty"`
-	AppleKeyID   string             `json:"apple_key_id,omitempty"`
-	ClientID     string             `json:"client_id,omitempty"`
-	CreatedAt    time.Time          `json:"created_at,omitzero"`
-	DiscoveryURL string             `json:"discovery_url,omitempty"`
-	Enabled      bool               `json:"enabled"`
-	ID           string             `json:"id,omitempty"`
-	Provider     string             `json:"provider,omitempty"`
-	TenantID     string             `json:"tenant_id,omitempty"`
+	Kind           SocialProviderKind `json:"kind,omitempty"`
+	AppleTeamID    string             `json:"apple_team_id,omitempty"`
+	AppleKeyID     string             `json:"apple_key_id,omitempty"`
+	ClientID       string             `json:"client_id,omitempty"`
+	CreatedAt      time.Time          `json:"created_at,omitzero"`
+	DiscoveryURL   string             `json:"discovery_url,omitempty"`
+	Enabled        bool               `json:"enabled"`
+	ID             string             `json:"id,omitempty"`
+	Provider       string             `json:"provider,omitempty"`
+	OrganizationID string             `json:"organization_id,omitempty"`
 }
 
 // SocialProviderKind is a string enumeration used by SocialProvider.Kind. oidc for a provider found by

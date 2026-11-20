@@ -12,23 +12,23 @@ type DeviceAuthorizationsService struct{ c *Client }
 // List lists pending and approved device authorizations. Page.Truncated reports a list cut short by
 // the server's cap.
 //
-// API: GET /v1/tenants/{tenantID}/oauth/devices
-func (s *DeviceAuthorizationsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[DeviceAuthorization], error) {
+// API: GET /v1/organizations/{organizationID}/oauth/devices
+func (s *DeviceAuthorizationsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[DeviceAuthorization], error) {
 	return call[Page[DeviceAuthorization]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oauth/devices",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oauth/devices",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Revoke revokes a device authorization.
 //
-// API: DELETE /v1/tenants/{tenantID}/oauth/devices/{id}
-func (s *DeviceAuthorizationsService) Revoke(ctx context.Context, tenantID, authorizationID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/oauth/devices/{id}
+func (s *DeviceAuthorizationsService) Revoke(ctx context.Context, organizationID, authorizationID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/oauth/devices/{authorizationID}",
-		pathArgs: []string{tenantID, authorizationID},
+		path:     "/v1/organizations/{organizationID}/oauth/devices/{authorizationID}",
+		pathArgs: []string{organizationID, authorizationID},
 	}, nil, opts)
 }
 

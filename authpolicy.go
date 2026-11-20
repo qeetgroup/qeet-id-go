@@ -5,44 +5,44 @@ import (
 	"net/http"
 )
 
-// AuthPolicyService manages how a tenant's people may sign in.
+// AuthPolicyService manages how an organization's people may sign in.
 type AuthPolicyService struct{ c *Client }
 
-// Get returns a tenant's sign-in policy.
+// Get returns an organization's sign-in policy.
 //
-// API: GET /v1/tenants/{tenantID}/auth-policy
-func (s *AuthPolicyService) Get(ctx context.Context, tenantID string, opts ...RequestOption) (*AuthPolicy, error) {
+// API: GET /v1/organizations/{organizationID}/auth-policy
+func (s *AuthPolicyService) Get(ctx context.Context, organizationID string, opts ...RequestOption) (*AuthPolicy, error) {
 	return call[AuthPolicy](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/auth-policy",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/auth-policy",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Update replaces a tenant's sign-in policy. Read it with Get, change it, and send it back.
+// Update replaces an organization's sign-in policy. Read it with Get, change it, and send it back.
 //
-// API: PUT /v1/tenants/{tenantID}/auth-policy
-func (s *AuthPolicyService) Update(ctx context.Context, tenantID string, params AuthPolicy, opts ...RequestOption) (*AuthPolicy, error) {
+// API: PUT /v1/organizations/{organizationID}/auth-policy
+func (s *AuthPolicyService) Update(ctx context.Context, organizationID string, params AuthPolicy, opts ...RequestOption) (*AuthPolicy, error) {
 	return call[AuthPolicy](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/auth-policy",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/auth-policy",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// Usage reports how the tenant's people sign in today, to show the effect of a policy change.
+// Usage reports how the organization's people sign in today, to show the effect of a policy change.
 //
-// API: GET /v1/tenants/{tenantID}/auth-policy/usage
-func (s *AuthPolicyService) Usage(ctx context.Context, tenantID string, opts ...RequestOption) (*AuthPolicyUsage, error) {
+// API: GET /v1/organizations/{organizationID}/auth-policy/usage
+func (s *AuthPolicyService) Usage(ctx context.Context, organizationID string, opts ...RequestOption) (*AuthPolicyUsage, error) {
 	return call[AuthPolicyUsage](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/auth-policy/usage",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/auth-policy/usage",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// AuthPolicy is a tenant's sign-in policy: the methods people may use, password rules, lockout and
+// AuthPolicy is an organization's sign-in policy: the methods people may use, password rules, lockout and
 // remembered devices.
 type AuthPolicy struct {
 	PasswordEnabled          bool `json:"password_enabled"`
@@ -74,7 +74,7 @@ type AuthPolicy struct {
 }
 
 // LockoutLimits is the platform defaults for the lockout settings (LOGIN_LOCKOUT_THRESHOLD / _WINDOW /
-// _DURATION, built-in 5 / 15 / 15) and the inclusive bounds a tenant may choose within
+// _DURATION, built-in 5 / 15 / 15) and the inclusive bounds an organization may choose within
 // (LOGIN_LOCKOUT_*_MIN / _MAX). Ignored on update.
 type LockoutLimits struct {
 	Defaults LockoutSettings `json:"defaults,omitzero"`

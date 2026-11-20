@@ -11,35 +11,35 @@ type CredentialsService struct{ c *Client }
 
 // Issue issues a credential as a signed JWT.
 //
-// API: POST /v1/tenants/{tenantID}/credentials
-func (s *CredentialsService) Issue(ctx context.Context, tenantID string, params IssueCredentialParams, opts ...RequestOption) (*IssuedCredential, error) {
+// API: POST /v1/organizations/{organizationID}/credentials
+func (s *CredentialsService) Issue(ctx context.Context, organizationID string, params IssueCredentialParams, opts ...RequestOption) (*IssuedCredential, error) {
 	return call[IssuedCredential](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/credentials",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/credentials",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// List lists a tenant's credentials.
+// List lists an organization's credentials.
 //
-// API: GET /v1/tenants/{tenantID}/credentials
-func (s *CredentialsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[Credential], error) {
+// API: GET /v1/organizations/{organizationID}/credentials
+func (s *CredentialsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[Credential], error) {
 	return call[Page[Credential]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/credentials",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/credentials",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Revoke revokes a credential.
 //
-// API: POST /v1/tenants/{tenantID}/credentials/{id}/revoke
-func (s *CredentialsService) Revoke(ctx context.Context, tenantID, credentialID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/credentials/{id}/revoke
+func (s *CredentialsService) Revoke(ctx context.Context, organizationID, credentialID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/credentials/{credentialID}/revoke",
-		pathArgs: []string{tenantID, credentialID},
+		path:     "/v1/organizations/{organizationID}/credentials/{credentialID}/revoke",
+		pathArgs: []string{organizationID, credentialID},
 	}, nil, opts)
 }
 
@@ -58,7 +58,7 @@ type IssueCredentialParams struct {
 	Type       string         `json:"type,omitempty"`
 	Claims     map[string]any `json:"claims,omitempty"`
 	TTLSeconds *int           `json:"ttl_seconds,omitempty"`
-	// The person the credential is for, a member of the organisation (else 422 vc.user_not_member).
+	// The person the credential is for, a member of the organization (else 422 vc.user_not_member).
 	// Recorded with the credential, not in the signed JWT-VC.
 	UserID string `json:"user_id,omitempty"`
 }
@@ -70,7 +70,7 @@ type IssuedCredential struct {
 	JWT          string    `json:"jwt,omitempty"`
 }
 
-// Credential is a W3C verifiable credential a tenant issued.
+// Credential is a W3C verifiable credential an organization issued.
 type Credential struct {
 	ExpiresAt time.Time `json:"expires_at,omitzero"`
 	ID        string    `json:"id,omitempty"`

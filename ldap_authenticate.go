@@ -51,9 +51,9 @@ type TokenPair struct {
 	SessionID string `json:"session_id"`
 	// UserID identifies the person signed in.
 	UserID string `json:"user_id"`
-	// TenantID is the tenant the token is scoped to; empty for a session
+	// OrganizationID is the organization the token is scoped to; empty for a session
 	// without one.
-	TenantID string `json:"tenant_id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
 }
 
 // MFAChallenge is a sign-in stopped before its session: the person holds a

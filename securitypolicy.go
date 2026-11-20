@@ -6,52 +6,48 @@ import (
 	"time"
 )
 
-// SecurityPolicyService manages a tenant's session, password and second-factor policy.
+// SecurityPolicyService manages an organization's session and second-factor policy. Password rules are
+// the auth policy's (AuthPolicyService).
 type SecurityPolicyService struct{ c *Client }
 
-// Get returns a tenant's security policy.
+// Get returns an organization's security policy.
 //
-// API: GET /v1/tenants/{tenantID}/policy
-func (s *SecurityPolicyService) Get(ctx context.Context, tenantID string, opts ...RequestOption) (*SecurityPolicy, error) {
+// API: GET /v1/organizations/{organizationID}/policy
+func (s *SecurityPolicyService) Get(ctx context.Context, organizationID string, opts ...RequestOption) (*SecurityPolicy, error) {
 	return call[SecurityPolicy](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/policy",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/policy",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Replace replaces a tenant's whole security policy.
+// Replace replaces an organization's whole security policy.
 //
-// API: PUT /v1/tenants/{tenantID}/policy
-func (s *SecurityPolicyService) Replace(ctx context.Context, tenantID string, params SecurityPolicy, opts ...RequestOption) (*SecurityPolicy, error) {
+// API: PUT /v1/organizations/{organizationID}/policy
+func (s *SecurityPolicyService) Replace(ctx context.Context, organizationID string, params SecurityPolicy, opts ...RequestOption) (*SecurityPolicy, error) {
 	return call[SecurityPolicy](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/policy",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/policy",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// Update changes part of a tenant's security policy. Fields left nil are not changed.
+// Update changes part of an organization's security policy. Fields left nil are not changed.
 //
-// API: PATCH /v1/tenants/{tenantID}/policy
-func (s *SecurityPolicyService) Update(ctx context.Context, tenantID string, params UpdateSecurityPolicyParams, opts ...RequestOption) (*SecurityPolicy, error) {
+// API: PATCH /v1/organizations/{organizationID}/policy
+func (s *SecurityPolicyService) Update(ctx context.Context, organizationID string, params UpdateSecurityPolicyParams, opts ...RequestOption) (*SecurityPolicy, error) {
 	return call[SecurityPolicy](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/policy",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/policy",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// SecurityPolicy is a tenant's session, password and second-factor policy.
+// SecurityPolicy is an organization's session and second-factor policy.
 type SecurityPolicy struct {
-	TenantID string `json:"tenant_id,omitempty"`
-	// Accepted and ignored, and never returned. Password rules are the auth policy's (AuthPolicy, PUT
-	// /v1/tenants/{tenantID}/auth-policy), which sign-in and the compliance checks apply.
-	PasswordMinLength int `json:"password_min_length"`
-	// Accepted and ignored, and never returned; see password_min_length.
-	PasswordComplexity string `json:"password_complexity,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
 	// How long a session lasts after sign-in however active it is, and an application's grant however
 	// often it is renewed: a duration such as "720h" or "90m", between 1h and 8760h. Applies to sessions
 	// and grants started after it is saved. Omitted or zero on update: the platform default.
@@ -60,7 +56,7 @@ type SecurityPolicy struct {
 	// longer than session_max_age. Applies to sessions started after it is saved. Omitted or zero on
 	// update: the platform default (no longer than session_max_age).
 	SessionIdleTimeout string `json:"session_idle_timeout,omitempty"`
-	// How many live sessions one person may hold in the organisation at once; null for no limit (the
+	// How many live sessions one person may hold in the organization at once; null for no limit (the
 	// default). Counted and enforced as a session opens, so simultaneous sign-ins cannot exceed it.
 	MaxSessions *int `json:"max_sessions,omitempty"`
 	// What a sign-in at max_sessions does: evict_oldest ends the person's least recently used session
@@ -142,7 +138,7 @@ type UpdateSecurityPolicyParams struct {
 	// longer than session_max_age. Applies to sessions started after it is saved. Omitted or zero on
 	// update: the platform default (no longer than session_max_age).
 	SessionIdleTimeout *string `json:"session_idle_timeout,omitempty"`
-	// How many live sessions one person may hold in the organisation at once; null for no limit (the
+	// How many live sessions one person may hold in the organization at once; null for no limit (the
 	// default). Counted and enforced as a session opens, so simultaneous sign-ins cannot exceed it.
 	MaxSessions *int `json:"max_sessions,omitempty"`
 	// What a sign-in at max_sessions does: evict_oldest ends the person's least recently used session

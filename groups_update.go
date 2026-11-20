@@ -12,7 +12,7 @@ type UpdateGroupParams struct {
 	Name *string
 	// Description replaces the group's description.
 	Description *string
-	// ParentID moves the group under another group of the tenant.
+	// ParentID moves the group under another group of the organization.
 	ParentID *string
 	// MoveToTop moves the group to the top level, removing its parent. It
 	// cannot be combined with ParentID.

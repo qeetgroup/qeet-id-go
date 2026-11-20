@@ -21,13 +21,13 @@ import (
 // client.Users.Get(ctx, userID). The fields are set by NewClient and must not
 // be changed.
 type Client struct {
-	// Tenants and the people, groups and invitations in them.
-	Tenants     *TenantsService
-	Users       *UsersService
-	Groups      *GroupsService
-	Invitations *InvitationsService
-	Domains     *DomainsService
-	Branding    *BrandingService
+	// Organizations and the people, groups and invitations in them.
+	Organizations *OrganizationsService
+	Users         *UsersService
+	Groups        *GroupsService
+	Invitations   *InvitationsService
+	Domains       *DomainsService
+	Branding      *BrandingService
 
 	// Access control: roles, permissions, attribute- and relationship-based
 	// rules, and AuthZEN decisions.
@@ -155,7 +155,7 @@ func NewClient(opts ...Option) (*Client, error) {
 		}
 	}
 
-	c.Tenants = &TenantsService{c: c}
+	c.Organizations = &OrganizationsService{c: c}
 	c.Users = &UsersService{c: c}
 	c.Groups = &GroupsService{c: c}
 	c.Invitations = &InvitationsService{c: c}

@@ -15,71 +15,71 @@ type RelationshipsService struct{ c *Client }
 // List lists the tuples on an object or naming a subject. Page.Truncated reports a list cut short by
 // the server's cap.
 //
-// API: GET /v1/tenants/{tenantID}/relation-tuples
-func (s *RelationshipsService) List(ctx context.Context, tenantID string, params *ListRelationTuplesParams, opts ...RequestOption) (*Page[RelationTuple], error) {
+// API: GET /v1/organizations/{organizationID}/relation-tuples
+func (s *RelationshipsService) List(ctx context.Context, organizationID string, params *ListRelationTuplesParams, opts ...RequestOption) (*Page[RelationTuple], error) {
 	return call[Page[RelationTuple]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/relation-tuples",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
 
 // Create writes a tuple: subject has relation on object.
 //
-// API: POST /v1/tenants/{tenantID}/relation-tuples
-func (s *RelationshipsService) Create(ctx context.Context, tenantID string, params CreateRelationTupleParams, opts ...RequestOption) (*RelationTuple, error) {
+// API: POST /v1/organizations/{organizationID}/relation-tuples
+func (s *RelationshipsService) Create(ctx context.Context, organizationID string, params CreateRelationTupleParams, opts ...RequestOption) (*RelationTuple, error) {
 	return call[RelationTuple](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/relation-tuples",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a tuple.
 //
-// API: DELETE /v1/tenants/{tenantID}/relation-tuples/{id}
-func (s *RelationshipsService) Delete(ctx context.Context, tenantID, tupleID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/relation-tuples/{id}
+func (s *RelationshipsService) Delete(ctx context.Context, organizationID, tupleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/relation-tuples/{tupleID}",
-		pathArgs: []string{tenantID, tupleID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples/{tupleID}",
+		pathArgs: []string{organizationID, tupleID},
 	}, nil, opts)
 }
 
 // Check reports whether a user has a relation on an object, following group and parent relations.
 //
-// API: POST /v1/tenants/{tenantID}/relation-tuples/check
-func (s *RelationshipsService) Check(ctx context.Context, tenantID string, params CheckRelationParams, options *CheckRelationOptions, opts ...RequestOption) (*RelationCheck, error) {
+// API: POST /v1/organizations/{organizationID}/relation-tuples/check
+func (s *RelationshipsService) Check(ctx context.Context, organizationID string, params CheckRelationParams, options *CheckRelationOptions, opts ...RequestOption) (*RelationCheck, error) {
 	return call[RelationCheck](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/relation-tuples/check",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples/check",
+		pathArgs: []string{organizationID},
 		query:    options.values(),
 		body:     params,
 	}, opts)
 }
 
-// ListTypes lists the object types the tenant's tuples use.
+// ListTypes lists the object types the organization's tuples use.
 //
-// API: GET /v1/tenants/{tenantID}/relation-tuples/types
-func (s *RelationshipsService) ListTypes(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[RelationObjectType], error) {
+// API: GET /v1/organizations/{organizationID}/relation-tuples/types
+func (s *RelationshipsService) ListTypes(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[RelationObjectType], error) {
 	return call[Page[RelationObjectType]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/relation-tuples/types",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples/types",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// ListObjects lists the objects the tenant's tuples name, one page at a time.
+// ListObjects lists the objects the organization's tuples name, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/relation-tuples/objects
-func (s *RelationshipsService) ListObjects(ctx context.Context, tenantID string, params *ListRelationObjectsParams, opts ...RequestOption) (*Page[RelationObject], error) {
+// API: GET /v1/organizations/{organizationID}/relation-tuples/objects
+func (s *RelationshipsService) ListObjects(ctx context.Context, organizationID string, params *ListRelationObjectsParams, opts ...RequestOption) (*Page[RelationObject], error) {
 	return call[Page[RelationObject]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/relation-tuples/objects",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples/objects",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -87,20 +87,20 @@ func (s *RelationshipsService) ListObjects(ctx context.Context, tenantID string,
 // AllObjects returns an iterator over every item ListObjects returns, across all pages. It fetches a
 // page only when the loop needs it, and breaking out of the loop stops paging. A failed request ends
 // the iteration with a non-nil error.
-func (s *RelationshipsService) AllObjects(ctx context.Context, tenantID string, params *ListRelationObjectsParams, opts ...RequestOption) iter.Seq2[*RelationObject, error] {
+func (s *RelationshipsService) AllObjects(ctx context.Context, organizationID string, params *ListRelationObjectsParams, opts ...RequestOption) iter.Seq2[*RelationObject, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[RelationObject], error) {
-		return s.ListObjects(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.ListObjects(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 
 // Graph expands every subject that can reach an object through a relation.
 //
-// API: GET /v1/tenants/{tenantID}/relation-tuples/graph
-func (s *RelationshipsService) Graph(ctx context.Context, tenantID string, params *RelationGraphParams, opts ...RequestOption) (*RelationGraph, error) {
+// API: GET /v1/organizations/{organizationID}/relation-tuples/graph
+func (s *RelationshipsService) Graph(ctx context.Context, organizationID string, params *RelationGraphParams, opts ...RequestOption) (*RelationGraph, error) {
 	return call[RelationGraph](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/relation-tuples/graph",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/relation-tuples/graph",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -136,7 +136,7 @@ type RelationTuple struct {
 	Object   string `json:"object,omitempty"`
 	Relation string `json:"relation,omitempty"`
 	Subject  string `json:"subject,omitempty"`
-	// A user subject's person, by display name or address, when they belong to the organisation.
+	// A user subject's person, by display name or address, when they belong to the organization.
 	SubjectName string `json:"subject_name,omitempty"`
 }
 
@@ -290,7 +290,7 @@ type RelationGraphNode struct {
 	ID    string `json:"id,omitempty"`
 	Type  string `json:"type,omitempty"`
 	Label string `json:"label,omitempty"`
-	// A user node's person, by display name or address, when they belong to the organisation.
+	// A user node's person, by display name or address, when they belong to the organization.
 	Name string `json:"name,omitempty"`
 }
 

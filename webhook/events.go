@@ -15,8 +15,8 @@ type Event struct {
 	// version: an incompatible change to its data comes as a new name, while
 	// new fields may be added to any event's data.
 	Type EventType `json:"type"`
-	// TenantID is the tenant the event belongs to.
-	TenantID string `json:"tenant_id"`
+	// OrganizationID is the organization the event belongs to.
+	OrganizationID string `json:"organization_id"`
 	// OccurredAt is when the event happened.
 	OccurredAt time.Time `json:"occurred_at"`
 	// Data is the event's own payload. Decode it with DecodeData.
@@ -96,9 +96,9 @@ const (
 
 	OIDCClientLockedOut EventType = "oidc.client_locked_out"
 
-	TenantSuspended   EventType = "tenant.suspended"
-	TenantReactivated EventType = "tenant.reactivated"
-	TenantDeleted     EventType = "tenant.deleted"
+	OrganizationSuspended   EventType = "organization.suspended"
+	OrganizationReactivated EventType = "organization.reactivated"
+	OrganizationDeleted     EventType = "organization.deleted"
 
 	// TestPing is the event WebhooksService.Test sends. No subscription names
 	// it, and every subscription can receive it.
@@ -106,20 +106,20 @@ const (
 )
 
 // UserData is the data of the user events. Every one carries UserID and
-// TenantID; Email and Source are set where the event's origin has them
+// OrganizationID; Email and Source are set where the event's origin has them
 // (Source is "admin" or "scim").
 type UserData struct {
-	UserID   string `json:"user_id"`
-	TenantID string `json:"tenant_id"`
-	Email    string `json:"email,omitempty"`
-	Source   string `json:"source,omitempty"`
+	UserID         string `json:"user_id"`
+	OrganizationID string `json:"organization_id"`
+	Email          string `json:"email,omitempty"`
+	Source         string `json:"source,omitempty"`
 }
 
 // GroupMemberData is the data of GroupMemberAdded and GroupMemberRemoved.
 type GroupMemberData struct {
-	GroupID  string `json:"group_id"`
-	UserID   string `json:"user_id"`
-	TenantID string `json:"tenant_id"`
+	GroupID        string `json:"group_id"`
+	UserID         string `json:"user_id"`
+	OrganizationID string `json:"organization_id"`
 	// Source is "scim", "saml" or "ldap" when a directory or sign-in
 	// connection changed the membership; empty for an administrator.
 	Source string `json:"source,omitempty"`
@@ -135,8 +135,8 @@ type SessionRevokedData struct {
 	UserID string `json:"user_id"`
 	// SessionID is the session that ended; it is the sid claim of its tokens.
 	SessionID string `json:"session_id"`
-	// TenantID is the session's tenant; empty for a session without one.
-	TenantID string `json:"tenant_id,omitempty"`
+	// OrganizationID is the session's organization; empty for a session without one.
+	OrganizationID string `json:"organization_id,omitempty"`
 	// Reason says why the session ended.
 	Reason RevocationReason `json:"reason"`
 	// RevokedAt is when it ended.
@@ -157,14 +157,14 @@ const (
 	ReasonPasswordChanged         RevocationReason = "password_changed"
 	ReasonPasswordReset           RevocationReason = "password_reset"
 	ReasonAdminPasswordSet        RevocationReason = "admin_password_set"
-	ReasonTenantSwitch            RevocationReason = "tenant_switch"
+	ReasonOrganizationSwitch      RevocationReason = "organization_switch"
 	ReasonSuspended               RevocationReason = "suspended"
 	ReasonDeprovisioned           RevocationReason = "deprovisioned"
 	ReasonReactivated             RevocationReason = "reactivated"
 	ReasonDeleted                 RevocationReason = "deleted"
 	ReasonRemovedFromOrganization RevocationReason = "removed_from_organization"
-	ReasonTenantSuspended         RevocationReason = "tenant_suspended"
-	ReasonTenantDeleted           RevocationReason = "tenant_deleted"
+	ReasonOrganizationSuspended   RevocationReason = "organization_suspended"
+	ReasonOrganizationDeleted     RevocationReason = "organization_deleted"
 	ReasonExpired                 RevocationReason = "expired"
 	ReasonSessionLimit            RevocationReason = "session_limit"
 )

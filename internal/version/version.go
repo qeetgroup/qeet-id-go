@@ -8,10 +8,10 @@ import (
 
 // SDK is the release version of the module. Keep it equal to the tag being
 // released; it is sent in the User-Agent header.
-const SDK = "0.1.0"
+const SDK = "0.2.0"
 
 // UserAgent identifies the SDK, its version, the Go runtime and the platform,
-// for example "qeet-id-go/0.1.0 (go1.27.1; linux/amd64)".
+// for example "qeet-id-go/0.2.0 (go1.27.1; linux/amd64)".
 func UserAgent() string {
 	return "qeet-id-go/" + SDK + " (" + runtime.Version() + "; " + runtime.GOOS + "/" + runtime.GOARCH + ")"
 }

@@ -6,63 +6,63 @@ import (
 	"time"
 )
 
-// IPRulesService manages the network addresses a tenant's people may sign in from.
+// IPRulesService manages the network addresses an organization's people may sign in from.
 type IPRulesService struct{ c *Client }
 
-// List lists a tenant's rules and whether they are enforced.
+// List lists an organization's rules and whether they are enforced.
 //
-// API: GET /v1/tenants/{tenantID}/ip-rules
-func (s *IPRulesService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*IPRules, error) {
+// API: GET /v1/organizations/{organizationID}/ip-rules
+func (s *IPRulesService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*IPRules, error) {
 	return call[IPRules](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/ip-rules",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/ip-rules",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create adds a rule.
 //
-// API: POST /v1/tenants/{tenantID}/ip-rules
-func (s *IPRulesService) Create(ctx context.Context, tenantID string, params CreateIPRuleParams, opts ...RequestOption) (*IPRule, error) {
+// API: POST /v1/organizations/{organizationID}/ip-rules
+func (s *IPRulesService) Create(ctx context.Context, organizationID string, params CreateIPRuleParams, opts ...RequestOption) (*IPRule, error) {
 	return call[IPRule](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/ip-rules",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/ip-rules",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a rule.
 //
-// API: DELETE /v1/tenants/{tenantID}/ip-rules/{ruleID}
-func (s *IPRulesService) Delete(ctx context.Context, tenantID, ruleID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/ip-rules/{ruleID}
+func (s *IPRulesService) Delete(ctx context.Context, organizationID, ruleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/ip-rules/{ruleID}",
-		pathArgs: []string{tenantID, ruleID},
+		path:     "/v1/organizations/{organizationID}/ip-rules/{ruleID}",
+		pathArgs: []string{organizationID, ruleID},
 	}, nil, opts)
 }
 
-// Check reports whether an address would be allowed under the tenant's rules.
+// Check reports whether an address would be allowed under the organization's rules.
 //
-// API: POST /v1/tenants/{tenantID}/ip-rules/check
-func (s *IPRulesService) Check(ctx context.Context, tenantID string, params CheckIPParams, opts ...RequestOption) (*IPCheck, error) {
+// API: POST /v1/organizations/{organizationID}/ip-rules/check
+func (s *IPRulesService) Check(ctx context.Context, organizationID string, params CheckIPParams, opts ...RequestOption) (*IPCheck, error) {
 	return call[IPCheck](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/ip-rules/check",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/ip-rules/check",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // SetEnforcement turns rule enforcement on or off. The rules themselves are kept either way.
 //
-// API: PUT /v1/tenants/{tenantID}/ip-rules/config
-func (s *IPRulesService) SetEnforcement(ctx context.Context, tenantID string, params SetIPEnforcementParams, opts ...RequestOption) (*IPEnforcement, error) {
+// API: PUT /v1/organizations/{organizationID}/ip-rules/config
+func (s *IPRulesService) SetEnforcement(ctx context.Context, organizationID string, params SetIPEnforcementParams, opts ...RequestOption) (*IPEnforcement, error) {
 	return call[IPEnforcement](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/ip-rules/config",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/ip-rules/config",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
@@ -71,16 +71,18 @@ func (s *IPRulesService) SetEnforcement(ctx context.Context, tenantID string, pa
 type IPRules struct {
 	Enabled bool     `json:"enabled"`
 	Items   []IPRule `json:"items,omitempty"`
+	// Truncated reports that the server cut the list at its cap: there are more rules than Items holds.
+	Truncated bool `json:"truncated,omitempty"`
 }
 
 // IPRule allows or denies sign-in from a range of network addresses.
 type IPRule struct {
-	Action    string    `json:"action,omitempty"`
-	CIDR      string    `json:"cidr,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitzero"`
-	ID        string    `json:"id,omitempty"`
-	Label     string    `json:"label,omitempty"`
-	TenantID  string    `json:"tenant_id,omitempty"`
+	Action         string    `json:"action,omitempty"`
+	CIDR           string    `json:"cidr,omitempty"`
+	CreatedAt      time.Time `json:"created_at,omitzero"`
+	ID             string    `json:"id,omitempty"`
+	Label          string    `json:"label,omitempty"`
+	OrganizationID string    `json:"organization_id,omitempty"`
 }
 
 // CreateIPRuleParams is the request body of IPRulesService.Create.
@@ -115,7 +117,7 @@ type IPCheck struct {
 	ReasonCode IPCheckReasonCode `json:"reason_code,omitempty"`
 	// For ip.deny_rule, the rule's cidr.
 	ReasonParams map[string]any `json:"reason_params,omitempty"`
-	// What the organisation's rules decide whatever the enforcement flag, so they can be tried before
+	// What the organization's rules decide whatever the enforcement flag, so they can be tried before
 	// they are turned on; with enforcement on it matches the fields above.
 	Rules IPCheckRules `json:"rules,omitzero"`
 }
@@ -134,7 +136,7 @@ const (
 	IPCheckReasonCodeIPEnforcementDisabled IPCheckReasonCode = "ip.enforcement_disabled"
 )
 
-// IPCheckRules is the type of IPCheck.Rules. What the organisation's rules decide whatever the
+// IPCheckRules is the type of IPCheck.Rules. What the organization's rules decide whatever the
 // enforcement flag, so they can be tried before they are turned on; with enforcement on it matches the
 // fields above.
 type IPCheckRules struct {

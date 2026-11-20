@@ -39,7 +39,7 @@ func main() {
 	mux.Handle("GET /invoices", v.Middleware(jwt.RequireScope("invoices.read")(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			claims, _ := jwt.ClaimsFromContext(r.Context())
-			fmt.Fprintf(w, "invoices of tenant %s for user %s\n", claims.TenantID, claims.UserID)
+			fmt.Fprintf(w, "invoices of organization %s for user %s\n", claims.OrganizationID, claims.UserID)
 		}))))
 
 	srv := &http.Server{Addr: ":8081", Handler: mux, ReadHeaderTimeout: 5 * time.Second}

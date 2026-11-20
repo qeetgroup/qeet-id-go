@@ -16,7 +16,7 @@ func (s *PermissionsService) List(ctx context.Context, opts ...RequestOption) (*
 	return call[Page[Permission]](ctx, s.c, &request{method: http.MethodGet, path: "/v1/permissions"}, opts)
 }
 
-// Check reports whether a user holds a permission in a tenant. Set Explain to get the grant path that
+// Check reports whether a user holds a permission in an organization. Set Explain to get the grant path that
 // decided it.
 //
 // API: GET /v1/check
@@ -24,24 +24,24 @@ func (s *PermissionsService) Check(ctx context.Context, params *CheckPermissionP
 	return call[PermissionCheck](ctx, s.c, &request{method: http.MethodGet, path: "/v1/check", query: params.values()}, opts)
 }
 
-// Effective returns every permission a user holds in a tenant, directly or through groups, with the
+// Effective returns every permission a user holds in an organization, directly or through groups, with the
 // grants behind them.
 //
-// API: GET /v1/users/{userID}/tenants/{tenantID}/permissions
-func (s *PermissionsService) Effective(ctx context.Context, userID, tenantID string, opts ...RequestOption) (*EffectivePermissions, error) {
+// API: GET /v1/users/{userID}/organizations/{organizationID}/permissions
+func (s *PermissionsService) Effective(ctx context.Context, userID, organizationID string, opts ...RequestOption) (*EffectivePermissions, error) {
 	return call[EffectivePermissions](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/users/{userID}/tenants/{tenantID}/permissions",
-		pathArgs: []string{userID, tenantID},
+		path:     "/v1/users/{userID}/organizations/{organizationID}/permissions",
+		pathArgs: []string{userID, organizationID},
 	}, opts)
 }
 
 // CheckPermissionParams holds the optional query parameters of PermissionsService.Check. A nil
 // *CheckPermissionParams sends none.
 type CheckPermissionParams struct {
-	UserID     string
-	TenantID   string
-	Permission string
+	UserID         string
+	OrganizationID string
+	Permission     string
 	// When "true", also return the role grant path(s), a reason on denial and the decision's trace.
 	Explain bool
 }
@@ -54,8 +54,8 @@ func (p *CheckPermissionParams) values() url.Values {
 	if p.UserID != "" {
 		q.Set("user_id", p.UserID)
 	}
-	if p.TenantID != "" {
-		q.Set("tenant_id", p.TenantID)
+	if p.OrganizationID != "" {
+		q.Set("organization_id", p.OrganizationID)
 	}
 	if p.Permission != "" {
 		q.Set("permission", p.Permission)
@@ -78,7 +78,7 @@ type PermissionCheck struct {
 	ReasonCode PermissionCheckReasonCode `json:"reason_code,omitempty"`
 	// With an ABAC code, the policy (policy_id, policy_name, priority), to a caller holding policy.read.
 	ReasonParams map[string]any `json:"reason_params,omitempty"`
-	// With explain=true. Each step in order, prefixed with its model (tenant, abac, rbac, rebac, none).
+	// With explain=true. Each step in order, prefixed with its model (organization, abac, rbac, rebac, none).
 	Trace []string `json:"trace,omitempty"`
 }
 
@@ -89,7 +89,7 @@ type AuthzDecidedBy struct {
 	Model AuthzDecidedByModel `json:"model,omitempty"`
 	// What decided it, in English. Show reason_code's meaning instead.
 	Rule string `json:"rule,omitempty"`
-	// What decided it: no organisation, an engine failure (refused), a role or a relationship tuple
+	// What decided it: no organization, an engine failure (refused), a role or a relationship tuple
 	// granting it, nothing allowing it, or an ABAC policy (allowing, denying, denying as an attribute it
 	// compares is absent, or refusing as its condition failed to evaluate).
 	ReasonCode AuthzDecidedByReasonCode `json:"reason_code,omitempty"`
@@ -105,22 +105,22 @@ type AuthzDecidedByModel string
 
 // Values of AuthzDecidedByModel. The server may add values; handle an unknown one gracefully.
 const (
-	AuthzDecidedByModelTenant AuthzDecidedByModel = "tenant"
-	AuthzDecidedByModelABAC   AuthzDecidedByModel = "abac"
-	AuthzDecidedByModelRBAC   AuthzDecidedByModel = "rbac"
-	AuthzDecidedByModelReBAC  AuthzDecidedByModel = "rebac"
-	AuthzDecidedByModelNone   AuthzDecidedByModel = "none"
+	AuthzDecidedByModelOrganization AuthzDecidedByModel = "organization"
+	AuthzDecidedByModelABAC         AuthzDecidedByModel = "abac"
+	AuthzDecidedByModelRBAC         AuthzDecidedByModel = "rbac"
+	AuthzDecidedByModelReBAC        AuthzDecidedByModel = "rebac"
+	AuthzDecidedByModelNone         AuthzDecidedByModel = "none"
 )
 
 // AuthzDecidedByReasonCode is a string enumeration used by AuthzDecidedBy.ReasonCode. What decided it:
-// no organisation, an engine failure (refused), a role or a relationship tuple granting it, nothing
+// no organization, an engine failure (refused), a role or a relationship tuple granting it, nothing
 // allowing it, or an ABAC policy (allowing, denying, denying as an attribute it compares is absent, or
 // refusing as its condition failed to evaluate).
 type AuthzDecidedByReasonCode string
 
 // Values of AuthzDecidedByReasonCode. The server may add values; handle an unknown one gracefully.
 const (
-	AuthzDecidedByReasonCodeAuthzNoTenant        AuthzDecidedByReasonCode = "authz.no_tenant"
+	AuthzDecidedByReasonCodeAuthzNoOrganization  AuthzDecidedByReasonCode = "authz.no_organization"
 	AuthzDecidedByReasonCodeAuthzEngineError     AuthzDecidedByReasonCode = "authz.engine_error"
 	AuthzDecidedByReasonCodeAuthzRoleGrant       AuthzDecidedByReasonCode = "authz.role_grant"
 	AuthzDecidedByReasonCodeAuthzRelationGrant   AuthzDecidedByReasonCode = "authz.relation_grant"

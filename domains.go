@@ -6,124 +6,124 @@ import (
 	"time"
 )
 
-// DomainsService proves control of email domains and manages the tenant's custom sign-in domain and
+// DomainsService proves control of email domains and manages the organization's custom sign-in domain and
 // break-glass members.
 type DomainsService struct{ c *Client }
 
-// List lists a tenant's domains.
+// List lists an organization's domains.
 //
-// API: GET /v1/tenants/{tenantID}/domains
-func (s *DomainsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[Domain], error) {
+// API: GET /v1/organizations/{organizationID}/domains
+func (s *DomainsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[Domain], error) {
 	return call[Page[Domain]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/domains",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/domains",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create claims a domain. Publish the DNS record the result names, then call Verify.
 //
-// API: POST /v1/tenants/{tenantID}/domains
-func (s *DomainsService) Create(ctx context.Context, tenantID string, params CreateDomainParams, opts ...RequestOption) (*Domain, error) {
+// API: POST /v1/organizations/{organizationID}/domains
+func (s *DomainsService) Create(ctx context.Context, organizationID string, params CreateDomainParams, opts ...RequestOption) (*Domain, error) {
 	return call[Domain](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/domains",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/domains",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Verify checks a claimed domain's DNS record and marks the domain verified when it matches.
 //
-// API: POST /v1/tenants/{tenantID}/domains/{id}/verify
-func (s *DomainsService) Verify(ctx context.Context, tenantID, domainID string, opts ...RequestOption) (*Domain, error) {
+// API: POST /v1/organizations/{organizationID}/domains/{id}/verify
+func (s *DomainsService) Verify(ctx context.Context, organizationID, domainID string, opts ...RequestOption) (*Domain, error) {
 	return call[Domain](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/domains/{domainID}/verify",
-		pathArgs: []string{tenantID, domainID},
+		path:     "/v1/organizations/{organizationID}/domains/{domainID}/verify",
+		pathArgs: []string{organizationID, domainID},
 	}, opts)
 }
 
 // Update changes a verified domain's single sign-on and just-in-time provisioning settings.
 //
-// API: PATCH /v1/tenants/{tenantID}/domains/{id}
-func (s *DomainsService) Update(ctx context.Context, tenantID, domainID string, params UpdateDomainParams, opts ...RequestOption) (*Domain, error) {
+// API: PATCH /v1/organizations/{organizationID}/domains/{id}
+func (s *DomainsService) Update(ctx context.Context, organizationID, domainID string, params UpdateDomainParams, opts ...RequestOption) (*Domain, error) {
 	return call[Domain](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/domains/{domainID}",
-		pathArgs: []string{tenantID, domainID},
+		path:     "/v1/organizations/{organizationID}/domains/{domainID}",
+		pathArgs: []string{organizationID, domainID},
 		body:     params,
 	}, opts)
 }
 
 // Delete removes a domain.
 //
-// API: DELETE /v1/tenants/{tenantID}/domains/{id}
-func (s *DomainsService) Delete(ctx context.Context, tenantID, domainID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/domains/{id}
+func (s *DomainsService) Delete(ctx context.Context, organizationID, domainID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/domains/{domainID}",
-		pathArgs: []string{tenantID, domainID},
+		path:     "/v1/organizations/{organizationID}/domains/{domainID}",
+		pathArgs: []string{organizationID, domainID},
 	}, nil, opts)
 }
 
-// LoginDomain returns the state of the tenant's custom sign-in domain.
+// LoginDomain returns the state of the organization's custom sign-in domain.
 //
-// API: GET /v1/tenants/{tenantID}/login-domain
-func (s *DomainsService) LoginDomain(ctx context.Context, tenantID string, opts ...RequestOption) (*LoginDomainStatus, error) {
+// API: GET /v1/organizations/{organizationID}/login-domain
+func (s *DomainsService) LoginDomain(ctx context.Context, organizationID string, opts ...RequestOption) (*LoginDomainStatus, error) {
 	return call[LoginDomainStatus](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/login-domain",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/login-domain",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// CheckLoginDomain checks the tenant's custom sign-in domain now and returns its state.
+// CheckLoginDomain checks the organization's custom sign-in domain now and returns its state.
 //
-// API: POST /v1/tenants/{tenantID}/login-domain/check
-func (s *DomainsService) CheckLoginDomain(ctx context.Context, tenantID string, opts ...RequestOption) (*LoginDomainStatus, error) {
+// API: POST /v1/organizations/{organizationID}/login-domain/check
+func (s *DomainsService) CheckLoginDomain(ctx context.Context, organizationID string, opts ...RequestOption) (*LoginDomainStatus, error) {
 	return call[LoginDomainStatus](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/login-domain/check",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/login-domain/check",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // ListBreakGlassMembers lists the members who may sign in with a password even when single sign-on is
 // required.
 //
-// API: GET /v1/tenants/{tenantID}/break-glass-members
-func (s *DomainsService) ListBreakGlassMembers(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[BreakGlassMember], error) {
+// API: GET /v1/organizations/{organizationID}/break-glass-members
+func (s *DomainsService) ListBreakGlassMembers(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[BreakGlassMember], error) {
 	return call[Page[BreakGlassMember]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/break-glass-members",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/break-glass-members",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // AddBreakGlassMember makes a member a break-glass member.
 //
-// API: PUT /v1/tenants/{tenantID}/break-glass-members/{userID}
-func (s *DomainsService) AddBreakGlassMember(ctx context.Context, tenantID, userID string, opts ...RequestOption) error {
+// API: PUT /v1/organizations/{organizationID}/break-glass-members/{userID}
+func (s *DomainsService) AddBreakGlassMember(ctx context.Context, organizationID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/break-glass-members/{userID}",
-		pathArgs: []string{tenantID, userID},
+		path:     "/v1/organizations/{organizationID}/break-glass-members/{userID}",
+		pathArgs: []string{organizationID, userID},
 	}, nil, opts)
 }
 
 // RemoveBreakGlassMember removes a break-glass member.
 //
-// API: DELETE /v1/tenants/{tenantID}/break-glass-members/{userID}
-func (s *DomainsService) RemoveBreakGlassMember(ctx context.Context, tenantID, userID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/break-glass-members/{userID}
+func (s *DomainsService) RemoveBreakGlassMember(ctx context.Context, organizationID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/break-glass-members/{userID}",
-		pathArgs: []string{tenantID, userID},
+		path:     "/v1/organizations/{organizationID}/break-glass-members/{userID}",
+		pathArgs: []string{organizationID, userID},
 	}, nil, opts)
 }
 
-// Domain is an email domain a tenant claims. Once verified it can require single sign-on and provision
+// Domain is an email domain an organization claims. Once verified it can require single sign-on and provision
 // accounts just in time.
 type Domain struct {
 	CreatedAt      time.Time `json:"created_at,omitzero"`
@@ -136,7 +136,7 @@ type Domain struct {
 	JitEnabled    bool      `json:"jit_enabled"`
 	LastCheckedAt time.Time `json:"last_checked_at,omitzero"`
 	LastError     string    `json:"last_error,omitempty"`
-	// Addresses on the domain sign in only through the organisation's active SAML, LDAP or OpenID Connect
+	// Addresses on the domain sign in only through the organization's active SAML, LDAP or OpenID Connect
 	// connection (break-glass members and administrators single sign-on can't sign in excepted).
 	SSOEnabled        bool      `json:"sso_enabled"`
 	Status            string    `json:"status,omitempty"`

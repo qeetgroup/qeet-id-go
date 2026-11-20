@@ -3,7 +3,7 @@
 //
 // Each delivery is a POST whose JSON body is an envelope, decoded into Event:
 //
-//	{"id": "...", "type": "user.created", "tenant_id": "...", "occurred_at": "...", "data": {...}}
+//	{"id": "...", "type": "user.created", "organization_id": "...", "occurred_at": "...", "data": {...}}
 //
 // Qeet ID signs every delivery. X-Qeet-Signature is "sha256=" and the hex
 // HMAC-SHA256, keyed by the subscription's secret, of the X-Qeet-Timestamp
@@ -34,6 +34,10 @@
 //
 // Deliveries are at least once and in no guaranteed order: deduplicate on
 // Event.ID, which is the same in every delivery of one event.
+//
+// Qeet ID signs its calls to an authentication hook the same way, with the
+// hook's secret. A hook's endpoint checks a call with Verify against the raw
+// body before it reads the body.
 package webhook
 
 import (

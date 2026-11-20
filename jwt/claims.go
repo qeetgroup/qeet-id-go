@@ -26,8 +26,8 @@ type Claims struct {
 	// UserID is the person the token was issued for; empty for a service
 	// token.
 	UserID string
-	// TenantID is the tenant the token is scoped to.
-	TenantID string
+	// OrganizationID is the organization the token is scoped to.
+	OrganizationID string
 	// SessionID is the session the token belongs to (the sid claim). It is the
 	// SessionID of a session.revoked webhook event.
 	SessionID string
@@ -69,23 +69,23 @@ func (c *Claims) HasAudience(audience string) bool { return slices.Contains(c.Au
 
 func parseClaims(payloadB64 string) (*Claims, error) {
 	var raw struct {
-		Issuer        string          `json:"iss"`
-		Subject       string          `json:"sub"`
-		Audience      json.RawMessage `json:"aud"`
-		ExpiresAt     json.Number     `json:"exp"`
-		NotBefore     json.Number     `json:"nbf"`
-		IssuedAt      json.Number     `json:"iat"`
-		ID            string          `json:"jti"`
-		UserID        string          `json:"user_id"`
-		TenantID      string          `json:"tenant_id"`
-		SessionID     string          `json:"sid"`
-		Scope         string          `json:"scope"`
-		ActorType     string          `json:"actor_type"`
-		AgentID       string          `json:"agent_id"`
-		Actor         *Actor          `json:"act"`
-		ClientID      string          `json:"client_id"`
-		ExchangeDepth int             `json:"exchange_depth"`
-		Custom        map[string]any  `json:"claims"`
+		Issuer         string          `json:"iss"`
+		Subject        string          `json:"sub"`
+		Audience       json.RawMessage `json:"aud"`
+		ExpiresAt      json.Number     `json:"exp"`
+		NotBefore      json.Number     `json:"nbf"`
+		IssuedAt       json.Number     `json:"iat"`
+		ID             string          `json:"jti"`
+		UserID         string          `json:"user_id"`
+		OrganizationID string          `json:"organization_id"`
+		SessionID      string          `json:"sid"`
+		Scope          string          `json:"scope"`
+		ActorType      string          `json:"actor_type"`
+		AgentID        string          `json:"agent_id"`
+		Actor          *Actor          `json:"act"`
+		ClientID       string          `json:"client_id"`
+		ExchangeDepth  int             `json:"exchange_depth"`
+		Custom         map[string]any  `json:"claims"`
 	}
 	if err := decodeSegment(payloadB64, &raw); err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func parseClaims(payloadB64 string) (*Claims, error) {
 	return &Claims{
 		Issuer: raw.Issuer, Subject: raw.Subject, Audience: aud,
 		ExpiresAt: exp, NotBefore: nbf, IssuedAt: iat, ID: raw.ID,
-		UserID: raw.UserID, TenantID: raw.TenantID, SessionID: raw.SessionID, Scope: raw.Scope,
+		UserID: raw.UserID, OrganizationID: raw.OrganizationID, SessionID: raw.SessionID, Scope: raw.Scope,
 		ActorType: raw.ActorType, AgentID: raw.AgentID, Actor: raw.Actor, ClientID: raw.ClientID,
 		ExchangeDepth: raw.ExchangeDepth, Custom: raw.Custom, Raw: payload,
 	}, nil

@@ -15,36 +15,36 @@ type AuthZENService struct{ c *Client }
 
 // Evaluate answers one access question.
 //
-// API: POST /v1/tenants/{tenantID}/access/v1/evaluation
-func (s *AuthZENService) Evaluate(ctx context.Context, tenantID string, params EvaluationParams, opts ...RequestOption) (*Evaluation, error) {
+// API: POST /v1/organizations/{organizationID}/access/v1/evaluation
+func (s *AuthZENService) Evaluate(ctx context.Context, organizationID string, params EvaluationParams, opts ...RequestOption) (*Evaluation, error) {
 	return call[Evaluation](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/access/v1/evaluation",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/access/v1/evaluation",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // EvaluateBatch answers many access questions in one request.
 //
-// API: POST /v1/tenants/{tenantID}/access/v1/evaluations
-func (s *AuthZENService) EvaluateBatch(ctx context.Context, tenantID string, params BatchEvaluationParams, opts ...RequestOption) (*BatchEvaluation, error) {
+// API: POST /v1/organizations/{organizationID}/access/v1/evaluations
+func (s *AuthZENService) EvaluateBatch(ctx context.Context, organizationID string, params BatchEvaluationParams, opts ...RequestOption) (*BatchEvaluation, error) {
 	return call[BatchEvaluation](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/access/v1/evaluations",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/access/v1/evaluations",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // ListDecisions lists recorded access decisions, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/authorization/decisions
-func (s *AuthZENService) ListDecisions(ctx context.Context, tenantID string, params *ListDecisionsParams, opts ...RequestOption) (*Page[AccessDecision], error) {
+// API: GET /v1/organizations/{organizationID}/authorization/decisions
+func (s *AuthZENService) ListDecisions(ctx context.Context, organizationID string, params *ListDecisionsParams, opts ...RequestOption) (*Page[AccessDecision], error) {
 	return call[Page[AccessDecision]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/authorization/decisions",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/authorization/decisions",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -52,9 +52,9 @@ func (s *AuthZENService) ListDecisions(ctx context.Context, tenantID string, par
 // AllDecisions returns an iterator over every item ListDecisions returns, across all pages. It fetches
 // a page only when the loop needs it, and breaking out of the loop stops paging. A failed request ends
 // the iteration with a non-nil error.
-func (s *AuthZENService) AllDecisions(ctx context.Context, tenantID string, params *ListDecisionsParams, opts ...RequestOption) iter.Seq2[*AccessDecision, error] {
+func (s *AuthZENService) AllDecisions(ctx context.Context, organizationID string, params *ListDecisionsParams, opts ...RequestOption) iter.Seq2[*AccessDecision, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[AccessDecision], error) {
-		return s.ListDecisions(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.ListDecisions(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 

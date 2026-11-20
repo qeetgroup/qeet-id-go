@@ -1,5 +1,5 @@
 # qeet-id-go — repository context metadata (Level 2).
-# Inherits qeetgroup/qeet-context (L0) and qeetgroup/qeet-id-context (L1).
+# Inherits qeetgroup/qeet-context (L0) and qeetgroup/qeet-id-files (L1).
 
 schema_version: 1
 
@@ -7,18 +7,18 @@ context:
   type: repository
   level: L2
   canonical: true
-  last_verified: "2026-11-05"
+  last_verified: "2026-11-21"
 
 inheritance:
   organization: {repository: qeetgroup/qeet-context, level: L0}
-  product:      {repository: qeetgroup/qeet-id-context, level: L1}
+  product:      {repository: qeetgroup/qeet-id-files, level: L1}
 
 repository:
   name: qeet-id-go
   product: qeet-id
   type: sdk
   role: sdk
-  status: development        # version string 0.1.0; no tag pushed, never fetched by the module proxy
+  status: development        # version string 0.2.0; v0.1.0 is the latest tag
   visibility: public
   default_branch: main
 
@@ -45,14 +45,15 @@ architecture:
 
 contracts:
   consumes:
-    api: qeet-id-server        # api/openapi/{auth,management,federation,developer,operations}.yaml
+    api: qeet-id-server        # api/openapi/{access,identity,federation,developer,operations}.yaml
     base_url: https://api.id.qeet.in
     jwks_url: https://api.id.qeet.in/.well-known/jwks.json
   auth_schemes:
     - "Authorization: ApiKey <key>"
-    - "Authorization: Bearer <token>   # service principal (client credentials) or token source"
+    - "Authorization: Bearer <token>   # service principal or AI agent (client credentials) or token source"
     - "Basic <client_id:client_secret>  # OAuth endpoints only"
-  webhook_signature: "X-Qeet-Signature: sha256=hex(HMAC-SHA256(secret, X-Qeet-Timestamp + '.' + body)); two values during rotation"
+  token_endpoint: POST /v1/oauth/token   # every grant; grant_type chooses the flow
+  webhook_signature: "X-Qeet-Signature: sha256=hex(HMAC-SHA256(secret, X-Qeet-Timestamp + '.' + body)); two values during rotation; auth-hook calls are signed the same way"
 
 defaults:
   timeout_per_attempt: 30s

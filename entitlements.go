@@ -5,32 +5,32 @@ import (
 	"net/http"
 )
 
-// EntitlementsService reports what a tenant's plan includes and how much of it is used.
+// EntitlementsService reports what an organization's plan includes and how much of it is used.
 type EntitlementsService struct{ c *Client }
 
-// Get returns the features and limits of the tenant's plan.
+// Get returns the features and limits of the organization's plan.
 //
-// API: GET /v1/tenants/{tenantID}/entitlements
-func (s *EntitlementsService) Get(ctx context.Context, tenantID string, opts ...RequestOption) (*Entitlements, error) {
+// API: GET /v1/organizations/{organizationID}/entitlements
+func (s *EntitlementsService) Get(ctx context.Context, organizationID string, opts ...RequestOption) (*Entitlements, error) {
 	return call[Entitlements](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/entitlements",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/entitlements",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Usage returns the tenant's resource usage against its plan limits.
+// Usage returns the organization's resource usage against its plan limits.
 //
-// API: GET /v1/tenants/{tenantID}/entitlements/usage
-func (s *EntitlementsService) Usage(ctx context.Context, tenantID string, opts ...RequestOption) (*EntitlementUsage, error) {
+// API: GET /v1/organizations/{organizationID}/entitlements/usage
+func (s *EntitlementsService) Usage(ctx context.Context, organizationID string, opts ...RequestOption) (*EntitlementUsage, error) {
 	return call[EntitlementUsage](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/entitlements/usage",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/entitlements/usage",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Entitlements lists the features and limits of a tenant's plan.
+// Entitlements lists the features and limits of an organization's plan.
 type Entitlements struct {
 	// Effective plan tier (annual "_year" variants folded to the base tier).
 	Plan PlanCode `json:"plan,omitempty"`

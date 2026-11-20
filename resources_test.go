@@ -116,12 +116,12 @@ func TestInvitationCreateCarriesNoToken(t *testing.T) {
 	if _, ok := hasJSONField(InvitationResult{}, "token"); ok {
 		t.Fatal("InvitationResult has a token field")
 	}
-	body := `{"invite":{"id":"i1","tenant_id":"t1","email":"ada@example.com","role_id":null,"status":"pending",
+	body := `{"invite":{"id":"i1","organization_id":"t1","email":"ada@example.com","role_id":null,"status":"pending",
 		"expires_at":"2026-11-12T10:00:00Z","created_at":"2026-11-05T10:00:00Z","accepted_at":null,
 		"delivery":{"status":"not_sent","code":"email.suppressed","message":"The address bounced before."}}}`
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(201, body)}}
 	c := newFakeClient(t, f)
-	res, err := c.Invitations.Create(context.Background(), CreateInvitationParams{TenantID: "t1", Email: "ada@example.com"})
+	res, err := c.Invitations.Create(context.Background(), CreateInvitationParams{OrganizationID: "t1", Email: "ada@example.com"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func hasJSONField(v any, name string) (string, bool) {
 func TestLDAPAuthenticate(t *testing.T) {
 	pair := `{"access_token":"at","token_type":"Bearer","expires_at":"2026-11-05T10:10:00Z","refresh_token":"rt",
 		"session_expires_at":"2026-11-06T10:00:00Z","idle_expires_at":"2026-11-05T11:00:00Z",
-		"session_id":"s1","user_id":"u1","tenant_id":"t1"}`
+		"session_id":"s1","user_id":"u1","organization_id":"t1"}`
 	challenge := `{"mfa_required":true,"mfa_token":"mt","methods":["totp","sms"],
 		"factors":[{"type":"totp"},{"type":"sms","id":"f1","destination":"+91 ••••• •4321"}]}`
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(200, pair), answer(200, challenge)}}
@@ -161,7 +161,7 @@ func TestLDAPAuthenticate(t *testing.T) {
 		t.Fatal(err)
 	}
 	tp, ok := res.(*TokenPair)
-	if !ok || tp.AccessToken != "at" || tp.RefreshToken != "rt" || tp.TenantID != "t1" {
+	if !ok || tp.AccessToken != "at" || tp.RefreshToken != "rt" || tp.OrganizationID != "t1" {
 		t.Fatalf("first result = %#v, want a *TokenPair", res)
 	}
 
@@ -225,7 +225,7 @@ func TestQueryEncoding(t *testing.T) {
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(200, `{"allowed":true}`)}}
 	c := newFakeClient(t, f)
 	res, err := c.Permissions.Check(context.Background(), &CheckPermissionParams{
-		UserID: "u1", TenantID: "t1", Permission: "billing.write", Explain: true,
+		UserID: "u1", OrganizationID: "t1", Permission: "billing.write", Explain: true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -234,7 +234,7 @@ func TestQueryEncoding(t *testing.T) {
 		t.Error("Allowed = false")
 	}
 	q, _ := url.ParseQuery(f.calls()[0].query)
-	if q.Get("user_id") != "u1" || q.Get("tenant_id") != "t1" || q.Get("permission") != "billing.write" || q.Get("explain") != "true" {
+	if q.Get("user_id") != "u1" || q.Get("organization_id") != "t1" || q.Get("permission") != "billing.write" || q.Get("explain") != "true" {
 		t.Errorf("query = %v", q)
 	}
 	f2 := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(200, `{"items":[]}`)}}
@@ -244,5 +244,66 @@ func TestQueryEncoding(t *testing.T) {
 	}
 	if q := f2.calls()[0].query; q != "email_verified=false" {
 		t.Errorf("query = %q, want email_verified=false", q)
+	}
+}
+
+// TestListUsersNamesPeople checks the filters that name members: id and email
+// repeat, one value each.
+func TestListUsersNamesPeople(t *testing.T) {
+	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(200,
+		`{"items":[{"id":"u2","status":"deleted","deleted_at":"2026-11-01T09:00:00Z"}],"total":1}`)}}
+	c := newFakeClient(t, f)
+	page, err := c.Users.List(context.Background(), &ListUsersParams{
+		IDs: []string{"u1", "u2"}, Emails: []string{"Ada@Example.com"}, IncludeDeleted: true,
+		AdminsWithoutMFA: new(true), InGroup: new(false), Limit: 200,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	q, _ := url.ParseQuery(f.calls()[0].query)
+	if got := q["id"]; len(got) != 2 || got[0] != "u1" || got[1] != "u2" {
+		t.Errorf("id = %v, want both", got)
+	}
+	if q.Get("email") != "Ada@Example.com" || q.Get("include_deleted") != "true" ||
+		q.Get("admins_without_mfa") != "true" || q.Get("in_group") != "false" || q.Has("offset") {
+		t.Errorf("query = %v", q)
+	}
+	if u := page.Items[0]; u.Status != UserStatusDeleted || u.DeletedAt == nil {
+		t.Errorf("user = %+v", u)
+	}
+}
+
+// TestCursorListsWithSummaries checks that the lists answering a summary
+// beside their page send the cursor back and read next_cursor.
+func TestCursorListsWithSummaries(t *testing.T) {
+	f := &fakeAPI{answers: []func(*http.Request) *http.Response{
+		answer(200, `{"items":[],"next_cursor":"c2","total":3,"limit":1,"summary":{}}`),
+		answer(200, `{"items":[],"next_cursor":"c3","total":3,"limit":1,"summary":{},"volume":[]}`),
+		answer(200, `{"items":[],"next_cursor":"c4","total":3,"limit":1,"summary":{}}`),
+		answer(200, `{"items":[],"next_cursor":"c5"}`),
+	}}
+	c := newFakeClient(t, f)
+	ctx := context.Background()
+	errs, err := c.Directory.ListErrors(ctx, "o1", &ListDirectoryErrorsParams{Cursor: "c1"})
+	if err != nil || errs.NextCursor != "c2" {
+		t.Fatalf("ListErrors = %+v, %v", errs, err)
+	}
+	activity, err := c.Directory.ListActivity(ctx, "o1", &ListDirectoryActivityParams{Cursor: "c2"})
+	if err != nil || activity.NextCursor != "c3" {
+		t.Fatalf("ListActivity = %+v, %v", activity, err)
+	}
+	suspended, err := c.Users.ListSuspended(ctx, &ListSuspendedUsersParams{Cursor: "c3"})
+	if err != nil || suspended.NextCursor != "c4" {
+		t.Fatalf("ListSuspended = %+v, %v", suspended, err)
+	}
+	messages, err := c.EmailDelivery.ListMessages(ctx, "o1", &ListEmailMessagesParams{To: "a@example.com", Cursor: "c4"})
+	if err != nil || messages.NextCursor != "c5" {
+		t.Fatalf("ListMessages = %+v, %v", messages, err)
+	}
+	for i, want := range []string{"c1", "c2", "c3", "c4"} {
+		q, _ := url.ParseQuery(f.calls()[i].query)
+		if q.Get("cursor") != want || q.Has("offset") {
+			t.Errorf("call %d query = %v, want cursor %s", i, q, want)
+		}
 	}
 }

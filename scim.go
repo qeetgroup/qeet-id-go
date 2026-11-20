@@ -9,98 +9,98 @@ import (
 	"time"
 )
 
-// SCIMService manages a tenant's SCIM provisioning tokens and lists what the identity provider
+// SCIMService manages an organization's SCIM provisioning tokens and lists what the identity provider
 // provisioned.
 type SCIMService struct{ c *Client }
 
-// Config returns the tenant's SCIM provisioning state.
+// Config returns the organization's SCIM provisioning state.
 //
-// API: GET /v1/tenants/{tenantID}/scim
-func (s *SCIMService) Config(ctx context.Context, tenantID string, opts ...RequestOption) (*SCIMConfig, error) {
+// API: GET /v1/organizations/{organizationID}/scim
+func (s *SCIMService) Config(ctx context.Context, organizationID string, opts ...RequestOption) (*SCIMConfig, error) {
 	return call[SCIMConfig](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/scim",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// ListTokens lists the tenant's SCIM tokens.
+// ListTokens lists the organization's SCIM tokens.
 //
-// API: GET /v1/tenants/{tenantID}/scim/tokens
-func (s *SCIMService) ListTokens(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[SCIMToken], error) {
+// API: GET /v1/organizations/{organizationID}/scim/tokens
+func (s *SCIMService) ListTokens(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[SCIMToken], error) {
 	return call[Page[SCIMToken]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/scim/tokens",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim/tokens",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // CreateToken creates a SCIM token. The result carries the token, shown only once.
 //
-// API: POST /v1/tenants/{tenantID}/scim/tokens
-func (s *SCIMService) CreateToken(ctx context.Context, tenantID string, params CreateSCIMTokenParams, opts ...RequestOption) (*CreatedSCIMToken, error) {
+// API: POST /v1/organizations/{organizationID}/scim/tokens
+func (s *SCIMService) CreateToken(ctx context.Context, organizationID string, params CreateSCIMTokenParams, opts ...RequestOption) (*CreatedSCIMToken, error) {
 	return call[CreatedSCIMToken](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/scim/tokens",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim/tokens",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // RotateToken replaces a SCIM token. The old token keeps working for the overlap given.
 //
-// API: POST /v1/tenants/{tenantID}/scim/tokens/{id}/rotate
-func (s *SCIMService) RotateToken(ctx context.Context, tenantID, tokenID string, params RotateSCIMTokenParams, opts ...RequestOption) (*RotatedSCIMToken, error) {
+// API: POST /v1/organizations/{organizationID}/scim/tokens/{id}/rotate
+func (s *SCIMService) RotateToken(ctx context.Context, organizationID, tokenID string, params RotateSCIMTokenParams, opts ...RequestOption) (*RotatedSCIMToken, error) {
 	return call[RotatedSCIMToken](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/scim/tokens/{tokenID}/rotate",
-		pathArgs: []string{tenantID, tokenID},
+		path:     "/v1/organizations/{organizationID}/scim/tokens/{tokenID}/rotate",
+		pathArgs: []string{organizationID, tokenID},
 		body:     params,
 	}, opts)
 }
 
 // RevokeToken revokes a SCIM token.
 //
-// API: DELETE /v1/tenants/{tenantID}/scim/tokens/{id}
-func (s *SCIMService) RevokeToken(ctx context.Context, tenantID, tokenID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/scim/tokens/{id}
+func (s *SCIMService) RevokeToken(ctx context.Context, organizationID, tokenID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/scim/tokens/{tokenID}",
-		pathArgs: []string{tenantID, tokenID},
+		path:     "/v1/organizations/{organizationID}/scim/tokens/{tokenID}",
+		pathArgs: []string{organizationID, tokenID},
 	}, nil, opts)
 }
 
 // ReplaceAllTokens issues a new SCIM token and revokes every earlier one at once. The result carries
 // the token, shown only once.
 //
-// API: POST /v1/tenants/{tenantID}/scim/token
-func (s *SCIMService) ReplaceAllTokens(ctx context.Context, tenantID string, opts ...RequestOption) (*ReplacedSCIMTokens, error) {
+// API: POST /v1/organizations/{organizationID}/scim/token
+func (s *SCIMService) ReplaceAllTokens(ctx context.Context, organizationID string, opts ...RequestOption) (*ReplacedSCIMTokens, error) {
 	return call[ReplacedSCIMTokens](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/scim/token",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim/token",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// RevokeAllTokens revokes every SCIM token of the tenant, which stops provisioning.
+// RevokeAllTokens revokes every SCIM token of the organization, which stops provisioning.
 //
-// API: DELETE /v1/tenants/{tenantID}/scim/token
-func (s *SCIMService) RevokeAllTokens(ctx context.Context, tenantID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/scim/token
+func (s *SCIMService) RevokeAllTokens(ctx context.Context, organizationID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/scim/token",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim/token",
+		pathArgs: []string{organizationID},
 	}, nil, opts)
 }
 
 // ListUsers lists the users the identity provider provisioned, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/scim/users
-func (s *SCIMService) ListUsers(ctx context.Context, tenantID string, params *ListSCIMResourcesParams, opts ...RequestOption) (*Page[SCIMUser], error) {
+// API: GET /v1/organizations/{organizationID}/scim/users
+func (s *SCIMService) ListUsers(ctx context.Context, organizationID string, params *ListSCIMResourcesParams, opts ...RequestOption) (*Page[SCIMUser], error) {
 	return call[Page[SCIMUser]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/scim/users",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim/users",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -108,20 +108,20 @@ func (s *SCIMService) ListUsers(ctx context.Context, tenantID string, params *Li
 // AllUsers returns an iterator over every item ListUsers returns, across all pages. It fetches a page
 // only when the loop needs it, and breaking out of the loop stops paging. A failed request ends the
 // iteration with a non-nil error.
-func (s *SCIMService) AllUsers(ctx context.Context, tenantID string, params *ListSCIMResourcesParams, opts ...RequestOption) iter.Seq2[*SCIMUser, error] {
+func (s *SCIMService) AllUsers(ctx context.Context, organizationID string, params *ListSCIMResourcesParams, opts ...RequestOption) iter.Seq2[*SCIMUser, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[SCIMUser], error) {
-		return s.ListUsers(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.ListUsers(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 
 // ListGroups lists the groups the identity provider provisioned, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/scim/groups
-func (s *SCIMService) ListGroups(ctx context.Context, tenantID string, params *ListSCIMResourcesParams, opts ...RequestOption) (*Page[SCIMGroup], error) {
+// API: GET /v1/organizations/{organizationID}/scim/groups
+func (s *SCIMService) ListGroups(ctx context.Context, organizationID string, params *ListSCIMResourcesParams, opts ...RequestOption) (*Page[SCIMGroup], error) {
 	return call[Page[SCIMGroup]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/scim/groups",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/scim/groups",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -129,13 +129,13 @@ func (s *SCIMService) ListGroups(ctx context.Context, tenantID string, params *L
 // AllGroups returns an iterator over every item ListGroups returns, across all pages. It fetches a
 // page only when the loop needs it, and breaking out of the loop stops paging. A failed request ends
 // the iteration with a non-nil error.
-func (s *SCIMService) AllGroups(ctx context.Context, tenantID string, params *ListSCIMResourcesParams, opts ...RequestOption) iter.Seq2[*SCIMGroup, error] {
+func (s *SCIMService) AllGroups(ctx context.Context, organizationID string, params *ListSCIMResourcesParams, opts ...RequestOption) iter.Seq2[*SCIMGroup, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[SCIMGroup], error) {
-		return s.ListGroups(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.ListGroups(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 
-// SCIMConfig is the state of a tenant's SCIM provisioning.
+// SCIMConfig is the state of an organization's SCIM provisioning.
 type SCIMConfig struct {
 	// When the newest working token was issued.
 	CreatedAt *time.Time `json:"created_at,omitempty"`

@@ -6,172 +6,172 @@ import (
 	"time"
 )
 
-// SAMLConnectionsService manages SAML connections to a tenant's identity providers (Qeet ID as the
+// SAMLConnectionsService manages SAML connections to an organization's identity providers (Qeet ID as the
 // service provider).
 type SAMLConnectionsService struct{ c *Client }
 
-// List lists a tenant's SAML connections.
+// List lists an organization's SAML connections.
 //
-// API: GET /v1/tenants/{tenantID}/saml
-func (s *SAMLConnectionsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[SAMLConnection], error) {
+// API: GET /v1/organizations/{organizationID}/saml
+func (s *SAMLConnectionsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[SAMLConnection], error) {
 	return call[Page[SAMLConnection]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/saml",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/saml",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create creates a connection from its settings.
 //
-// API: POST /v1/tenants/{tenantID}/saml
-func (s *SAMLConnectionsService) Create(ctx context.Context, tenantID string, params SAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
+// API: POST /v1/organizations/{organizationID}/saml
+func (s *SAMLConnectionsService) Create(ctx context.Context, organizationID string, params SAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/saml",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Import creates a connection from the identity provider's metadata.
 //
-// API: POST /v1/tenants/{tenantID}/saml/import
-func (s *SAMLConnectionsService) Import(ctx context.Context, tenantID string, params ImportSAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
+// API: POST /v1/organizations/{organizationID}/saml/import
+func (s *SAMLConnectionsService) Import(ctx context.Context, organizationID string, params ImportSAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml/import",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/saml/import",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Get returns a connection.
 //
-// API: GET /v1/tenants/{tenantID}/saml/{id}
-func (s *SAMLConnectionsService) Get(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*SAMLConnection, error) {
+// API: GET /v1/organizations/{organizationID}/saml/{id}
+func (s *SAMLConnectionsService) Get(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}",
+		pathArgs: []string{organizationID, connectionID},
 	}, opts)
 }
 
 // Update changes a connection. Empty fields are not changed.
 //
-// API: PATCH /v1/tenants/{tenantID}/saml/{id}
-func (s *SAMLConnectionsService) Update(ctx context.Context, tenantID, connectionID string, params SAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
+// API: PATCH /v1/organizations/{organizationID}/saml/{id}
+func (s *SAMLConnectionsService) Update(ctx context.Context, organizationID, connectionID string, params UpdateSAMLConnectionParams, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a connection.
 //
-// API: DELETE /v1/tenants/{tenantID}/saml/{id}
-func (s *SAMLConnectionsService) Delete(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/saml/{id}
+func (s *SAMLConnectionsService) Delete(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}",
+		pathArgs: []string{organizationID, connectionID},
 	}, nil, opts)
 }
 
 // ApplyMetadata updates a connection from the identity provider's metadata.
 //
-// API: POST /v1/tenants/{tenantID}/saml/{id}/metadata
-func (s *SAMLConnectionsService) ApplyMetadata(ctx context.Context, tenantID, connectionID string, params ApplySAMLMetadataParams, opts ...RequestOption) (*SAMLConnection, error) {
+// API: POST /v1/organizations/{organizationID}/saml/{id}/metadata
+func (s *SAMLConnectionsService) ApplyMetadata(ctx context.Context, organizationID, connectionID string, params ApplySAMLMetadataParams, opts ...RequestOption) (*SAMLConnection, error) {
 	return call[SAMLConnection](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/metadata",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/metadata",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // AddCertificate adds an identity provider signing certificate, for a certificate rollover.
 //
-// API: POST /v1/tenants/{tenantID}/saml/{id}/certificates
-func (s *SAMLConnectionsService) AddCertificate(ctx context.Context, tenantID, connectionID string, params AddSAMLCertificateParams, opts ...RequestOption) (*SAMLCertificate, error) {
+// API: POST /v1/organizations/{organizationID}/saml/{id}/certificates
+func (s *SAMLConnectionsService) AddCertificate(ctx context.Context, organizationID, connectionID string, params AddSAMLCertificateParams, opts ...RequestOption) (*SAMLCertificate, error) {
 	return call[SAMLCertificate](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/certificates",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/certificates",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // RemoveCertificate removes an identity provider signing certificate.
 //
-// API: DELETE /v1/tenants/{tenantID}/saml/{id}/certificates/{certificateID}
-func (s *SAMLConnectionsService) RemoveCertificate(ctx context.Context, tenantID, connectionID, certificateID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/saml/{id}/certificates/{certificateID}
+func (s *SAMLConnectionsService) RemoveCertificate(ctx context.Context, organizationID, connectionID, certificateID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/certificates/{certificateID}",
-		pathArgs: []string{tenantID, connectionID, certificateID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/certificates/{certificateID}",
+		pathArgs: []string{organizationID, connectionID, certificateID},
 	}, nil, opts)
 }
 
 // Test checks a connection's settings.
 //
-// API: POST /v1/tenants/{tenantID}/saml/{id}/test
-func (s *SAMLConnectionsService) Test(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*SAMLTestResult, error) {
+// API: POST /v1/organizations/{organizationID}/saml/{id}/test
+func (s *SAMLConnectionsService) Test(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) (*SAMLTestResult, error) {
 	return call[SAMLTestResult](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/test",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/test",
+		pathArgs: []string{organizationID, connectionID},
 	}, opts)
 }
 
-// ListGroupMappings lists how identity provider groups map to tenant groups.
+// ListGroupMappings lists how identity provider groups map to organization groups.
 //
-// API: GET /v1/tenants/{tenantID}/saml/{id}/group-mappings
-func (s *SAMLConnectionsService) ListGroupMappings(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*Page[GroupMapping], error) {
+// API: GET /v1/organizations/{organizationID}/saml/{id}/group-mappings
+func (s *SAMLConnectionsService) ListGroupMappings(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) (*Page[GroupMapping], error) {
 	return call[Page[GroupMapping]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/group-mappings",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/group-mappings",
+		pathArgs: []string{organizationID, connectionID},
 	}, opts)
 }
 
-// CreateGroupMapping maps an identity provider group to a tenant group.
+// CreateGroupMapping maps an identity provider group to an organization group.
 //
-// API: POST /v1/tenants/{tenantID}/saml/{id}/group-mappings
-func (s *SAMLConnectionsService) CreateGroupMapping(ctx context.Context, tenantID, connectionID string, params CreateGroupMappingParams, opts ...RequestOption) (*GroupMapping, error) {
+// API: POST /v1/organizations/{organizationID}/saml/{id}/group-mappings
+func (s *SAMLConnectionsService) CreateGroupMapping(ctx context.Context, organizationID, connectionID string, params CreateGroupMappingParams, opts ...RequestOption) (*GroupMapping, error) {
 	return call[GroupMapping](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/group-mappings",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/group-mappings",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // DeleteGroupMapping removes a group mapping.
 //
-// API: DELETE /v1/tenants/{tenantID}/saml/{id}/group-mappings/{mappingID}
-func (s *SAMLConnectionsService) DeleteGroupMapping(ctx context.Context, tenantID, connectionID, mappingID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/saml/{id}/group-mappings/{mappingID}
+func (s *SAMLConnectionsService) DeleteGroupMapping(ctx context.Context, organizationID, connectionID, mappingID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/saml/{connectionID}/group-mappings/{mappingID}",
-		pathArgs: []string{tenantID, connectionID, mappingID},
+		path:     "/v1/organizations/{organizationID}/saml/{connectionID}/group-mappings/{mappingID}",
+		pathArgs: []string{organizationID, connectionID, mappingID},
 	}, nil, opts)
 }
 
-// SAMLConnection connects a tenant to a SAML identity provider, with Qeet ID as the service provider.
+// SAMLConnection connects an organization to a SAML identity provider, with Qeet ID as the service provider.
 type SAMLConnection struct {
 	// The connection's own entity ID, for the IdP.
 	SPEntityID string `json:"sp_entity_id,omitempty"`
 	// Where the IdP posts assertions.
 	ACSURL string `json:"acs_url,omitempty"`
 	// The connection's own metadata, for the IdP to import.
-	SPMetadataURL string `json:"sp_metadata_url,omitempty"`
-	ID            string `json:"id,omitempty"`
-	TenantID      string `json:"tenant_id,omitempty"`
-	Name          string `json:"name,omitempty"`
-	IDPEntityID   string `json:"idp_entity_id,omitempty"`
-	IDPSSOURL     string `json:"idp_sso_url,omitempty"`
+	SPMetadataURL  string `json:"sp_metadata_url,omitempty"`
+	ID             string `json:"id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	IDPEntityID    string `json:"idp_entity_id,omitempty"`
+	IDPSSOURL      string `json:"idp_sso_url,omitempty"`
 	// The oldest of the signing certificates the connection trusts.
 	IDPCertificate string `json:"idp_certificate,omitempty"`
 	// Every IdP signing certificate the connection trusts, oldest first. An assertion signed with any of
@@ -249,6 +249,25 @@ type SAMLConnectionParams struct {
 	Status          string `json:"status,omitempty"`
 }
 
+// UpdateSAMLConnectionParams is the request body of SAMLConnectionsService.Update. Empty fields are not
+// changed.
+type UpdateSAMLConnectionParams struct {
+	Name        string `json:"name,omitempty"`
+	IDPEntityID string `json:"idp_entity_id,omitempty"`
+	IDPSSOURL   string `json:"idp_sso_url,omitempty"`
+	// PEM or base64 DER X.509 signing certificate. It becomes the only certificate the connection
+	// trusts; add and remove certificates one at a time with the certificates endpoints.
+	IDPCertificate string `json:"idp_certificate,omitempty"`
+	EmailAttribute string `json:"email_attribute,omitempty"`
+	NameAttribute  string `json:"name_attribute,omitempty"`
+	// The attribute carrying the person's groups; empty reads the common ones (see SAMLConnection). Over
+	// 256 characters is refused with 422 validation_failed.
+	GroupsAttribute string `json:"groups_attribute,omitempty"`
+	Status          string `json:"status,omitempty"`
+	// Accept IdP-initiated sign-ins (unsolicited assertions); see SAMLConnection.
+	AllowIDPInitiated *bool `json:"allow_idp_initiated,omitempty"`
+}
+
 // ImportSAMLConnectionParams is the request body of SAMLConnectionsService.Import.
 type ImportSAMLConnectionParams struct {
 	Name string `json:"name,omitempty"`
@@ -290,7 +309,7 @@ type SAMLTestCheck struct {
 	Ok     bool   `json:"ok"`
 }
 
-// GroupMapping maps a group of an identity provider or directory to a tenant group.
+// GroupMapping maps a group of an identity provider or directory to an organization group.
 type GroupMapping struct {
 	ID string `json:"id,omitempty"`
 	// The group as the identity provider asserts it (a name, an object id or an LDAP DN), compared

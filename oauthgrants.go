@@ -14,12 +14,12 @@ type OAuthGrantsService struct{ c *Client }
 
 // List lists active grants, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/oauth/grants
-func (s *OAuthGrantsService) List(ctx context.Context, tenantID string, params *ListOAuthGrantsParams, opts ...RequestOption) (*Page[OAuthGrant], error) {
+// API: GET /v1/organizations/{organizationID}/oauth/grants
+func (s *OAuthGrantsService) List(ctx context.Context, organizationID string, params *ListOAuthGrantsParams, opts ...RequestOption) (*Page[OAuthGrant], error) {
 	return call[Page[OAuthGrant]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oauth/grants",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oauth/grants",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -27,31 +27,31 @@ func (s *OAuthGrantsService) List(ctx context.Context, tenantID string, params *
 // All returns an iterator over every item List returns, across all pages. It fetches a page only when
 // the loop needs it, and breaking out of the loop stops paging. A failed request ends the iteration
 // with a non-nil error.
-func (s *OAuthGrantsService) All(ctx context.Context, tenantID string, params *ListOAuthGrantsParams, opts ...RequestOption) iter.Seq2[*OAuthGrant, error] {
+func (s *OAuthGrantsService) All(ctx context.Context, organizationID string, params *ListOAuthGrantsParams, opts ...RequestOption) iter.Seq2[*OAuthGrant, error] {
 	return paginate(ctx, params.cursor(), func(ctx context.Context, cursor string) (*Page[OAuthGrant], error) {
-		return s.List(ctx, tenantID, params.withCursor(cursor), opts...)
+		return s.List(ctx, organizationID, params.withCursor(cursor), opts...)
 	})
 }
 
 // Revoke revokes a grant and the tokens issued under it.
 //
-// API: DELETE /v1/tenants/{tenantID}/oauth/grants/{id}
-func (s *OAuthGrantsService) Revoke(ctx context.Context, tenantID, grantID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/oauth/grants/{id}
+func (s *OAuthGrantsService) Revoke(ctx context.Context, organizationID, grantID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/oauth/grants/{grantID}",
-		pathArgs: []string{tenantID, grantID},
+		path:     "/v1/organizations/{organizationID}/oauth/grants/{grantID}",
+		pathArgs: []string{organizationID, grantID},
 	}, nil, opts)
 }
 
 // RevokeMany revokes several grants, or every grant of one application.
 //
-// API: POST /v1/tenants/{tenantID}/oauth/grants/revoke
-func (s *OAuthGrantsService) RevokeMany(ctx context.Context, tenantID string, params RevokeOAuthGrantsParams, opts ...RequestOption) (*RevokedGrants, error) {
+// API: POST /v1/organizations/{organizationID}/oauth/grants/revoke
+func (s *OAuthGrantsService) RevokeMany(ctx context.Context, organizationID string, params RevokeOAuthGrantsParams, opts ...RequestOption) (*RevokedGrants, error) {
 	return call[RevokedGrants](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/oauth/grants/revoke",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oauth/grants/revoke",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }

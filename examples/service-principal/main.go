@@ -2,7 +2,7 @@
 // with short-lived tokens from the OAuth client credentials grant instead of a
 // long-lived API key.
 //
-//	QEETID_CLIENT_ID=... QEETID_CLIENT_SECRET=... QEETID_TENANT_ID=... go run ./examples/service-principal
+//	QEETID_CLIENT_ID=... QEETID_CLIENT_SECRET=... QEETID_ORGANIZATION_ID=... go run ./examples/service-principal
 package main
 
 import (
@@ -29,7 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	groups, err := client.Groups.List(ctx, os.Getenv("QEETID_TENANT_ID"), nil)
+	groups, err := client.Groups.List(ctx, os.Getenv("QEETID_ORGANIZATION_ID"), nil)
 	if oauthErr, ok := errors.AsType[*qeetid.OAuthError](err); ok {
 		log.Fatalf("the token endpoint refused the service principal: %s", oauthErr.Code)
 	}

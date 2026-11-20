@@ -10,37 +10,37 @@ import (
 // their behalf.
 type TokenVaultService struct{ c *Client }
 
-// RegisterProvider registers, or replaces, a third-party OAuth provider for the tenant.
+// RegisterProvider registers, or replaces, a third-party OAuth provider for the organization.
 //
-// API: POST /v1/tenants/{tenantID}/vault/tokens/providers
-func (s *TokenVaultService) RegisterProvider(ctx context.Context, tenantID string, params RegisterTokenVaultProviderParams, opts ...RequestOption) (*TokenVaultProvider, error) {
+// API: POST /v1/organizations/{organizationID}/vault/tokens/providers
+func (s *TokenVaultService) RegisterProvider(ctx context.Context, organizationID string, params RegisterTokenVaultProviderParams, opts ...RequestOption) (*TokenVaultProvider, error) {
 	return call[TokenVaultProvider](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/vault/tokens/providers",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/vault/tokens/providers",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// ListProviders lists the tenant's registered providers.
+// ListProviders lists the organization's registered providers.
 //
-// API: GET /v1/tenants/{tenantID}/vault/tokens/providers
-func (s *TokenVaultService) ListProviders(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[TokenVaultProvider], error) {
+// API: GET /v1/organizations/{organizationID}/vault/tokens/providers
+func (s *TokenVaultService) ListProviders(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[TokenVaultProvider], error) {
 	return call[Page[TokenVaultProvider]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/vault/tokens/providers",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/vault/tokens/providers",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // DeleteProvider removes a provider.
 //
-// API: DELETE /v1/tenants/{tenantID}/vault/tokens/providers/{provider}
-func (s *TokenVaultService) DeleteProvider(ctx context.Context, tenantID, provider string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/vault/tokens/providers/{provider}
+func (s *TokenVaultService) DeleteProvider(ctx context.Context, organizationID, provider string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/vault/tokens/providers/{provider}",
-		pathArgs: []string{tenantID, provider},
+		path:     "/v1/organizations/{organizationID}/vault/tokens/providers/{provider}",
+		pathArgs: []string{organizationID, provider},
 	}, nil, opts)
 }
 

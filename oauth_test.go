@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// clientCredentialsAnswer is the server's answer to a client credentials grant
-// (developer/principal TokenResponse).
+// clientCredentialsAnswer is the token endpoint's answer to a client
+// credentials grant (OAuthTokenResponse), for a service principal or an agent.
 const clientCredentialsAnswer = `{"access_token":"eyJ.service.token","token_type":"Bearer","expires_in":600,
 	"expires_at":"2026-11-05T10:10:00Z","scope":"user.read user.write"}`
 
@@ -54,6 +54,43 @@ func TestClientCredentials(t *testing.T) {
 	}
 }
 
+// TestAgentToken checks that an agent's token comes from the token endpoint's
+// client credentials grant, with the agent's ID and secret as the client's.
+func TestAgentToken(t *testing.T) {
+	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(http.StatusOK, clientCredentialsAnswer)}}
+	c := newFakeClient(t, f)
+	tok, err := c.Agents.Token(context.Background(), AgentTokenParams{AgentID: "agent-7", Secret: "as_1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tok.AccessToken != "eyJ.service.token" || tok.ExpiresAt.IsZero() {
+		t.Errorf("token = %+v", tok)
+	}
+	got := f.calls()[0]
+	if got.method != http.MethodPost || got.path != "/v1/oauth/token" {
+		t.Errorf("request = %s %s, want POST /v1/oauth/token", got.method, got.path)
+	}
+	user, pass, ok := (&http.Request{Header: got.header}).BasicAuth()
+	if !ok || user != "agent-7" || pass != "as_1" {
+		t.Errorf("Basic credentials = %q %q %v; want the agent's ID and secret", user, pass, ok)
+	}
+	form, _ := url.ParseQuery(got.body)
+	if form.Get("grant_type") != "client_credentials" || form.Has("scope") || form.Has("agent_id") || form.Has("secret") {
+		t.Errorf("form = %v", form)
+	}
+	if _, err := c.Agents.Token(context.Background(), AgentTokenParams{AgentID: "agent-7"}); err == nil {
+		t.Error("Token without a secret: want an error before any request")
+	}
+	if n := len(f.calls()); n != 1 {
+		t.Errorf("sent %d requests, want 1", n)
+	}
+}
+
+func agentToken(ctx context.Context, c *Client) error {
+	_, err := c.Agents.Token(ctx, AgentTokenParams{AgentID: "agent-7", Secret: "s"})
+	return err
+}
+
 func TestExpiresInWithoutExpiresAt(t *testing.T) {
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(http.StatusOK, `{"access_token":"at","token_type":"Bearer","expires_in":300,"refresh_token":"rt"}`)}}
 	c := newFakeClient(t, f)
@@ -70,8 +107,8 @@ func TestExpiresInWithoutExpiresAt(t *testing.T) {
 	}
 }
 
-// TestTokenEndpointErrors covers each error /v1/oauth/token and
-// /v1/oauth/token-code answer with, in the RFC 6749 shape.
+// TestTokenEndpointErrors covers each error /v1/oauth/token answers with, in
+// the RFC 6749 shape, whatever the grant.
 func TestTokenEndpointErrors(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -84,6 +121,9 @@ func TestTokenEndpointErrors(t *testing.T) {
 		{"missing grant type", 400, `{"error":"invalid_request","error_description":"grant_type is required."}`, OAuthInvalidRequest, ErrInvalidRequest, clientCreds},
 		{"wrong secret", 401, `{"error":"invalid_client","error_description":"Invalid client credentials."}`, OAuthInvalidClient, ErrUnauthorized, clientCreds},
 		{"disabled principal", 400, `{"error":"unauthorized_client","error_description":"This service principal is disabled."}`, OAuthUnauthorizedClient, ErrInvalidRequest, clientCreds},
+		{"wrong agent secret", 401, `{"error":"invalid_client","error_description":"Invalid client credentials."}`, OAuthInvalidClient, ErrUnauthorized, agentToken},
+		{"suspended agent", 400, `{"error":"unauthorized_client","error_description":"The agent is not active."}`, OAuthUnauthorizedClient, ErrInvalidRequest, agentToken},
+		{"resource on client credentials", 400, `{"error":"invalid_target","error_description":"resource is not accepted with client_credentials"}`, OAuthInvalidTarget, ErrInvalidRequest, clientCreds},
 		{"other grant", 400, `{"error":"unsupported_grant_type","error_description":"Use client_credentials."}`, OAuthUnsupportedGrantType, ErrInvalidRequest, clientCreds},
 		{"reused code", 400, `{"error":"invalid_grant","error_description":"The authorization code was already used."}`, OAuthInvalidGrant, ErrInvalidRequest, exchangeCode},
 		{"scope beyond subject", 400, `{"error":"invalid_scope","error_description":"scope exceeds the subject token"}`, OAuthInvalidScope, ErrInvalidRequest, exchangeToken},
@@ -190,8 +230,8 @@ func TestTokenExchangeForm(t *testing.T) {
 			t.Errorf("form[%s] = %q, want %q", k, form.Get(k), v)
 		}
 	}
-	if got.path != "/v1/oauth/token-code" {
-		t.Errorf("path = %q: token exchange is served by the token-code endpoint", got.path)
+	if got.path != "/v1/oauth/token" {
+		t.Errorf("path = %q: every grant is served by the token endpoint", got.path)
 	}
 }
 
@@ -217,7 +257,7 @@ func TestIntrospect(t *testing.T) {
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{
 		answer(http.StatusOK, `{"active":true,"token_type":"Bearer","sub":"u1","scope":"openid email","iss":"qeet-id",
 			"aud":["qeet-id","https://mcp.example.com"],"client_id":"app","resource":"https://mcp.example.com",
-			"exp":1762337400,"iat":1762336800,"tenant_id":"t1","sid":"s1","act":{"sub":"agent-7"}}`),
+			"exp":1762337400,"iat":1762336800,"organization_id":"t1","sid":"s1","act":{"sub":"agent-7"}}`),
 		answer(http.StatusOK, `{"active":false}`),
 		answer(http.StatusUnauthorized, `{"error":{"code":"oidc.client_auth_failed","message":"The client could not be authenticated."}}`),
 	}}
@@ -268,8 +308,8 @@ func TestUserInfoSendsThePersonsToken(t *testing.T) {
 
 func TestDiscover(t *testing.T) {
 	f := &fakeAPI{answers: []func(*http.Request) *http.Response{answer(http.StatusOK,
-		`{"issuer":"qeet-id","jwks_uri":"https://api.id.qeet.in/.well-known/jwks.json","token_endpoint":"https://api.id.qeet.in/v1/oauth/token-code",
-		"grant_types_supported":["authorization_code","urn:openid:params:grant-type:ciba"],"actor_types_supported":["user","service","agent"]}`)}}
+		`{"issuer":"qeet-id","jwks_uri":"https://api.id.qeet.in/.well-known/jwks.json","token_endpoint":"https://api.id.qeet.in/v1/oauth/token",
+		"grant_types_supported":["authorization_code","client_credentials","urn:openid:params:grant-type:ciba"],"actor_types_supported":["user","service","agent"]}`)}}
 	c := newFakeClient(t, f)
 	md, err := c.OAuth.Discover(context.Background())
 	if err != nil {

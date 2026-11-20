@@ -91,11 +91,12 @@ func WithAPIKey(key string) Option {
 }
 
 // WithClientCredentials authenticates every request with an access token that
-// the client obtains for a service principal with the OAuth client credentials
-// grant (POST /v1/oauth/token). The client caches the token and fetches a new
-// one shortly before it expires. scopes, when given, are sent with the grant,
-// but the server ignores them today: the token carries every scope the service
-// principal holds.
+// the client obtains for a service principal or an AI agent with the OAuth
+// client credentials grant (POST /v1/oauth/token): clientID is the principal's
+// or agent's ID and clientSecret its secret. The client caches the token and
+// fetches a new one shortly before it expires. scopes, when given, are sent
+// with the grant, but the server ignores them: the token carries every scope
+// the principal or agent holds.
 func WithClientCredentials(clientID, clientSecret string, scopes ...string) Option {
 	return optionFunc(func(c *clientConfig) {
 		if clientID == "" || clientSecret == "" {
@@ -110,7 +111,7 @@ func WithClientCredentials(clientID, clientSecret string, scopes ...string) Opti
 
 // WithTokenSource authenticates every request with a bearer token from ts, sent
 // as "Authorization: Bearer <token>". Use it for tokens the client does not
-// obtain itself, such as an agent's token or one from golang.org/x/oauth2.
+// obtain itself, such as a person's token or one from golang.org/x/oauth2.
 func WithTokenSource(ts TokenSource) Option {
 	return optionFunc(func(c *clientConfig) {
 		if ts == nil {

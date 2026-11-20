@@ -10,7 +10,7 @@ import (
 // GroupsService manages groups, their members and the roles granted to them.
 type GroupsService struct{ c *Client }
 
-// Create creates a group.
+// Create creates a group in the caller's organization.
 //
 // It accepts WithIdempotencyKey. Without one, the client sends a random key so that a retry cannot
 // apply the request twice.
@@ -39,14 +39,14 @@ func (s *GroupsService) Delete(ctx context.Context, groupID string, opts ...Requ
 	return s.c.do(ctx, &request{method: http.MethodDelete, path: "/v1/groups/{groupID}", pathArgs: []string{groupID}}, nil, opts)
 }
 
-// List lists a tenant's groups.
+// List lists an organization's groups.
 //
-// API: GET /v1/tenants/{tenantID}/groups
-func (s *GroupsService) List(ctx context.Context, tenantID string, params *ListGroupsParams, opts ...RequestOption) (*Page[Group], error) {
+// API: GET /v1/organizations/{organizationID}/groups
+func (s *GroupsService) List(ctx context.Context, organizationID string, params *ListGroupsParams, opts ...RequestOption) (*Page[Group], error) {
 	return call[Page[Group]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/groups",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/groups",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -86,34 +86,34 @@ func (s *GroupsService) RemoveMember(ctx context.Context, groupID, userID string
 
 // ListRoles lists the roles granted to a group. Every member inherits them.
 //
-// API: GET /v1/tenants/{tenantID}/groups/{groupID}/roles
-func (s *GroupsService) ListRoles(ctx context.Context, tenantID, groupID string, opts ...RequestOption) (*Page[GroupRole], error) {
+// API: GET /v1/organizations/{organizationID}/groups/{groupID}/roles
+func (s *GroupsService) ListRoles(ctx context.Context, organizationID, groupID string, opts ...RequestOption) (*Page[GroupRole], error) {
 	return call[Page[GroupRole]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/groups/{groupID}/roles",
-		pathArgs: []string{tenantID, groupID},
+		path:     "/v1/organizations/{organizationID}/groups/{groupID}/roles",
+		pathArgs: []string{organizationID, groupID},
 	}, opts)
 }
 
 // GrantRole grants a role to a group.
 //
-// API: POST /v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}
-func (s *GroupsService) GrantRole(ctx context.Context, tenantID, groupID, roleID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/groups/{groupID}/roles/{roleID}
+func (s *GroupsService) GrantRole(ctx context.Context, organizationID, groupID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}",
-		pathArgs: []string{tenantID, groupID, roleID},
+		path:     "/v1/organizations/{organizationID}/groups/{groupID}/roles/{roleID}",
+		pathArgs: []string{organizationID, groupID, roleID},
 	}, nil, opts)
 }
 
 // RevokeRole revokes a role from a group.
 //
-// API: DELETE /v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}
-func (s *GroupsService) RevokeRole(ctx context.Context, tenantID, groupID, roleID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/groups/{groupID}/roles/{roleID}
+func (s *GroupsService) RevokeRole(ctx context.Context, organizationID, groupID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/groups/{groupID}/roles/{roleID}",
-		pathArgs: []string{tenantID, groupID, roleID},
+		path:     "/v1/organizations/{organizationID}/groups/{groupID}/roles/{roleID}",
+		pathArgs: []string{organizationID, groupID, roleID},
 	}, nil, opts)
 }
 
@@ -124,7 +124,7 @@ func (s *GroupsService) Import(ctx context.Context, params ImportGroupsParams, o
 	return call[GroupImportResult](ctx, s.c, &request{method: http.MethodPost, path: "/v1/groups/import", body: params}, opts)
 }
 
-// ListTemplates lists the tenant's group templates.
+// ListTemplates lists the organization's group templates.
 //
 // API: GET /v1/groups/templates
 func (s *GroupsService) ListTemplates(ctx context.Context, opts ...RequestOption) (*Page[GroupTemplate], error) {
@@ -172,19 +172,18 @@ type CreateGroupParams struct {
 	Description string  `json:"description,omitempty"`
 	Name        string  `json:"name,omitempty"`
 	ParentID    *string `json:"parent_id,omitempty"`
-	TenantID    string  `json:"tenant_id,omitempty"`
 }
 
-// Group is a set of users in a tenant. Groups can nest, and the roles granted to a group pass to its
+// Group is a set of users in an organization. Groups can nest, and the roles granted to a group pass to its
 // members.
 type Group struct {
-	CreatedAt   time.Time `json:"created_at,omitzero"`
-	Description string    `json:"description,omitempty"`
-	ID          string    `json:"id,omitempty"`
-	MemberCount int       `json:"member_count"`
-	Name        string    `json:"name,omitempty"`
-	ParentID    string    `json:"parent_id,omitempty"`
-	TenantID    string    `json:"tenant_id,omitempty"`
+	CreatedAt      time.Time `json:"created_at,omitzero"`
+	Description    string    `json:"description,omitempty"`
+	ID             string    `json:"id,omitempty"`
+	MemberCount    int       `json:"member_count"`
+	Name           string    `json:"name,omitempty"`
+	ParentID       string    `json:"parent_id,omitempty"`
+	OrganizationID string    `json:"organization_id,omitempty"`
 	// The roles granted to the group itself, in the list only and only for a caller with role.read.
 	Roles []GroupRole `json:"roles,omitempty"`
 }
@@ -307,14 +306,14 @@ const (
 
 // GroupTemplate is a saved tree of groups that GroupsService.ApplyTemplate creates in one step.
 type GroupTemplate struct {
-	CreatedAt   time.Time           `json:"created_at,omitzero"`
-	Description string              `json:"description,omitempty"`
-	GroupCount  int                 `json:"group_count"`
-	ID          string              `json:"id,omitempty"`
-	Name        string              `json:"name,omitempty"`
-	Nodes       []GroupTemplateNode `json:"nodes,omitempty"`
-	TenantID    string              `json:"tenant_id,omitempty"`
-	UpdatedAt   time.Time           `json:"updated_at,omitzero"`
+	CreatedAt      time.Time           `json:"created_at,omitzero"`
+	Description    string              `json:"description,omitempty"`
+	GroupCount     int                 `json:"group_count"`
+	ID             string              `json:"id,omitempty"`
+	Name           string              `json:"name,omitempty"`
+	Nodes          []GroupTemplateNode `json:"nodes,omitempty"`
+	OrganizationID string              `json:"organization_id,omitempty"`
+	UpdatedAt      time.Time           `json:"updated_at,omitzero"`
 }
 
 // GroupTemplateNode is one element of GroupTemplate.Nodes.

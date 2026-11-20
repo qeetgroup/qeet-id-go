@@ -1,7 +1,7 @@
 // Command quickstart creates a user, gives them a role and lists the
-// tenant's users with an API key.
+// organization's users with an API key.
 //
-//	QEETID_API_KEY=qk_... QEETID_TENANT_ID=... go run ./examples/quickstart
+//	QEETID_API_KEY=qk_... QEETID_ORGANIZATION_ID=... go run ./examples/quickstart
 package main
 
 import (
@@ -23,12 +23,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tenantID := os.Getenv("QEETID_TENANT_ID")
+	organizationID := os.Getenv("QEETID_ORGANIZATION_ID")
 
 	user, err := client.Users.Create(ctx, qeetid.CreateUserParams{
-		TenantID:    tenantID,
-		Email:       "ada@brightleaffoods.in",
-		DisplayName: "Ada Lovelace",
+		OrganizationID: organizationID,
+		Email:          "ada@brightleaffoods.in",
+		DisplayName:    "Ada Lovelace",
 	})
 	switch {
 	case errors.Is(err, qeetid.ErrConflict):
@@ -38,13 +38,13 @@ func main() {
 	}
 	fmt.Println("created", user.ID)
 
-	roles, err := client.Roles.List(ctx, tenantID)
+	roles, err := client.Roles.List(ctx, organizationID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, role := range roles.Items {
 		if role.Name == "editor" {
-			if err := client.Roles.AssignToUser(ctx, user.ID, tenantID, role.ID); err != nil {
+			if err := client.Roles.AssignToUser(ctx, user.ID, organizationID, role.ID); err != nil {
 				log.Fatal(err)
 			}
 			fmt.Println("assigned", role.Name)

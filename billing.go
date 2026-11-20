@@ -6,58 +6,58 @@ import (
 	"time"
 )
 
-// BillingService manages the tenant's Qeet ID plan, subscription, invoices and billing profile.
+// BillingService manages the organization's Qeet ID plan, subscription, invoices and billing profile.
 type BillingService struct{ c *Client }
 
-// ListPlans lists the plans a tenant can subscribe to.
+// ListPlans lists the plans an organization can subscribe to.
 //
 // API: GET /v1/billing/plans
 func (s *BillingService) ListPlans(ctx context.Context, opts ...RequestOption) (*Page[Plan], error) {
 	return call[Page[Plan]](ctx, s.c, &request{method: http.MethodGet, path: "/v1/billing/plans"}, opts)
 }
 
-// Subscription returns the tenant's subscription. Status is none when there is no subscription.
+// Subscription returns the organization's subscription. Status is none when there is no subscription.
 //
-// API: GET /v1/tenants/{tenantID}/billing/subscription
-func (s *BillingService) Subscription(ctx context.Context, tenantID string, opts ...RequestOption) (*Subscription, error) {
+// API: GET /v1/organizations/{organizationID}/billing/subscription
+func (s *BillingService) Subscription(ctx context.Context, organizationID string, opts ...RequestOption) (*Subscription, error) {
 	return call[Subscription](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/billing/subscription",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/subscription",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Subscribe subscribes the tenant to a plan or changes its plan.
+// Subscribe subscribes the organization to a plan or changes its plan.
 //
-// API: PUT /v1/tenants/{tenantID}/billing/subscription
-func (s *BillingService) Subscribe(ctx context.Context, tenantID string, params SubscribeParams, opts ...RequestOption) (*Subscription, error) {
+// API: PUT /v1/organizations/{organizationID}/billing/subscription
+func (s *BillingService) Subscribe(ctx context.Context, organizationID string, params SubscribeParams, opts ...RequestOption) (*Subscription, error) {
 	return call[Subscription](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/billing/subscription",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/subscription",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // CancelSubscription cancels the subscription at the end of the current period.
 //
-// API: POST /v1/tenants/{tenantID}/billing/subscription/cancel
-func (s *BillingService) CancelSubscription(ctx context.Context, tenantID string, opts ...RequestOption) (*SubscriptionCancellation, error) {
+// API: POST /v1/organizations/{organizationID}/billing/subscription/cancel
+func (s *BillingService) CancelSubscription(ctx context.Context, organizationID string, opts ...RequestOption) (*SubscriptionCancellation, error) {
 	return call[SubscriptionCancellation](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/billing/subscription/cancel",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/subscription/cancel",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// StartTrial starts a trial of a plan for the tenant.
+// StartTrial starts a trial of a plan for the organization.
 //
-// API: POST /v1/tenants/{tenantID}/billing/trial
-func (s *BillingService) StartTrial(ctx context.Context, tenantID string, params StartTrialParams, opts ...RequestOption) (*Subscription, error) {
+// API: POST /v1/organizations/{organizationID}/billing/trial
+func (s *BillingService) StartTrial(ctx context.Context, organizationID string, params StartTrialParams, opts ...RequestOption) (*Subscription, error) {
 	return call[Subscription](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/billing/trial",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/trial",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
@@ -67,25 +67,25 @@ func (s *BillingService) StartTrial(ctx context.Context, tenantID string, params
 // It accepts WithIdempotencyKey. Without one, the client sends a random key so that a retry cannot
 // apply the request twice.
 //
-// API: POST /v1/tenants/{tenantID}/billing/checkout
-func (s *BillingService) Checkout(ctx context.Context, tenantID string, params CheckoutParams, opts ...RequestOption) (*CheckoutResult, error) {
+// API: POST /v1/organizations/{organizationID}/billing/checkout
+func (s *BillingService) Checkout(ctx context.Context, organizationID string, params CheckoutParams, opts ...RequestOption) (*CheckoutResult, error) {
 	return call[CheckoutResult](ctx, s.c, &request{
 		method:     http.MethodPost,
-		path:       "/v1/tenants/{tenantID}/billing/checkout",
-		pathArgs:   []string{tenantID},
+		path:       "/v1/organizations/{organizationID}/billing/checkout",
+		pathArgs:   []string{organizationID},
 		body:       params,
 		idempotent: true,
 	}, opts)
 }
 
-// ListInvoices lists the tenant's invoices.
+// ListInvoices lists the organization's invoices.
 //
-// API: GET /v1/tenants/{tenantID}/billing/invoices
-func (s *BillingService) ListInvoices(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[Invoice], error) {
+// API: GET /v1/organizations/{organizationID}/billing/invoices
+func (s *BillingService) ListInvoices(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[Invoice], error) {
 	return call[Page[Invoice]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/billing/invoices",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/invoices",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
@@ -94,12 +94,12 @@ func (s *BillingService) ListInvoices(ctx context.Context, tenantID string, opts
 // It accepts WithIdempotencyKey. Without one, the client sends a random key so that a retry cannot
 // apply the request twice.
 //
-// API: POST /v1/tenants/{tenantID}/billing/invoices/{invoiceID}/pay
-func (s *BillingService) PayInvoice(ctx context.Context, tenantID, invoiceID string, params PayInvoiceParams, opts ...RequestOption) (*CheckoutResult, error) {
+// API: POST /v1/organizations/{organizationID}/billing/invoices/{invoiceID}/pay
+func (s *BillingService) PayInvoice(ctx context.Context, organizationID, invoiceID string, params PayInvoiceParams, opts ...RequestOption) (*CheckoutResult, error) {
 	return call[CheckoutResult](ctx, s.c, &request{
 		method:     http.MethodPost,
-		path:       "/v1/tenants/{tenantID}/billing/invoices/{invoiceID}/pay",
-		pathArgs:   []string{tenantID, invoiceID},
+		path:       "/v1/organizations/{organizationID}/billing/invoices/{invoiceID}/pay",
+		pathArgs:   []string{organizationID, invoiceID},
 		body:       params,
 		idempotent: true,
 	}, opts)
@@ -107,39 +107,39 @@ func (s *BillingService) PayInvoice(ctx context.Context, tenantID, invoiceID str
 
 // PaymentMethod returns the payment method on file, if any.
 //
-// API: GET /v1/tenants/{tenantID}/billing/payment-method
-func (s *BillingService) PaymentMethod(ctx context.Context, tenantID string, opts ...RequestOption) (*PaymentMethodResult, error) {
+// API: GET /v1/organizations/{organizationID}/billing/payment-method
+func (s *BillingService) PaymentMethod(ctx context.Context, organizationID string, opts ...RequestOption) (*PaymentMethodResult, error) {
 	return call[PaymentMethodResult](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/billing/payment-method",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/payment-method",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// Profile returns the tenant's billing profile.
+// Profile returns the organization's billing profile.
 //
-// API: GET /v1/tenants/{tenantID}/billing/profile
-func (s *BillingService) Profile(ctx context.Context, tenantID string, opts ...RequestOption) (*BillingProfile, error) {
+// API: GET /v1/organizations/{organizationID}/billing/profile
+func (s *BillingService) Profile(ctx context.Context, organizationID string, opts ...RequestOption) (*BillingProfile, error) {
 	return call[BillingProfile](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/billing/profile",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/profile",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
-// UpdateProfile replaces the tenant's billing profile.
+// UpdateProfile replaces the organization's billing profile.
 //
-// API: PUT /v1/tenants/{tenantID}/billing/profile
-func (s *BillingService) UpdateProfile(ctx context.Context, tenantID string, params BillingProfile, opts ...RequestOption) (*BillingProfile, error) {
+// API: PUT /v1/organizations/{organizationID}/billing/profile
+func (s *BillingService) UpdateProfile(ctx context.Context, organizationID string, params BillingProfile, opts ...RequestOption) (*BillingProfile, error) {
 	return call[BillingProfile](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/billing/profile",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/billing/profile",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
-// Plan is a Qeet ID plan a tenant can subscribe to. Prices are in minor units, such as paise or cents.
+// Plan is a Qeet ID plan an organization can subscribe to. Prices are in minor units, such as paise or cents.
 type Plan struct {
 	Code        string         `json:"code,omitempty"`
 	Description string         `json:"description,omitempty"`
@@ -150,7 +150,7 @@ type Plan struct {
 	Prices      map[string]int `json:"prices,omitempty"`
 }
 
-// Subscription is a tenant's Qeet ID subscription. Status is none when the tenant has none.
+// Subscription is an organization's Qeet ID subscription. Status is none when the organization has none.
 type Subscription struct {
 	AmountMinor        int                `json:"amount_minor"`
 	CancelAtPeriodEnd  bool               `json:"cancel_at_period_end"`
@@ -215,7 +215,7 @@ type CheckoutResult struct {
 	Status      string `json:"status,omitempty"`
 }
 
-// Invoice is a bill for a tenant's subscription.
+// Invoice is a bill for an organization's subscription.
 type Invoice struct {
 	// The total charged, taxable_amount_minor plus tax_amount_minor; for a checkout, what the payment
 	// provider charged.
@@ -278,7 +278,7 @@ const (
 	InvoiceKindRenewal  InvoiceKind = "renewal"
 )
 
-// BillingProfile holds the details printed on a tenant's invoices.
+// BillingProfile holds the details printed on an organization's invoices.
 type BillingProfile struct {
 	AddressLine1 string `json:"address_line1,omitempty"`
 	AddressLine2 string `json:"address_line2,omitempty"`

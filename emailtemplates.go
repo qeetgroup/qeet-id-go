@@ -5,74 +5,74 @@ import (
 	"net/http"
 )
 
-// EmailTemplatesService customizes the emails Qeet ID sends for a tenant.
+// EmailTemplatesService customizes the emails Qeet ID sends for an organization.
 type EmailTemplatesService struct{ c *Client }
 
-// List lists every template with the tenant's customization, if any.
+// List lists every template with the organization's customization, if any.
 //
-// API: GET /v1/tenants/{tenantID}/email-templates
-func (s *EmailTemplatesService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*EmailTemplates, error) {
+// API: GET /v1/organizations/{organizationID}/email-templates
+func (s *EmailTemplatesService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*EmailTemplates, error) {
 	return call[EmailTemplates](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/email-templates",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/email-templates",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Get returns a template.
 //
-// API: GET /v1/tenants/{tenantID}/email-templates/{key}
-func (s *EmailTemplatesService) Get(ctx context.Context, tenantID, key string, opts ...RequestOption) (*EmailTemplate, error) {
+// API: GET /v1/organizations/{organizationID}/email-templates/{key}
+func (s *EmailTemplatesService) Get(ctx context.Context, organizationID, key string, opts ...RequestOption) (*EmailTemplate, error) {
 	return call[EmailTemplate](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/email-templates/{key}",
-		pathArgs: []string{tenantID, key},
+		path:     "/v1/organizations/{organizationID}/email-templates/{key}",
+		pathArgs: []string{organizationID, key},
 	}, opts)
 }
 
-// Update saves a tenant's customization of a template.
+// Update saves an organization's customization of a template.
 //
-// API: PUT /v1/tenants/{tenantID}/email-templates/{key}
-func (s *EmailTemplatesService) Update(ctx context.Context, tenantID, key string, params UpdateEmailTemplateParams, opts ...RequestOption) (*EmailTemplate, error) {
+// API: PUT /v1/organizations/{organizationID}/email-templates/{key}
+func (s *EmailTemplatesService) Update(ctx context.Context, organizationID, key string, params UpdateEmailTemplateParams, opts ...RequestOption) (*EmailTemplate, error) {
 	return call[EmailTemplate](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/email-templates/{key}",
-		pathArgs: []string{tenantID, key},
+		path:     "/v1/organizations/{organizationID}/email-templates/{key}",
+		pathArgs: []string{organizationID, key},
 		body:     params,
 	}, opts)
 }
 
-// Reset drops a tenant's customization and returns the default template.
+// Reset drops an organization's customization and returns the default template.
 //
-// API: DELETE /v1/tenants/{tenantID}/email-templates/{key}
-func (s *EmailTemplatesService) Reset(ctx context.Context, tenantID, key string, opts ...RequestOption) (*EmailTemplate, error) {
+// API: DELETE /v1/organizations/{organizationID}/email-templates/{key}
+func (s *EmailTemplatesService) Reset(ctx context.Context, organizationID, key string, opts ...RequestOption) (*EmailTemplate, error) {
 	return call[EmailTemplate](ctx, s.c, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/email-templates/{key}",
-		pathArgs: []string{tenantID, key},
+		path:     "/v1/organizations/{organizationID}/email-templates/{key}",
+		pathArgs: []string{organizationID, key},
 	}, opts)
 }
 
 // Preview renders a template with sample values. Nothing is sent.
 //
-// API: POST /v1/tenants/{tenantID}/email-templates/{key}/preview
-func (s *EmailTemplatesService) Preview(ctx context.Context, tenantID, key string, params PreviewEmailTemplateParams, opts ...RequestOption) (*EmailPreview, error) {
+// API: POST /v1/organizations/{organizationID}/email-templates/{key}/preview
+func (s *EmailTemplatesService) Preview(ctx context.Context, organizationID, key string, params PreviewEmailTemplateParams, opts ...RequestOption) (*EmailPreview, error) {
 	return call[EmailPreview](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/email-templates/{key}/preview",
-		pathArgs: []string{tenantID, key},
+		path:     "/v1/organizations/{organizationID}/email-templates/{key}/preview",
+		pathArgs: []string{organizationID, key},
 		body:     params,
 	}, opts)
 }
 
 // SendTest sends a template to the calling person's verified email address.
 //
-// API: POST /v1/tenants/{tenantID}/email-templates/{key}/test
-func (s *EmailTemplatesService) SendTest(ctx context.Context, tenantID, key string, params SendTestEmailParams, opts ...RequestOption) (*TestEmailResult, error) {
+// API: POST /v1/organizations/{organizationID}/email-templates/{key}/test
+func (s *EmailTemplatesService) SendTest(ctx context.Context, organizationID, key string, params SendTestEmailParams, opts ...RequestOption) (*TestEmailResult, error) {
 	return call[TestEmailResult](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/email-templates/{key}/test",
-		pathArgs: []string{tenantID, key},
+		path:     "/v1/organizations/{organizationID}/email-templates/{key}/test",
+		pathArgs: []string{organizationID, key},
 		body:     params,
 	}, opts)
 }
@@ -83,7 +83,7 @@ type EmailTemplates struct {
 	Capabilities EmailTemplatesCapabilities `json:"capabilities,omitzero"`
 }
 
-// EmailTemplate is an email Qeet ID sends, with the tenant's customization if it has one.
+// EmailTemplate is an email Qeet ID sends, with the organization's customization if it has one.
 type EmailTemplate struct {
 	Subject       string                     `json:"subject,omitempty"`
 	Body          string                     `json:"body,omitempty"`
@@ -132,8 +132,8 @@ type EmailTemplateDeliveryScope string
 
 // Values of EmailTemplateDeliveryScope. The server may add values; handle an unknown one gracefully.
 const (
-	EmailTemplateDeliveryScopeTenant   EmailTemplateDeliveryScope = "tenant"
-	EmailTemplateDeliveryScopePlatform EmailTemplateDeliveryScope = "platform"
+	EmailTemplateDeliveryScopeOrganization EmailTemplateDeliveryScope = "organization"
+	EmailTemplateDeliveryScopePlatform     EmailTemplateDeliveryScope = "platform"
 )
 
 // EmailTemplatesCapabilities is the type of EmailTemplates.Capabilities.

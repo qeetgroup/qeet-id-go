@@ -32,19 +32,19 @@ func ExampleVerifier_Middleware() {
 	}
 	api := v.Middleware(jwt.RequireScope("invoices.read")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims, _ := jwt.ClaimsFromContext(r.Context())
-		fmt.Fprintf(w, "invoices of tenant %s for %s", claims.TenantID, claims.UserID)
+		fmt.Fprintf(w, "invoices of organization %s for %s", claims.OrganizationID, claims.UserID)
 	})))
 
 	req := httptest.NewRequest(http.MethodGet, "/invoices", nil)
 	req.Header.Set("Authorization", "Bearer "+sign(map[string]any{
 		"iss": "qeet-id", "aud": "https://api.example.com", "sub": "u-1", "user_id": "u-1",
-		"tenant_id": "t-1", "sid": "s-1", "scope": "openid invoices.read",
+		"organization_id": "t-1", "sid": "s-1", "scope": "openid invoices.read",
 		"exp": time.Now().Add(5 * time.Minute).Unix(),
 	}))
 	w := httptest.NewRecorder()
 	api.ServeHTTP(w, req)
 	fmt.Println(w.Code, w.Body.String())
-	// Output: 200 invoices of tenant t-1 for u-1
+	// Output: 200 invoices of organization t-1 for u-1
 }
 
 func ExampleVerifier_Verify() {

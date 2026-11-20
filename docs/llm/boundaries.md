@@ -15,7 +15,7 @@ logging, idempotency keys) · error typing · pagination · webhook delivery ver
 | Not owned | Owner |
 |---|---|
 | **The API contract** | `qeet-id-server` — its five OpenAPI documents and handlers |
-| Any authorization or tenancy decision | `qeet-id-server` |
+| Any authorization or organization-scoping decision | `qeet-id-server` |
 | Token issuance, session semantics, the webhook signature | `qeet-id-server` |
 | End-user flows in browsers and apps | the browser and mobile SDKs |
 | The Node SDK | `qeet-id-node` |

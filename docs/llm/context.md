@@ -1,6 +1,6 @@
 # Repository Context — qeet-id-go
 
-**Level:** L2 · **Status:** active · **Evidence state:** verified · **Last verified:** 2026-11-05
+**Level:** L2 · **Status:** active · **Evidence state:** verified · **Last verified:** 2026-11-21
 **Verification scope:** package layout, defaults, transport behaviour, CI jobs and tests read from
 source; endpoints checked against `qeet-id-server` develop.
 
@@ -8,7 +8,7 @@ source; endpoints checked against `qeet-id-server` develop.
 
 The server-side **Go SDK for Qeet ID**. Module `github.com/qeetgroup/qeet-id-go`, package `qeetid`
 (imported as `qeetid "github.com/qeetgroup/qeet-id-go"`), with leaf packages `webhook` and `jwt`.
-Version string 0.1.0, **no tag pushed yet**. Go 1.26+, standard library only.
+Version string 0.2.0 (v0.1.0 is the latest tag). Go 1.26+, standard library only.
 
 ## Context inheritance
 
@@ -25,12 +25,12 @@ qeet-id-go (L2)        THIS REPOSITORY
 ## Responsibilities
 
 Typed bindings for 48 services (about 330 operations) of the Qeet ID API, credentials (API key,
-service principal client credentials, any bearer token source), safe retries, idempotency keys,
+service principal or AI agent client credentials, any bearer token source), safe retries, idempotency keys,
 pagination, typed errors, webhook verification and access-token verification.
 
 ## Non-responsibilities
 
-**It owns no behaviour.** Authorization, tenancy, token issuance and validation rules are the
+**It owns no behaviour.** Authorization, organization scoping, token issuance and validation rules are the
 server's. It does not own the OpenAPI contract, end-user flows, or documentation sites.
 
 ## Architecture
@@ -80,7 +80,8 @@ returning `iter.Seq2[*T, error]`; capped lists report `Truncated`.
 ## Cryptography
 
 `webhook`: HMAC-SHA256 of `timestamp + "." + body`, `hmac.Equal`, five-minute tolerance, any of
-several signatures and secrets. `jwt`: ES256 with raw r‖s signatures converted to ASN.1, keys from
+several signatures and secrets; auth-hook calls are signed the same way, so `Verifier.Verify` checks
+them too. `jwt`: ES256 with raw r‖s signatures converted to ASN.1, keys from
 the JWKS cached ten minutes, unknown `kid` refresh at most once a minute, shared fetches, stale keys
 during outages.
 

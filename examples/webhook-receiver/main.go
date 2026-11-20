@@ -40,7 +40,7 @@ func main() {
 			if err := e.DecodeData(&d); err != nil {
 				return err
 			}
-			log.Printf("%s: user %s in tenant %s", e.Type, d.UserID, d.TenantID)
+			log.Printf("%s: user %s in organization %s", e.Type, d.UserID, d.OrganizationID)
 		case webhook.SessionRevoked:
 			var d webhook.SessionRevokedData
 			if err := e.DecodeData(&d); err != nil {

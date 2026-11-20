@@ -26,7 +26,7 @@ var (
 	// session the access token belongs to has ended. Sign the person in again;
 	// retrying with the same token cannot succeed, and the client never does.
 	ErrSessionRevoked = errors.New("qeetid: session revoked")
-	// ErrPaymentRequired matches a request the tenant's plan does not cover
+	// ErrPaymentRequired matches a request the organization's plan does not cover
 	// (HTTP 402), such as a feature outside the plan or a full seat count.
 	ErrPaymentRequired = errors.New("qeetid: payment required")
 	// ErrForbidden matches a request the credentials are not allowed to make
@@ -68,6 +68,69 @@ const (
 	CodeIdempotencyKeyReused      = "idempotency.key_reused"
 	CodeIdempotencyInProgress     = "idempotency.in_progress"
 	CodeIdempotencyOutcomeUnknown = "idempotency.outcome_unknown"
+)
+
+// Error codes of the organization and of the rules that guard changes to people, roles and
+// connections. Like the codes above they are values of APIError.Code; the server may add others.
+const (
+	// CodeBadRequest refuses a request that can't be read, including a path carrying an encoded
+	// slash or backslash.
+	CodeBadRequest = "bad_request"
+	// CodeStepUpRequired asks for a recent second factor before a sensitive change.
+	CodeStepUpRequired = "step_up_required"
+	// CodeMFAEnrollmentRequired asks the person to set up a second factor first.
+	CodeMFAEnrollmentRequired = "mfa.enrollment_required"
+	// CodeAddressNotAllowed refuses a request from an address the organization's rules refuse.
+	CodeAddressNotAllowed = "auth.address_not_allowed"
+	// CodeOrganizationInactive refuses an organization that is suspended or deleted.
+	CodeOrganizationInactive = "auth.organization_inactive"
+	// CodeOrganizationOwnerOnly refuses an organization change only an owner may make.
+	CodeOrganizationOwnerOnly = "organization.owner_only"
+	// CodeOrganizationDeletionScheduled refuses a deletion already scheduled.
+	CodeOrganizationDeletionScheduled = "organization.deletion_scheduled"
+	// CodeOrganizationRegionUnavailable refuses a region other than the one the service is hosted
+	// in; APIError.Metadata["available"] names it.
+	CodeOrganizationRegionUnavailable = "organization.region_unavailable"
+	// CodeOrganizationRegionReadOnly refuses a change of an organization's region.
+	CodeOrganizationRegionReadOnly = "organization.region_read_only"
+	// CodeUpgradeRequired refuses a feature the organization's plan doesn't include (HTTP 402).
+	CodeUpgradeRequired = "billing.upgrade_required"
+	// CodeCheckoutRequired refuses creating an organization on a paid plan, which starts with
+	// checkout (HTTP 402).
+	CodeCheckoutRequired = "billing.checkout_required"
+	// CodeGrantExceedsCaller refuses giving or taking away a role, a permission or a scope the caller
+	// doesn't hold, such as an invitation to a role above the caller's or a secret rotation for an
+	// agent with scopes the caller lacks.
+	CodeGrantExceedsCaller = "rbac.grant_exceeds_caller"
+	// CodeTargetIsOwner refuses a change to an owner by someone who isn't one.
+	CodeTargetIsOwner = "rbac.target_is_owner"
+	// CodeTargetOutranksCaller refuses a change to someone holding a permission the caller doesn't.
+	CodeTargetOutranksCaller = "rbac.target_outranks_caller"
+	// CodeTrustChangeOutranksCaller refuses a change to what a connection trusts (a SAML
+	// certificate, an OIDC issuer, an LDAP server, ...) unless the caller outranks every
+	// administrator linked to it.
+	CodeTrustChangeOutranksCaller = "rbac.trust_change_outranks_caller"
+	// CodeRelationCheckTooComplex refuses a relationship check that would expand too many
+	// relationship sets (HTTP 422).
+	CodeRelationCheckTooComplex = "rebac.check_too_complex"
+	// CodeVerificationAttemptsExceeded refuses even the right code after too many wrong ones, until
+	// the hour has passed.
+	CodeVerificationAttemptsExceeded = "verification.attempts_exceeded"
+	// CodeVerificationCodeSendLimited refuses sending another verification code for now (HTTP 429).
+	CodeVerificationCodeSendLimited = "verification.code_send_limited"
+	// CodeVerificationDeliveryUnavailable reports that no SMS provider is set up (HTTP 503).
+	CodeVerificationDeliveryUnavailable = "verification.delivery_unavailable"
+	// CodeVerificationEmailManaged refuses moving an address off, or onto, a domain an organization
+	// manages through single sign-on or its directory.
+	CodeVerificationEmailManaged = "verification.email_managed"
+	// CodeResourceDomainUnverified refuses registering an API resource on a host the organization
+	// hasn't verified.
+	CodeResourceDomainUnverified = "oidc.resource_domain_unverified"
+	// CodeResourceReserved refuses registering an API resource on the platform's own hosts.
+	CodeResourceReserved = "oidc.resource_reserved"
+	// CodeTokenVaultProviderInUse refuses changing a Token Vault provider's endpoints or client
+	// while anyone is connected through it.
+	CodeTokenVaultProviderInUse = "tokenvault.provider_in_use"
 )
 
 // APIError is the error the client returns when the Qeet ID API answers with
@@ -190,8 +253,8 @@ const (
 
 // OAuthError is the error the client returns when an OAuth endpoint answers
 // in the RFC 6749 shape {"error": "...", "error_description": "..."}, as the
-// token endpoints (/v1/oauth/token and /v1/oauth/token-code), device
-// authorization, backchannel authentication and token revocation do.
+// token endpoint (/v1/oauth/token, every grant), device authorization,
+// backchannel authentication and token revocation do.
 //
 // The device and backchannel polling errors authorization_pending and
 // slow_down arrive as an *OAuthError too; see OAuthService.PollDeviceToken.

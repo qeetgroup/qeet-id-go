@@ -14,22 +14,22 @@ var handRouteCases = []routeCase{
 		_, err := c.OAuth.ClientCredentials(ctx, ClientCredentialsParams{ClientID: "id", ClientSecret: "s"})
 		return err
 	}},
-	{name: "OAuth.ExchangeCode", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: exchangeCode},
-	{name: "OAuth.RefreshToken", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
+	{name: "OAuth.ExchangeCode", method: "POST", path: "/v1/oauth/token", public: true, basic: true, call: exchangeCode},
+	{name: "OAuth.RefreshToken", method: "POST", path: "/v1/oauth/token", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
 		_, err := c.OAuth.RefreshToken(ctx, RefreshTokenParams{ClientID: "id", ClientSecret: "s", RefreshToken: "rt"})
 		return err
 	}},
-	{name: "OAuth.ExchangeToken", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: exchangeToken},
+	{name: "OAuth.ExchangeToken", method: "POST", path: "/v1/oauth/token", public: true, basic: true, call: exchangeToken},
 	{name: "OAuth.AuthorizeDevice", method: "POST", path: "/v1/oauth/device_authorization", public: true, call: func(ctx context.Context, c *Client) error {
 		_, err := c.OAuth.AuthorizeDevice(ctx, DeviceAuthorizationParams{ClientID: "tv"})
 		return err
 	}},
-	{name: "OAuth.PollDeviceToken", method: "POST", path: "/v1/oauth/token-code", public: true, call: pollDevice},
+	{name: "OAuth.PollDeviceToken", method: "POST", path: "/v1/oauth/token", public: true, call: pollDevice},
 	{name: "OAuth.AuthorizeBackchannel", method: "POST", path: "/v1/oauth/bc-authorize", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
 		_, err := c.OAuth.AuthorizeBackchannel(ctx, BackchannelAuthorizationParams{ClientID: "k", ClientSecret: "s", LoginHint: "ada@example.com"})
 		return err
 	}},
-	{name: "OAuth.PollBackchannelToken", method: "POST", path: "/v1/oauth/token-code", public: true, basic: true, call: pollBackchannel},
+	{name: "OAuth.PollBackchannelToken", method: "POST", path: "/v1/oauth/token", public: true, basic: true, call: pollBackchannel},
 	{name: "OAuth.Introspect", method: "POST", path: "/oauth/introspect", public: true, basic: true, call: func(ctx context.Context, c *Client) error {
 		_, err := c.OAuth.Introspect(ctx, IntrospectParams{ClientID: "id", ClientSecret: "s", Token: "t"})
 		return err
@@ -39,6 +39,7 @@ var handRouteCases = []routeCase{
 		_, err := c.OAuth.Discover(ctx)
 		return err
 	}},
+	{name: "Agents.Token", method: "POST", path: "/v1/oauth/token", public: true, basic: true, call: agentToken},
 	{name: "LDAP.Authenticate", method: "POST", path: "/ldap/conn-1/authenticate", public: true, call: func(ctx context.Context, c *Client) error {
 		_, err := c.LDAP.Authenticate(ctx, "conn-1", LDAPAuthenticateParams{Username: "u", Password: "p"})
 		return err

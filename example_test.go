@@ -114,8 +114,8 @@ func ExampleWithIdempotencyKey() {
 	// The same key on a later attempt, even from another process, returns the
 	// first answer instead of creating the user twice.
 	user, err := client.Users.Create(context.Background(), qeetid.CreateUserParams{
-		TenantID: "3f6c2f4e-8a1b-4c7d-9e2f-5a6b7c8d9e01",
-		Email:    "ada@brightleaffoods.in",
+		OrganizationID: "3f6c2f4e-8a1b-4c7d-9e2f-5a6b7c8d9e01",
+		Email:          "ada@brightleaffoods.in",
 	}, qeetid.WithIdempotencyKey("hr-import-2026-11-05-row-17"))
 	if err != nil {
 		log.Fatal(err)

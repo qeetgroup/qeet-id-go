@@ -10,114 +10,114 @@ import (
 // ComplianceService generates compliance evidence and records control owners and external audits.
 type ComplianceService struct{ c *Client }
 
-// GenerateEvidence checks the tenant's controls against a framework and stores the evidence.
+// GenerateEvidence checks the organization's controls against a framework and stores the evidence.
 //
-// API: POST /v1/tenants/{tenantID}/compliance/{framework}/evidence
-func (s *ComplianceService) GenerateEvidence(ctx context.Context, tenantID, framework string, opts ...RequestOption) (*EvidenceRun, error) {
+// API: POST /v1/organizations/{organizationID}/compliance/{framework}/evidence
+func (s *ComplianceService) GenerateEvidence(ctx context.Context, organizationID, framework string, opts ...RequestOption) (*EvidenceRun, error) {
 	return call[EvidenceRun](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/compliance/{framework}/evidence",
-		pathArgs: []string{tenantID, framework},
+		path:     "/v1/organizations/{organizationID}/compliance/{framework}/evidence",
+		pathArgs: []string{organizationID, framework},
 	}, opts)
 }
 
 // ListEvidence lists the evidence runs for a framework.
 //
-// API: GET /v1/tenants/{tenantID}/compliance/{framework}/evidence
-func (s *ComplianceService) ListEvidence(ctx context.Context, tenantID, framework string, opts ...RequestOption) (*Page[EvidenceRun], error) {
+// API: GET /v1/organizations/{organizationID}/compliance/{framework}/evidence
+func (s *ComplianceService) ListEvidence(ctx context.Context, organizationID, framework string, opts ...RequestOption) (*Page[EvidenceRun], error) {
 	return call[Page[EvidenceRun]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/compliance/{framework}/evidence",
-		pathArgs: []string{tenantID, framework},
+		path:     "/v1/organizations/{organizationID}/compliance/{framework}/evidence",
+		pathArgs: []string{organizationID, framework},
 	}, opts)
 }
 
 // GetEvidence returns an evidence run with its full report.
 //
-// API: GET /v1/tenants/{tenantID}/compliance/evidence/{id}
-func (s *ComplianceService) GetEvidence(ctx context.Context, tenantID, runID string, opts ...RequestOption) (*EvidenceRun, error) {
+// API: GET /v1/organizations/{organizationID}/compliance/evidence/{id}
+func (s *ComplianceService) GetEvidence(ctx context.Context, organizationID, runID string, opts ...RequestOption) (*EvidenceRun, error) {
 	return call[EvidenceRun](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/compliance/evidence/{runID}",
-		pathArgs: []string{tenantID, runID},
+		path:     "/v1/organizations/{organizationID}/compliance/evidence/{runID}",
+		pathArgs: []string{organizationID, runID},
 	}, opts)
 }
 
 // ListControlOwners lists who owns each control.
 //
-// API: GET /v1/tenants/{tenantID}/compliance/controls/owners
-func (s *ComplianceService) ListControlOwners(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[ControlOwner], error) {
+// API: GET /v1/organizations/{organizationID}/compliance/controls/owners
+func (s *ComplianceService) ListControlOwners(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[ControlOwner], error) {
 	return call[Page[ControlOwner]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/compliance/controls/owners",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/compliance/controls/owners",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // SetControlOwner makes a person the owner of a control.
 //
-// API: PUT /v1/tenants/{tenantID}/compliance/controls/{controlID}/owner
-func (s *ComplianceService) SetControlOwner(ctx context.Context, tenantID, controlID string, params SetControlOwnerParams, opts ...RequestOption) error {
+// API: PUT /v1/organizations/{organizationID}/compliance/controls/{controlID}/owner
+func (s *ComplianceService) SetControlOwner(ctx context.Context, organizationID, controlID string, params SetControlOwnerParams, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/compliance/controls/{controlID}/owner",
-		pathArgs: []string{tenantID, controlID},
+		path:     "/v1/organizations/{organizationID}/compliance/controls/{controlID}/owner",
+		pathArgs: []string{organizationID, controlID},
 		body:     params,
 	}, nil, opts)
 }
 
 // RemoveControlOwner removes a control's owner.
 //
-// API: DELETE /v1/tenants/{tenantID}/compliance/controls/{controlID}/owner
-func (s *ComplianceService) RemoveControlOwner(ctx context.Context, tenantID, controlID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/compliance/controls/{controlID}/owner
+func (s *ComplianceService) RemoveControlOwner(ctx context.Context, organizationID, controlID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/compliance/controls/{controlID}/owner",
-		pathArgs: []string{tenantID, controlID},
+		path:     "/v1/organizations/{organizationID}/compliance/controls/{controlID}/owner",
+		pathArgs: []string{organizationID, controlID},
 	}, nil, opts)
 }
 
 // ListAudits lists recorded external audits and certificates.
 //
-// API: GET /v1/tenants/{tenantID}/compliance/audits
-func (s *ComplianceService) ListAudits(ctx context.Context, tenantID string, params *ListExternalAuditsParams, opts ...RequestOption) (*Page[ExternalAudit], error) {
+// API: GET /v1/organizations/{organizationID}/compliance/audits
+func (s *ComplianceService) ListAudits(ctx context.Context, organizationID string, params *ListExternalAuditsParams, opts ...RequestOption) (*Page[ExternalAudit], error) {
 	return call[Page[ExternalAudit]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/compliance/audits",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/compliance/audits",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
 
 // CreateAudit records an external audit or certificate.
 //
-// API: POST /v1/tenants/{tenantID}/compliance/audits
-func (s *ComplianceService) CreateAudit(ctx context.Context, tenantID string, params CreateExternalAuditParams, opts ...RequestOption) (*ExternalAudit, error) {
+// API: POST /v1/organizations/{organizationID}/compliance/audits
+func (s *ComplianceService) CreateAudit(ctx context.Context, organizationID string, params CreateExternalAuditParams, opts ...RequestOption) (*ExternalAudit, error) {
 	return call[ExternalAudit](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/compliance/audits",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/compliance/audits",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // DeleteAudit deletes a recorded external audit.
 //
-// API: DELETE /v1/tenants/{tenantID}/compliance/audits/{id}
-func (s *ComplianceService) DeleteAudit(ctx context.Context, tenantID, auditID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/compliance/audits/{id}
+func (s *ComplianceService) DeleteAudit(ctx context.Context, organizationID, auditID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/compliance/audits/{auditID}",
-		pathArgs: []string{tenantID, auditID},
+		path:     "/v1/organizations/{organizationID}/compliance/audits/{auditID}",
+		pathArgs: []string{organizationID, auditID},
 	}, nil, opts)
 }
 
-// EvidenceRun is the outcome of checking a tenant's controls against a compliance framework.
+// EvidenceRun is the outcome of checking an organization's controls against a compliance framework.
 type EvidenceRun struct {
-	ID          string              `json:"id,omitempty"`
-	TenantID    string              `json:"tenant_id,omitempty"`
-	Framework   ComplianceFramework `json:"framework,omitempty"`
-	GeneratedAt time.Time           `json:"generated_at,omitzero"`
+	ID             string              `json:"id,omitempty"`
+	OrganizationID string              `json:"organization_id,omitempty"`
+	Framework      ComplianceFramework `json:"framework,omitempty"`
+	GeneratedAt    time.Time           `json:"generated_at,omitzero"`
 	// Actor user ID; null when generated by a system or API-key actor.
 	GeneratedBy string `json:"generated_by,omitempty"`
 	PassCount   int    `json:"pass_count"`
@@ -177,7 +177,7 @@ const (
 	EvidenceControlStatusNa   EvidenceControlStatus = "na"
 )
 
-// ControlOwner is the person the organisation has made answer for a control, as it is now.
+// ControlOwner is the person the organization has made answer for a control, as it is now.
 type ControlOwner struct {
 	ControlID   string    `json:"control_id,omitempty"`
 	UserID      string    `json:"user_id,omitempty"`
@@ -208,7 +208,7 @@ func (p *ListExternalAuditsParams) values() url.Values {
 	return q
 }
 
-// ExternalAudit is an external audit report or certificate the tenant recorded.
+// ExternalAudit is an external audit report or certificate the organization recorded.
 type ExternalAudit struct {
 	ID        string              `json:"id,omitempty"`
 	Framework ComplianceFramework `json:"framework,omitempty"`

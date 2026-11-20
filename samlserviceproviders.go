@@ -10,126 +10,126 @@ import (
 // as the identity provider).
 type SAMLServiceProvidersService struct{ c *Client }
 
-// List lists a tenant's SAML service providers.
+// List lists an organization's SAML service providers.
 //
-// API: GET /v1/tenants/{tenantID}/saml-providers
-func (s *SAMLServiceProvidersService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[SAMLServiceProvider], error) {
+// API: GET /v1/organizations/{organizationID}/saml-providers
+func (s *SAMLServiceProvidersService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[SAMLServiceProvider], error) {
 	return call[Page[SAMLServiceProvider]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/saml-providers",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/saml-providers",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create registers a service provider.
 //
-// API: POST /v1/tenants/{tenantID}/saml-providers
-func (s *SAMLServiceProvidersService) Create(ctx context.Context, tenantID string, params SAMLServiceProviderParams, opts ...RequestOption) (*SAMLServiceProvider, error) {
+// API: POST /v1/organizations/{organizationID}/saml-providers
+func (s *SAMLServiceProvidersService) Create(ctx context.Context, organizationID string, params SAMLServiceProviderParams, opts ...RequestOption) (*SAMLServiceProvider, error) {
 	return call[SAMLServiceProvider](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml-providers",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/saml-providers",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Get returns a service provider.
 //
-// API: GET /v1/tenants/{tenantID}/saml-providers/{id}
-func (s *SAMLServiceProvidersService) Get(ctx context.Context, tenantID, providerID string, opts ...RequestOption) (*SAMLServiceProvider, error) {
+// API: GET /v1/organizations/{organizationID}/saml-providers/{id}
+func (s *SAMLServiceProvidersService) Get(ctx context.Context, organizationID, providerID string, opts ...RequestOption) (*SAMLServiceProvider, error) {
 	return call[SAMLServiceProvider](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}",
-		pathArgs: []string{tenantID, providerID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}",
+		pathArgs: []string{organizationID, providerID},
 	}, opts)
 }
 
 // Update changes a service provider. Empty fields are not changed.
 //
-// API: PATCH /v1/tenants/{tenantID}/saml-providers/{id}
-func (s *SAMLServiceProvidersService) Update(ctx context.Context, tenantID, providerID string, params SAMLServiceProviderParams, opts ...RequestOption) (*SAMLServiceProvider, error) {
+// API: PATCH /v1/organizations/{organizationID}/saml-providers/{id}
+func (s *SAMLServiceProvidersService) Update(ctx context.Context, organizationID, providerID string, params SAMLServiceProviderParams, opts ...RequestOption) (*SAMLServiceProvider, error) {
 	return call[SAMLServiceProvider](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}",
-		pathArgs: []string{tenantID, providerID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}",
+		pathArgs: []string{organizationID, providerID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a service provider.
 //
-// API: DELETE /v1/tenants/{tenantID}/saml-providers/{id}
-func (s *SAMLServiceProvidersService) Delete(ctx context.Context, tenantID, providerID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/saml-providers/{id}
+func (s *SAMLServiceProvidersService) Delete(ctx context.Context, organizationID, providerID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}",
-		pathArgs: []string{tenantID, providerID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}",
+		pathArgs: []string{organizationID, providerID},
 	}, nil, opts)
 }
 
 // ListAssignments lists the people and groups assigned to a service provider.
 //
-// API: GET /v1/tenants/{tenantID}/saml-providers/{id}/assignments
-func (s *SAMLServiceProvidersService) ListAssignments(ctx context.Context, tenantID, providerID string, opts ...RequestOption) (*SAMLServiceProviderAssignments, error) {
+// API: GET /v1/organizations/{organizationID}/saml-providers/{id}/assignments
+func (s *SAMLServiceProvidersService) ListAssignments(ctx context.Context, organizationID, providerID string, opts ...RequestOption) (*SAMLServiceProviderAssignments, error) {
 	return call[SAMLServiceProviderAssignments](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments",
-		pathArgs: []string{tenantID, providerID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}/assignments",
+		pathArgs: []string{organizationID, providerID},
 	}, opts)
 }
 
 // AssignUser assigns a person to a service provider.
 //
-// API: POST /v1/tenants/{tenantID}/saml-providers/{id}/assignments/users/{userID}
-func (s *SAMLServiceProvidersService) AssignUser(ctx context.Context, tenantID, providerID, userID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/saml-providers/{id}/assignments/users/{userID}
+func (s *SAMLServiceProvidersService) AssignUser(ctx context.Context, organizationID, providerID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/users/{userID}",
-		pathArgs: []string{tenantID, providerID, userID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}/assignments/users/{userID}",
+		pathArgs: []string{organizationID, providerID, userID},
 	}, nil, opts)
 }
 
 // UnassignUser unassigns a person from a service provider.
 //
-// API: DELETE /v1/tenants/{tenantID}/saml-providers/{id}/assignments/users/{userID}
-func (s *SAMLServiceProvidersService) UnassignUser(ctx context.Context, tenantID, providerID, userID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/saml-providers/{id}/assignments/users/{userID}
+func (s *SAMLServiceProvidersService) UnassignUser(ctx context.Context, organizationID, providerID, userID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/users/{userID}",
-		pathArgs: []string{tenantID, providerID, userID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}/assignments/users/{userID}",
+		pathArgs: []string{organizationID, providerID, userID},
 	}, nil, opts)
 }
 
 // AssignGroup assigns a group to a service provider.
 //
-// API: POST /v1/tenants/{tenantID}/saml-providers/{id}/assignments/groups/{groupID}
-func (s *SAMLServiceProvidersService) AssignGroup(ctx context.Context, tenantID, providerID, groupID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/saml-providers/{id}/assignments/groups/{groupID}
+func (s *SAMLServiceProvidersService) AssignGroup(ctx context.Context, organizationID, providerID, groupID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/groups/{groupID}",
-		pathArgs: []string{tenantID, providerID, groupID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}/assignments/groups/{groupID}",
+		pathArgs: []string{organizationID, providerID, groupID},
 	}, nil, opts)
 }
 
 // UnassignGroup unassigns a group from a service provider.
 //
-// API: DELETE /v1/tenants/{tenantID}/saml-providers/{id}/assignments/groups/{groupID}
-func (s *SAMLServiceProvidersService) UnassignGroup(ctx context.Context, tenantID, providerID, groupID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/saml-providers/{id}/assignments/groups/{groupID}
+func (s *SAMLServiceProvidersService) UnassignGroup(ctx context.Context, organizationID, providerID, groupID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/saml-providers/{providerID}/assignments/groups/{groupID}",
-		pathArgs: []string{tenantID, providerID, groupID},
+		path:     "/v1/organizations/{organizationID}/saml-providers/{providerID}/assignments/groups/{groupID}",
+		pathArgs: []string{organizationID, providerID, groupID},
 	}, nil, opts)
 }
 
 // SAMLServiceProvider is an application that signs people in with Qeet ID over SAML, with Qeet ID as
 // the identity provider.
 type SAMLServiceProvider struct {
-	ID       string `json:"id,omitempty"`
-	TenantID string `json:"tenant_id,omitempty"`
-	Name     string `json:"name,omitempty"`
-	EntityID string `json:"entity_id,omitempty"`
-	ACSURL   string `json:"acs_url,omitempty"`
+	ID             string `json:"id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	EntityID       string `json:"entity_id,omitempty"`
+	ACSURL         string `json:"acs_url,omitempty"`
 	// urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
 	// urn:oasis:names:tc:SAML:2.0:nameid-format:persistent or
 	// urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
@@ -173,7 +173,7 @@ type SAMLAttributeMapping struct {
 	// email; user_id (the account ID, the same at every app); persistent_id (an opaque value made for
 	// this person at this SP, which never changes); display_name; given_name and family_name (the
 	// user-metadata key of that name, else the person's directory profile first_name or last_name);
-	// groups (the names of their groups in the organisation, one value each); roles (the names of their
+	// groups (the names of their groups in the organization, one value each); roles (the names of their
 	// roles there, directly or through a group, one value each); or metadata.<key> (that user-metadata
 	// key: a string, number or boolean, or an array of them as one value each)
 	Source string `json:"source,omitempty"`
@@ -217,7 +217,20 @@ type SAMLServiceProviderParams struct {
 	Attributes []SAMLAttributeMapping `json:"attributes,omitempty"`
 	// Sign in only the people assigned to the SP; off by default
 	AssignmentRequired *bool `json:"assignment_required,omitempty"`
+	// The service provider's state: draft, active or disabled (422 saml.status_invalid otherwise). Empty
+	// creates a draft, or leaves the state as it is on update. A draft signs nobody in.
+	Status SAMLServiceProviderStatus `json:"status,omitempty"`
 }
+
+// SAMLServiceProviderStatus is a string enumeration used by SAMLServiceProviderParams.Status.
+type SAMLServiceProviderStatus string
+
+// Values of SAMLServiceProviderStatus. The server may add values; handle an unknown one gracefully.
+const (
+	SAMLServiceProviderStatusDraft    SAMLServiceProviderStatus = "draft"
+	SAMLServiceProviderStatusActive   SAMLServiceProviderStatus = "active"
+	SAMLServiceProviderStatusDisabled SAMLServiceProviderStatus = "disabled"
+)
 
 // SAMLServiceProviderAssignments is the result of SAMLServiceProvidersService.ListAssignments.
 type SAMLServiceProviderAssignments struct {

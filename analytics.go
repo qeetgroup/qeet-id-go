@@ -8,17 +8,17 @@ import (
 	"time"
 )
 
-// AnalyticsService reads a tenant's sign-in and user analytics.
+// AnalyticsService reads an organization's sign-in and user analytics.
 type AnalyticsService struct{ c *Client }
 
-// Overview returns the tenant's key figures and trends.
+// Overview returns the organization's key figures and trends.
 //
-// API: GET /v1/tenants/{tenantID}/analytics/overview
-func (s *AnalyticsService) Overview(ctx context.Context, tenantID string, params *AnalyticsOverviewParams, opts ...RequestOption) (*AnalyticsOverview, error) {
+// API: GET /v1/organizations/{organizationID}/analytics/overview
+func (s *AnalyticsService) Overview(ctx context.Context, organizationID string, params *AnalyticsOverviewParams, opts ...RequestOption) (*AnalyticsOverview, error) {
 	return call[AnalyticsOverview](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/analytics/overview",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/analytics/overview",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
@@ -56,7 +56,7 @@ func (p *AnalyticsOverviewParams) values() url.Values {
 	return q
 }
 
-// AnalyticsOverview holds a tenant's key sign-in and user figures and their trends.
+// AnalyticsOverview holds an organization's key sign-in and user figures and their trends.
 type AnalyticsOverview struct {
 	FailedLoginsHourly24h []AnalyticsHourlyPoint         `json:"failed_logins_hourly_24h,omitempty"`
 	FailedTrend14d        []AnalyticsTrendPoint          `json:"failed_trend_14d,omitempty"`
@@ -69,7 +69,7 @@ type AnalyticsOverview struct {
 	MFATrend14d           []AnalyticsTrendPoint          `json:"mfa_trend_14d,omitempty"`
 	UserTrend14d          []AnalyticsTrendPoint          `json:"user_trend_14d,omitempty"`
 	WeeklyActivity8w      []AnalyticsWeeklyActivityPoint `json:"weekly_activity_8w,omitempty"`
-	// The sign-ins day by day (UTC) over the chosen range, without organisation switches; present when
+	// The sign-ins day by day (UTC) over the chosen range, without organization switches; present when
 	// from, to or days was given.
 	Range AnalyticsOverviewRange `json:"range,omitzero"`
 }
@@ -135,7 +135,7 @@ type AnalyticsWeeklyActivityPoint struct {
 	Week string `json:"week,omitempty"`
 }
 
-// AnalyticsOverviewRange is the sign-ins day by day (UTC) over the chosen range, without organisation
+// AnalyticsOverviewRange is the sign-ins day by day (UTC) over the chosen range, without organization
 // switches; present when from, to or days was given.
 type AnalyticsOverviewRange struct {
 	From   time.Time                   `json:"from,omitzero"`

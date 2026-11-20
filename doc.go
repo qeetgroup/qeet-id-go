@@ -1,4 +1,4 @@
-// Package qeetid is the Go client for the Qeet ID API: manage tenants, users,
+// Package qeetid is the Go client for the Qeet ID API: manage organizations, users,
 // groups, roles, applications, federation and every other Qeet ID resource
 // from your servers.
 //

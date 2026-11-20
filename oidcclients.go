@@ -9,111 +9,111 @@ import (
 // OIDCClientsService manages the applications that sign people in with Qeet ID over OpenID Connect.
 type OIDCClientsService struct{ c *Client }
 
-// List lists a tenant's applications.
+// List lists an organization's applications.
 //
-// API: GET /v1/tenants/{tenantID}/oidc/clients
-func (s *OIDCClientsService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[OIDCClient], error) {
+// API: GET /v1/organizations/{organizationID}/oidc/clients
+func (s *OIDCClientsService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[OIDCClient], error) {
 	return call[Page[OIDCClient]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oidc/clients",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create registers an application. The result carries its secret, shown only once.
 //
-// API: POST /v1/tenants/{tenantID}/oidc/clients
-func (s *OIDCClientsService) Create(ctx context.Context, tenantID string, params CreateOIDCClientParams, opts ...RequestOption) (*CreateOIDCClientResult, error) {
+// API: POST /v1/organizations/{organizationID}/oidc/clients
+func (s *OIDCClientsService) Create(ctx context.Context, organizationID string, params CreateOIDCClientParams, opts ...RequestOption) (*CreateOIDCClientResult, error) {
 	return call[CreateOIDCClientResult](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/oidc/clients",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Get returns an application.
 //
-// API: GET /v1/tenants/{tenantID}/oidc/clients/{id}
-func (s *OIDCClientsService) Get(ctx context.Context, tenantID, clientID string, opts ...RequestOption) (*OIDCClient, error) {
+// API: GET /v1/organizations/{organizationID}/oidc/clients/{id}
+func (s *OIDCClientsService) Get(ctx context.Context, organizationID, clientID string, opts ...RequestOption) (*OIDCClient, error) {
 	return call[OIDCClient](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}",
-		pathArgs: []string{tenantID, clientID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/{clientID}",
+		pathArgs: []string{organizationID, clientID},
 	}, opts)
 }
 
 // Update changes an application. Fields left nil are not changed.
 //
-// API: PATCH /v1/tenants/{tenantID}/oidc/clients/{id}
-func (s *OIDCClientsService) Update(ctx context.Context, tenantID, clientID string, params UpdateOIDCClientParams, opts ...RequestOption) (*OIDCClient, error) {
+// API: PATCH /v1/organizations/{organizationID}/oidc/clients/{id}
+func (s *OIDCClientsService) Update(ctx context.Context, organizationID, clientID string, params UpdateOIDCClientParams, opts ...RequestOption) (*OIDCClient, error) {
 	return call[OIDCClient](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}",
-		pathArgs: []string{tenantID, clientID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/{clientID}",
+		pathArgs: []string{organizationID, clientID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes an application.
 //
-// API: DELETE /v1/tenants/{tenantID}/oidc/clients/{id}
-func (s *OIDCClientsService) Delete(ctx context.Context, tenantID, clientID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/oidc/clients/{id}
+func (s *OIDCClientsService) Delete(ctx context.Context, organizationID, clientID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}",
-		pathArgs: []string{tenantID, clientID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/{clientID}",
+		pathArgs: []string{organizationID, clientID},
 	}, nil, opts)
 }
 
 // RotateSecret replaces an application's secret. The result carries the new secret, shown only once.
 //
-// API: POST /v1/tenants/{tenantID}/oidc/clients/{id}/rotate-secret
-func (s *OIDCClientsService) RotateSecret(ctx context.Context, tenantID, clientID string, opts ...RequestOption) (*RotatedClientSecret, error) {
+// API: POST /v1/organizations/{organizationID}/oidc/clients/{id}/rotate-secret
+func (s *OIDCClientsService) RotateSecret(ctx context.Context, organizationID, clientID string, opts ...RequestOption) (*RotatedClientSecret, error) {
 	return call[RotatedClientSecret](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}/rotate-secret",
-		pathArgs: []string{tenantID, clientID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/{clientID}/rotate-secret",
+		pathArgs: []string{organizationID, clientID},
 	}, opts)
 }
 
 // AuthFailures lists recent wrong-secret attempts for an application and whether it is locked out.
 //
-// API: GET /v1/tenants/{tenantID}/oidc/clients/{id}/auth-failures
-func (s *OIDCClientsService) AuthFailures(ctx context.Context, tenantID, clientID string, opts ...RequestOption) (*ClientAuthFailures, error) {
+// API: GET /v1/organizations/{organizationID}/oidc/clients/{id}/auth-failures
+func (s *OIDCClientsService) AuthFailures(ctx context.Context, organizationID, clientID string, opts ...RequestOption) (*ClientAuthFailures, error) {
 	return call[ClientAuthFailures](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}/auth-failures",
-		pathArgs: []string{tenantID, clientID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/{clientID}/auth-failures",
+		pathArgs: []string{organizationID, clientID},
 	}, opts)
 }
 
 // ListShadowAI lists applications with live grants that look like unmanaged AI agents.
 //
-// API: GET /v1/tenants/{tenantID}/oidc/clients/shadow-ai
-func (s *OIDCClientsService) ListShadowAI(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[ShadowAICandidate], error) {
+// API: GET /v1/organizations/{organizationID}/oidc/clients/shadow-ai
+func (s *OIDCClientsService) ListShadowAI(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[ShadowAICandidate], error) {
 	return call[Page[ShadowAICandidate]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/shadow-ai",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/shadow-ai",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // AcknowledgeShadowAI records that an administrator reviewed a shadow-AI candidate.
 //
-// API: POST /v1/tenants/{tenantID}/oidc/clients/{id}/review
-func (s *OIDCClientsService) AcknowledgeShadowAI(ctx context.Context, tenantID, clientID string, opts ...RequestOption) error {
+// API: POST /v1/organizations/{organizationID}/oidc/clients/{id}/review
+func (s *OIDCClientsService) AcknowledgeShadowAI(ctx context.Context, organizationID, clientID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/oidc/clients/{clientID}/review",
-		pathArgs: []string{tenantID, clientID},
+		path:     "/v1/organizations/{organizationID}/oidc/clients/{clientID}/review",
+		pathArgs: []string{organizationID, clientID},
 	}, nil, opts)
 }
 
 // OIDCClient is an application that signs people in with Qeet ID over OpenID Connect.
 type OIDCClient struct {
 	ID             string         `json:"id,omitempty"`
-	TenantID       string         `json:"tenant_id,omitempty"`
+	OrganizationID string         `json:"organization_id,omitempty"`
 	ClientID       string         `json:"client_id,omitempty"`
 	Type           OIDCClientType `json:"type,omitempty"`
 	Name           string         `json:"name,omitempty"`
@@ -154,7 +154,7 @@ const (
 
 // CreateOIDCClientParams is the request body of OIDCClientsService.Create.
 type CreateOIDCClientParams struct {
-	TenantID       string         `json:"tenant_id,omitempty"`
+	OrganizationID string         `json:"organization_id,omitempty"`
 	Name           string         `json:"name,omitempty"`
 	Type           OIDCClientType `json:"type,omitempty"`
 	RedirectURIs   []string       `json:"redirect_uris,omitempty"`

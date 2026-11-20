@@ -2,7 +2,7 @@
 
 # 🔐 Qeet ID for Go
 
-**The Go SDK for Qeet ID: manage tenants, people, access and federation from your servers, receive webhooks safely, and verify access tokens in your own APIs.**
+**The Go SDK for Qeet ID: manage organizations, people, access and federation from your servers, receive webhooks safely, and verify access tokens in your own APIs.**
 
 [![Go](https://img.shields.io/badge/Go-1.26%20%7C%201.27-00ADD8?logo=go&logoColor=white)](#-quick-start)
 [![context.Context](https://img.shields.io/badge/context-aware-00ADD8)](#-quick-start)
@@ -32,8 +32,8 @@
 ## 🚀 Quick start
 
 **Requirements:** Go 1.26 or 1.27 — the SDK supports the two most recent Go releases, following the Go team's
-[release policy](https://go.dev/doc/devel/release#policy) — and a server-side credential for your Qeet ID tenant: an
-API key, or a service principal's client ID and secret.
+[release policy](https://go.dev/doc/devel/release#policy) — and a server-side credential for your Qeet ID organization: an
+API key, or a service principal's or AI agent's ID and secret.
 
 **Install:**
 
@@ -66,9 +66,9 @@ func main() {
 	ctx := context.Background()
 
 	user, err := client.Users.Create(ctx, qeetid.CreateUserParams{
-		TenantID:    os.Getenv("QEETID_TENANT_ID"),
-		Email:       "ada@brightleaffoods.in",
-		DisplayName: "Ada Lovelace",
+		OrganizationID: os.Getenv("QEETID_ORGANIZATION_ID"),
+		Email:          "ada@brightleaffoods.in",
+		DisplayName:    "Ada Lovelace",
 	})
 	if errors.Is(err, qeetid.ErrConflict) {
 		log.Fatal("a user with this email already exists")
@@ -101,7 +101,7 @@ client, err := qeetid.NewClient(
 | Option | Default | What it does |
 |:--|:--|:--|
 | `WithAPIKey(key)` | — | Sends `Authorization: ApiKey <key>` |
-| `WithClientCredentials(id, secret, scopes...)` | — | Fetches, caches and renews service principal tokens |
+| `WithClientCredentials(id, secret, scopes...)` | — | Fetches, caches and renews service principal or AI agent tokens |
 | `WithTokenSource(ts)` | — | Sends `Authorization: Bearer <token>` from your own source |
 | `WithBaseURL(url)` | `https://api.id.qeet.in` | https only; http is allowed for a loopback host such as a local development server |
 | `WithHTTPClient(c)` | a new `http.Client` | Your own transport, proxy or TLS settings |
@@ -121,8 +121,8 @@ without sending the request.
 | Credential | Use it when | Option |
 |:--|:--|:--|
 | 🗝️ **API key** | A backend calls the management API | `WithAPIKey` |
-| 🤖 **Service principal** | You want short-lived tokens instead of a long-lived key | `WithClientCredentials` |
-| 🎫 **Token source** | You already hold a token, such as an AI agent's | `WithTokenSource` |
+| 🤖 **Service principal or AI agent** | You want short-lived tokens instead of a long-lived key | `WithClientCredentials` |
+| 🎫 **Token source** | You already hold a token, such as a person's | `WithTokenSource` |
 
 ```go
 // Service principal: one token shared across goroutines, renewed a minute before it expires.
@@ -130,6 +130,9 @@ client, err := qeetid.NewClient(qeetid.WithClientCredentials(
 	os.Getenv("QEETID_CLIENT_ID"), os.Getenv("QEETID_CLIENT_SECRET"),
 ))
 ```
+
+An AI agent authenticates the same way, with its ID as the client ID and its secret as the client secret: both come
+from the one token endpoint, `POST /v1/oauth/token`, with `grant_type=client_credentials`.
 
 A [`golang.org/x/oauth2`](https://pkg.go.dev/golang.org/x/oauth2) token source fits in a few lines, so the SDK does not
 depend on that module — `clientcredentials.Config` works against Qeet ID unchanged with `TokenURL` set to
@@ -149,7 +152,7 @@ qeetid.WithTokenSource(qeetid.TokenSourceFunc(func(context.Context) (string, err
 
 | Area | Services |
 |:--|:--|
-| 👥 **Tenants and people** | `Tenants` · `Users` · `Groups` · `Invitations` · `Domains` · `Branding` |
+| 👥 **Organizations and people** | `Organizations` · `Users` · `Groups` · `Invitations` · `Domains` · `Branding` |
 | 🛡️ **Access control** | `Roles` · `Permissions` · `ABACPolicies` · `Relationships` · `AuthZEN` |
 | 🔏 **Sign-in and security** | `AuthPolicy` · `SecurityPolicy` · `IPRules` · `Threats` |
 | 🌐 **Applications and federation** | `OAuth` · `OIDCClients` · `OAuthResources` · `OAuthGrants` · `DeviceAuthorizations` · `SigningKeys` · `ServicePrincipals` · `SocialProviders` · `SAMLConnections` · `SAMLServiceProviders` · `OIDCConnections` · `LDAP` · `Directory` · `SCIM` · `AdminPortalLinks` |
@@ -160,13 +163,13 @@ Each method's documentation names the endpoint it calls. A few of them:
 
 ```go
 // Give a user a role, then ask whether they hold a permission — and why.
-err = client.Roles.AssignToUser(ctx, userID, tenantID, roleID)
+err = client.Roles.AssignToUser(ctx, userID, organizationID, roleID)
 check, err := client.Permissions.Check(ctx, &qeetid.CheckPermissionParams{
-	UserID: userID, TenantID: tenantID, Permission: "billing.write", Explain: true,
+	UserID: userID, OrganizationID: organizationID, Permission: "billing.write", Explain: true,
 })
 
 // Relationship-based access: may this user view the document?
-rel, err := client.Relationships.Check(ctx, tenantID, qeetid.CheckRelationParams{
+rel, err := client.Relationships.Check(ctx, organizationID, qeetid.CheckRelationParams{
 	Object: "document:readme", Relation: "viewer", UserID: userID,
 }, nil)
 
@@ -200,14 +203,15 @@ case err != nil:
 | `errors.Is(err, qeetid.ErrInvalidRequest)` | 400 and 422, and OAuth errors other than `invalid_client` |
 | `errors.Is(err, qeetid.ErrUnauthorized)` | 401, and OAuth `invalid_client` |
 | `errors.Is(err, qeetid.ErrSessionRevoked)` | 401 `auth.session_revoked`: the session ended — sign the person in again |
-| `errors.Is(err, qeetid.ErrPaymentRequired)` | 402: the tenant's plan does not cover the request |
+| `errors.Is(err, qeetid.ErrPaymentRequired)` | 402: the organization's plan does not cover the request |
 | `errors.Is(err, qeetid.ErrForbidden)` · `ErrNotFound` · `ErrConflict` | 403 · 404 · 409 |
 | `errors.Is(err, qeetid.ErrRateLimited)` · `ErrUnavailable` | 429 · 503; `APIError.RetryAfter` says how long to wait |
 | `errors.As(err, &apiErr)` with `*qeetid.APIError` | Any API error: `StatusCode`, stable `Code`, `Message`, `Detail`, `Fields`, `Metadata`, `RequestID`, `RetryAfter` |
 | `errors.As(err, &oauthErr)` with `*qeetid.OAuthError` | Token endpoint errors in the RFC 6749 shape, with a typed `Code` such as `qeetid.OAuthInvalidGrant` |
 | `errors.Is(err, context.DeadlineExceeded)` | Network failures wrap their cause |
 
-Branch on `Code`, never on `Message`. Error text never contains a credential.
+Branch on `Code`, never on `Message`, comparing it with the `qeetid.Code…` constants — `qeetid.CodeStepUpRequired`,
+`qeetid.CodeTargetOutranksCaller`, `qeetid.CodeUpgradeRequired` and the others. Error text never contains a credential.
 
 ## 🔁 Retries & timeouts
 
@@ -253,7 +257,7 @@ narrow the request with a filter to see the rest.
 ## 🪝 Webhooks
 
 Package [`webhook`](webhook) verifies the deliveries Qeet ID sends and parses them into typed events. Each delivery is
-a POST whose body is `{id, type, tenant_id, occurred_at, data}`, signed in `X-Qeet-Signature` with `sha256=` and the
+a POST whose body is `{id, type, organization_id, occurred_at, data}`, signed in `X-Qeet-Signature` with `sha256=` and the
 HMAC-SHA256 of `X-Qeet-Timestamp`, a `.`, and the raw body.
 
 ```go
@@ -303,6 +307,17 @@ if errors.Is(err, webhook.ErrInvalidDelivery) {
 
 Deliveries are at least once and in no guaranteed order: deduplicate on `Event.ID`.
 
+Qeet ID signs its calls to your **authentication hooks** the same way, with the hook's secret, and sends two signatures
+for 24 hours after the secret changes. Check a hook call with `Verify` against the raw body before you read it:
+
+```go
+hooks, err := webhook.NewVerifier(os.Getenv("QEETID_AUTH_HOOK_SECRET"))
+if err := hooks.Verify(body, r.Header); err != nil {
+	http.Error(w, "invalid signature", http.StatusUnauthorized)
+	return
+}
+```
+
 ## 🔑 Verifying access tokens
 
 Package [`jwt`](jwt) verifies Qeet ID access tokens in your own API, with no call to Qeet ID per request:
@@ -316,7 +331,7 @@ v, err := jwt.NewVerifier(meta.Issuer, "https://api.example.com", jwt.WithJWKSUR
 mux.Handle("GET /invoices", v.Middleware(jwt.RequireScope("invoices.read")(http.HandlerFunc(
 	func(w http.ResponseWriter, r *http.Request) {
 		claims, _ := jwt.ClaimsFromContext(r.Context())
-		fmt.Fprintln(w, claims.UserID, claims.TenantID, claims.SessionID)
+		fmt.Fprintln(w, claims.UserID, claims.OrganizationID, claims.SessionID)
 	}))))
 ```
 
@@ -348,8 +363,7 @@ fmt.Println(tok.ExpiresIn, tok.Expiry())
 
 | Method | Endpoint |
 |:--|:--|
-| `ClientCredentials` | `POST /v1/oauth/token` |
-| `ExchangeCode` · `RefreshToken` · `ExchangeToken` · `PollDeviceToken` · `PollBackchannelToken` | `POST /v1/oauth/token-code` |
+| `ClientCredentials` · `ExchangeCode` · `RefreshToken` · `ExchangeToken` · `PollDeviceToken` · `PollBackchannelToken` | `POST /v1/oauth/token`, the one token endpoint: `grant_type` chooses the flow |
 | `AuthorizeDevice` · `AuthorizeBackchannel` | `POST /v1/oauth/device_authorization` · `POST /v1/oauth/bc-authorize` |
 | `Introspect` · `Revoke` | `POST /oauth/introspect` · `POST /oauth/revoke` |
 | `UserInfo` · `Discover` | `GET /v1/oauth/userinfo` · `GET /.well-known/openid-configuration` |

@@ -8,52 +8,52 @@ import (
 	"time"
 )
 
-// RolesService manages a tenant's roles, the permissions they grant and who holds them.
+// RolesService manages an organization's roles, the permissions they grant and who holds them.
 type RolesService struct{ c *Client }
 
-// List lists a tenant's roles.
+// List lists an organization's roles.
 //
-// API: GET /v1/tenants/{tenantID}/roles
-func (s *RolesService) List(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[Role], error) {
+// API: GET /v1/organizations/{organizationID}/roles
+func (s *RolesService) List(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[Role], error) {
 	return call[Page[Role]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/roles",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/roles",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // Create creates a role.
 //
-// API: POST /v1/tenants/{tenantID}/roles
-func (s *RolesService) Create(ctx context.Context, tenantID string, params CreateRoleParams, opts ...RequestOption) (*Role, error) {
+// API: POST /v1/organizations/{organizationID}/roles
+func (s *RolesService) Create(ctx context.Context, organizationID string, params CreateRoleParams, opts ...RequestOption) (*Role, error) {
 	return call[Role](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/roles",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/roles",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // Update renames a role or changes its description.
 //
-// API: PATCH /v1/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) Update(ctx context.Context, tenantID, roleID string, params UpdateRoleParams, opts ...RequestOption) (*Role, error) {
+// API: PATCH /v1/organizations/{organizationID}/roles/{roleID}
+func (s *RolesService) Update(ctx context.Context, organizationID, roleID string, params UpdateRoleParams, opts ...RequestOption) (*Role, error) {
 	return call[Role](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/roles/{roleID}",
-		pathArgs: []string{tenantID, roleID},
+		path:     "/v1/organizations/{organizationID}/roles/{roleID}",
+		pathArgs: []string{organizationID, roleID},
 		body:     params,
 	}, opts)
 }
 
 // Delete deletes a role.
 //
-// API: DELETE /v1/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) Delete(ctx context.Context, tenantID, roleID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/roles/{roleID}
+func (s *RolesService) Delete(ctx context.Context, organizationID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/roles/{roleID}",
-		pathArgs: []string{tenantID, roleID},
+		path:     "/v1/organizations/{organizationID}/roles/{roleID}",
+		pathArgs: []string{organizationID, roleID},
 	}, nil, opts)
 }
 
@@ -70,12 +70,12 @@ func (s *RolesService) ListPermissions(ctx context.Context, roleID string, opts 
 
 // SetPermissions replaces the permissions a role grants and returns the new set.
 //
-// API: PUT /v1/tenants/{tenantID}/roles/{roleID}/permissions
-func (s *RolesService) SetPermissions(ctx context.Context, tenantID, roleID string, params SetRolePermissionsParams, opts ...RequestOption) (*Page[Permission], error) {
+// API: PUT /v1/organizations/{organizationID}/roles/{roleID}/permissions
+func (s *RolesService) SetPermissions(ctx context.Context, organizationID, roleID string, params SetRolePermissionsParams, opts ...RequestOption) (*Page[Permission], error) {
 	return call[Page[Permission]](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/roles/{roleID}/permissions",
-		pathArgs: []string{tenantID, roleID},
+		path:     "/v1/organizations/{organizationID}/roles/{roleID}/permissions",
+		pathArgs: []string{organizationID, roleID},
 		body:     params,
 	}, opts)
 }
@@ -104,44 +104,44 @@ func (s *RolesService) RevokePermission(ctx context.Context, roleID, permissionI
 
 // Holders lists the people and groups that hold a role, one page at a time.
 //
-// API: GET /v1/tenants/{tenantID}/roles/{roleID}/holders
-func (s *RolesService) Holders(ctx context.Context, tenantID, roleID string, params *RoleHoldersParams, opts ...RequestOption) (*RoleHolders, error) {
+// API: GET /v1/organizations/{organizationID}/roles/{roleID}/holders
+func (s *RolesService) Holders(ctx context.Context, organizationID, roleID string, params *RoleHoldersParams, opts ...RequestOption) (*RoleHolders, error) {
 	return call[RoleHolders](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/roles/{roleID}/holders",
-		pathArgs: []string{tenantID, roleID},
+		path:     "/v1/organizations/{organizationID}/roles/{roleID}/holders",
+		pathArgs: []string{organizationID, roleID},
 		query:    params.values(),
 	}, opts)
 }
 
-// AssignToUser gives a user a role in a tenant.
+// AssignToUser gives a user a role in an organization.
 //
-// API: POST /v1/users/{userID}/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) AssignToUser(ctx context.Context, userID, tenantID, roleID string, opts ...RequestOption) error {
+// API: POST /v1/users/{userID}/organizations/{organizationID}/roles/{roleID}
+func (s *RolesService) AssignToUser(ctx context.Context, userID, organizationID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodPost,
-		path:     "/v1/users/{userID}/tenants/{tenantID}/roles/{roleID}",
-		pathArgs: []string{userID, tenantID, roleID},
+		path:     "/v1/users/{userID}/organizations/{organizationID}/roles/{roleID}",
+		pathArgs: []string{userID, organizationID, roleID},
 	}, nil, opts)
 }
 
 // UnassignFromUser takes a role away from a user.
 //
-// API: DELETE /v1/users/{userID}/tenants/{tenantID}/roles/{roleID}
-func (s *RolesService) UnassignFromUser(ctx context.Context, userID, tenantID, roleID string, opts ...RequestOption) error {
+// API: DELETE /v1/users/{userID}/organizations/{organizationID}/roles/{roleID}
+func (s *RolesService) UnassignFromUser(ctx context.Context, userID, organizationID, roleID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/users/{userID}/tenants/{tenantID}/roles/{roleID}",
-		pathArgs: []string{userID, tenantID, roleID},
+		path:     "/v1/users/{userID}/organizations/{organizationID}/roles/{roleID}",
+		pathArgs: []string{userID, organizationID, roleID},
 	}, nil, opts)
 }
 
-// Role is a named set of permissions in a tenant.
+// Role is a named set of permissions in an organization.
 type Role struct {
-	ID          string `json:"id,omitempty"`
-	TenantID    string `json:"tenant_id,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
+	ID             string `json:"id,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	Description    string `json:"description,omitempty"`
 	// A built-in role (owner, admin, member or viewer), whose permissions can't be changed and which
 	// doesn't count against the plan's custom roles.
 	IsSystem  bool      `json:"is_system"`

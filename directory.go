@@ -12,175 +12,175 @@ import (
 // DirectoryService manages directory sync: profile mappings, errors, activity and failure alerts.
 type DirectoryService struct{ c *Client }
 
-// ListConnections lists the tenant's directory connections.
+// ListConnections lists the organization's directory connections.
 //
-// API: GET /v1/tenants/{tenantID}/directory/connections
-func (s *DirectoryService) ListConnections(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[DirectoryConnection], error) {
+// API: GET /v1/organizations/{organizationID}/directory/connections
+func (s *DirectoryService) ListConnections(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[DirectoryConnection], error) {
 	return call[Page[DirectoryConnection]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/directory/connections",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/directory/connections",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // ListMappings lists a connection's effective profile mapping rules and the fields they can target.
 //
-// API: GET /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings
-func (s *DirectoryService) ListMappings(ctx context.Context, tenantID, connectionID string, opts ...RequestOption) (*DirectoryMappings, error) {
+// API: GET /v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings
+func (s *DirectoryService) ListMappings(ctx context.Context, organizationID, connectionID string, opts ...RequestOption) (*DirectoryMappings, error) {
 	return call[DirectoryMappings](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings",
+		pathArgs: []string{organizationID, connectionID},
 	}, opts)
 }
 
 // CreateMapping adds a profile mapping rule.
 //
-// API: POST /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings
-func (s *DirectoryService) CreateMapping(ctx context.Context, tenantID, connectionID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
+// API: POST /v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings
+func (s *DirectoryService) CreateMapping(ctx context.Context, organizationID, connectionID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
 	return call[DirectoryMapping](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // UpdateMapping replaces a profile mapping rule. Version must be the version last read.
 //
-// API: PUT /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}
-func (s *DirectoryService) UpdateMapping(ctx context.Context, tenantID, connectionID, mappingID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
+// API: PUT /v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings/{mappingID}
+func (s *DirectoryService) UpdateMapping(ctx context.Context, organizationID, connectionID, mappingID string, params DirectoryMapping, opts ...RequestOption) (*DirectoryMapping, error) {
 	return call[DirectoryMapping](ctx, s.c, &request{
 		method:   http.MethodPut,
-		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}",
-		pathArgs: []string{tenantID, connectionID, mappingID},
+		path:     "/v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings/{mappingID}",
+		pathArgs: []string{organizationID, connectionID, mappingID},
 		body:     params,
 	}, opts)
 }
 
 // DeleteMapping deletes a profile mapping rule.
 //
-// API: DELETE /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}
-func (s *DirectoryService) DeleteMapping(ctx context.Context, tenantID, connectionID, mappingID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings/{mappingID}
+func (s *DirectoryService) DeleteMapping(ctx context.Context, organizationID, connectionID, mappingID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/{mappingID}",
-		pathArgs: []string{tenantID, connectionID, mappingID},
+		path:     "/v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings/{mappingID}",
+		pathArgs: []string{organizationID, connectionID, mappingID},
 	}, nil, opts)
 }
 
 // PreviewMappings applies the saved rules to sample directory data without changing anything.
 //
-// API: POST /v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/preview
-func (s *DirectoryService) PreviewMappings(ctx context.Context, tenantID, connectionID string, params PreviewMappingsParams, opts ...RequestOption) (*MappingPreview, error) {
+// API: POST /v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings/preview
+func (s *DirectoryService) PreviewMappings(ctx context.Context, organizationID, connectionID string, params PreviewMappingsParams, opts ...RequestOption) (*MappingPreview, error) {
 	return call[MappingPreview](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/directory/connections/{connectionID}/mappings/preview",
-		pathArgs: []string{tenantID, connectionID},
+		path:     "/v1/organizations/{organizationID}/directory/connections/{connectionID}/mappings/preview",
+		pathArgs: []string{organizationID, connectionID},
 		body:     params,
 	}, opts)
 }
 
 // ListErrors lists directory sync errors with a remediation summary.
 //
-// API: GET /v1/tenants/{tenantID}/directory/errors
-func (s *DirectoryService) ListErrors(ctx context.Context, tenantID string, params *ListDirectoryErrorsParams, opts ...RequestOption) (*DirectoryErrors, error) {
+// API: GET /v1/organizations/{organizationID}/directory/errors
+func (s *DirectoryService) ListErrors(ctx context.Context, organizationID string, params *ListDirectoryErrorsParams, opts ...RequestOption) (*DirectoryErrors, error) {
 	return call[DirectoryErrors](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/directory/errors",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/directory/errors",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
 
 // ResolveError marks a directory error resolved.
 //
-// API: POST /v1/tenants/{tenantID}/directory/errors/{eventID}/resolve
-func (s *DirectoryService) ResolveError(ctx context.Context, tenantID, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
+// API: POST /v1/organizations/{organizationID}/directory/errors/{eventID}/resolve
+func (s *DirectoryService) ResolveError(ctx context.Context, organizationID, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
 	return call[DirectoryActionResult](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/directory/errors/{eventID}/resolve",
-		pathArgs: []string{tenantID, eventID},
+		path:     "/v1/organizations/{organizationID}/directory/errors/{eventID}/resolve",
+		pathArgs: []string{organizationID, eventID},
 	}, opts)
 }
 
 // RetryError retries the failed connection check behind a directory error.
 //
-// API: POST /v1/tenants/{tenantID}/directory/errors/{eventID}/retry
-func (s *DirectoryService) RetryError(ctx context.Context, tenantID, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
+// API: POST /v1/organizations/{organizationID}/directory/errors/{eventID}/retry
+func (s *DirectoryService) RetryError(ctx context.Context, organizationID, eventID string, opts ...RequestOption) (*DirectoryActionResult, error) {
 	return call[DirectoryActionResult](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/directory/errors/{eventID}/retry",
-		pathArgs: []string{tenantID, eventID},
+		path:     "/v1/organizations/{organizationID}/directory/errors/{eventID}/retry",
+		pathArgs: []string{organizationID, eventID},
 	}, opts)
 }
 
 // ListActivity lists recorded directory operations.
 //
-// API: GET /v1/tenants/{tenantID}/directory/activity
-func (s *DirectoryService) ListActivity(ctx context.Context, tenantID string, params *ListDirectoryActivityParams, opts ...RequestOption) (*DirectoryActivity, error) {
+// API: GET /v1/organizations/{organizationID}/directory/activity
+func (s *DirectoryService) ListActivity(ctx context.Context, organizationID string, params *ListDirectoryActivityParams, opts ...RequestOption) (*DirectoryActivity, error) {
 	return call[DirectoryActivity](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/directory/activity",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/directory/activity",
+		pathArgs: []string{organizationID},
 		query:    params.values(),
 	}, opts)
 }
 
 // ListAlerts lists directory failure alerts.
 //
-// API: GET /v1/tenants/{tenantID}/directory/alerts
-func (s *DirectoryService) ListAlerts(ctx context.Context, tenantID string, opts ...RequestOption) (*Page[DirectoryAlert], error) {
+// API: GET /v1/organizations/{organizationID}/directory/alerts
+func (s *DirectoryService) ListAlerts(ctx context.Context, organizationID string, opts ...RequestOption) (*Page[DirectoryAlert], error) {
 	return call[Page[DirectoryAlert]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/directory/alerts",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/directory/alerts",
+		pathArgs: []string{organizationID},
 	}, opts)
 }
 
 // CreateAlert creates a directory failure alert.
 //
-// API: POST /v1/tenants/{tenantID}/directory/alerts
-func (s *DirectoryService) CreateAlert(ctx context.Context, tenantID string, params CreateDirectoryAlertParams, opts ...RequestOption) (*DirectoryAlert, error) {
+// API: POST /v1/organizations/{organizationID}/directory/alerts
+func (s *DirectoryService) CreateAlert(ctx context.Context, organizationID string, params CreateDirectoryAlertParams, opts ...RequestOption) (*DirectoryAlert, error) {
 	return call[DirectoryAlert](ctx, s.c, &request{
 		method:   http.MethodPost,
-		path:     "/v1/tenants/{tenantID}/directory/alerts",
-		pathArgs: []string{tenantID},
+		path:     "/v1/organizations/{organizationID}/directory/alerts",
+		pathArgs: []string{organizationID},
 		body:     params,
 	}, opts)
 }
 
 // UpdateAlert changes or pauses a directory failure alert.
 //
-// API: PATCH /v1/tenants/{tenantID}/directory/alerts/{alertID}
-func (s *DirectoryService) UpdateAlert(ctx context.Context, tenantID, alertID string, params UpdateDirectoryAlertParams, opts ...RequestOption) (*DirectoryAlert, error) {
+// API: PATCH /v1/organizations/{organizationID}/directory/alerts/{alertID}
+func (s *DirectoryService) UpdateAlert(ctx context.Context, organizationID, alertID string, params UpdateDirectoryAlertParams, opts ...RequestOption) (*DirectoryAlert, error) {
 	return call[DirectoryAlert](ctx, s.c, &request{
 		method:   http.MethodPatch,
-		path:     "/v1/tenants/{tenantID}/directory/alerts/{alertID}",
-		pathArgs: []string{tenantID, alertID},
+		path:     "/v1/organizations/{organizationID}/directory/alerts/{alertID}",
+		pathArgs: []string{organizationID, alertID},
 		body:     params,
 	}, opts)
 }
 
 // DeleteAlert removes a directory failure alert.
 //
-// API: DELETE /v1/tenants/{tenantID}/directory/alerts/{alertID}
-func (s *DirectoryService) DeleteAlert(ctx context.Context, tenantID, alertID string, opts ...RequestOption) error {
+// API: DELETE /v1/organizations/{organizationID}/directory/alerts/{alertID}
+func (s *DirectoryService) DeleteAlert(ctx context.Context, organizationID, alertID string, opts ...RequestOption) error {
 	return s.c.do(ctx, &request{
 		method:   http.MethodDelete,
-		path:     "/v1/tenants/{tenantID}/directory/alerts/{alertID}",
-		pathArgs: []string{tenantID, alertID},
+		path:     "/v1/organizations/{organizationID}/directory/alerts/{alertID}",
+		pathArgs: []string{organizationID, alertID},
 	}, nil, opts)
 }
 
 // Profile returns the directory attributes behind a person's profile.
 //
-// API: GET /v1/tenants/{tenantID}/directory/profiles/{userID}
-func (s *DirectoryService) Profile(ctx context.Context, tenantID, userID string, opts ...RequestOption) (*Page[DirectoryProfileValue], error) {
+// API: GET /v1/organizations/{organizationID}/directory/profiles/{userID}
+func (s *DirectoryService) Profile(ctx context.Context, organizationID, userID string, opts ...RequestOption) (*Page[DirectoryProfileValue], error) {
 	return call[Page[DirectoryProfileValue]](ctx, s.c, &request{
 		method:   http.MethodGet,
-		path:     "/v1/tenants/{tenantID}/directory/profiles/{userID}",
-		pathArgs: []string{tenantID, userID},
+		path:     "/v1/organizations/{organizationID}/directory/profiles/{userID}",
+		pathArgs: []string{organizationID, userID},
 	}, opts)
 }
 
@@ -249,6 +249,9 @@ const (
 type DirectoryMappings struct {
 	Items   []DirectoryMapping `json:"items,omitempty"`
 	Targets map[string]string  `json:"targets,omitempty"`
+	// Truncated reports that the server cut the list at its cap: there are more mappings than Items
+	// holds.
+	Truncated bool `json:"truncated,omitempty"`
 }
 
 // DirectoryMapping is a rule that maps a directory attribute to a profile field.
@@ -401,7 +404,8 @@ type ListDirectoryErrorsParams struct {
 	Resolution   DirectoryEventResolution
 	Q            string
 	Limit        int
-	Offset       int
+	// The previous page's next_cursor.
+	Cursor string
 }
 
 func (p *ListDirectoryErrorsParams) values() url.Values {
@@ -427,18 +431,19 @@ func (p *ListDirectoryErrorsParams) values() url.Values {
 	if p.Limit != 0 {
 		q.Set("limit", strconv.FormatInt(int64(p.Limit), 10))
 	}
-	if p.Offset != 0 {
-		q.Set("offset", strconv.FormatInt(int64(p.Offset), 10))
+	if p.Cursor != "" {
+		q.Set("cursor", p.Cursor)
 	}
 	return q
 }
 
 // DirectoryErrors is the result of DirectoryService.ListErrors.
 type DirectoryErrors struct {
-	Items        []DirectoryEvent            `json:"items,omitempty"`
+	Items []DirectoryEvent `json:"items,omitempty"`
+	// Present when there is a next page: send it back as Cursor.
+	NextCursor   string                      `json:"next_cursor,omitempty"`
 	Total        int                         `json:"total"`
 	Limit        int                         `json:"limit"`
-	Offset       int                         `json:"offset"`
 	Summary      DirectoryErrorsSummary      `json:"summary,omitzero"`
 	Categories   []DirectoryErrorsCategory   `json:"categories,omitempty"`
 	Connections  []DirectoryErrorsConnection `json:"connections,omitempty"`
@@ -544,7 +549,8 @@ type ListDirectoryActivityParams struct {
 	Status       DirectoryEventStatus
 	Q            string
 	Limit        int
-	Offset       int
+	// The previous page's next_cursor.
+	Cursor string
 }
 
 func (p *ListDirectoryActivityParams) values() url.Values {
@@ -567,20 +573,21 @@ func (p *ListDirectoryActivityParams) values() url.Values {
 	if p.Limit != 0 {
 		q.Set("limit", strconv.FormatInt(int64(p.Limit), 10))
 	}
-	if p.Offset != 0 {
-		q.Set("offset", strconv.FormatInt(int64(p.Offset), 10))
+	if p.Cursor != "" {
+		q.Set("cursor", p.Cursor)
 	}
 	return q
 }
 
 // DirectoryActivity is the result of DirectoryService.ListActivity.
 type DirectoryActivity struct {
-	Items   []DirectoryEvent          `json:"items,omitempty"`
-	Total   int                       `json:"total"`
-	Limit   int                       `json:"limit"`
-	Offset  int                       `json:"offset"`
-	Summary DirectoryActivitySummary  `json:"summary,omitzero"`
-	Volume  []DirectoryActivityVolume `json:"volume,omitempty"`
+	Items []DirectoryEvent `json:"items,omitempty"`
+	// Present when there is a next page: send it back as Cursor.
+	NextCursor string                    `json:"next_cursor,omitempty"`
+	Total      int                       `json:"total"`
+	Limit      int                       `json:"limit"`
+	Summary    DirectoryActivitySummary  `json:"summary,omitzero"`
+	Volume     []DirectoryActivityVolume `json:"volume,omitempty"`
 }
 
 // DirectoryActivitySummary is the type of DirectoryActivity.Summary.
@@ -625,7 +632,7 @@ type CreateDirectoryAlertParams struct {
 // UpdateDirectoryAlertParams is the request body of DirectoryService.UpdateAlert.
 type UpdateDirectoryAlertParams struct {
 	Name *string `json:"name,omitempty"`
-	// A connection of the organisation, or "" for every connection.
+	// A connection of the organization, or "" for every connection.
 	ConnectionID *string `json:"connection_id,omitempty"`
 	Threshold    *int    `json:"threshold,omitempty"`
 	Enabled      *bool   `json:"enabled,omitempty"`

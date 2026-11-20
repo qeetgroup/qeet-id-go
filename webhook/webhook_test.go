@@ -80,7 +80,7 @@ func TestServerDeliveriesVerify(t *testing.T) {
 				if err != nil {
 					t.Fatalf("secret %q: %v", secret[:4], err)
 				}
-				if string(e.Type) != d.Headers[EventHeader] || e.DeliveryID != d.Headers[DeliveryIDHeader] || e.ID == "" || e.TenantID == "" || e.OccurredAt.IsZero() {
+				if string(e.Type) != d.Headers[EventHeader] || e.DeliveryID != d.Headers[DeliveryIDHeader] || e.ID == "" || e.OrganizationID == "" || e.OccurredAt.IsZero() {
 					t.Errorf("event = %+v", e)
 				}
 			}
@@ -100,7 +100,7 @@ func TestServerDeliveryData(t *testing.T) {
 	if err := e.DecodeData(&user); err != nil {
 		t.Fatal(err)
 	}
-	if e.Type != UserCreated || user.Email != "ada@brightleaffoods.in" || user.Source != "admin" || user.UserID == "" || user.TenantID != e.TenantID {
+	if e.Type != UserCreated || user.Email != "ada@brightleaffoods.in" || user.Source != "admin" || user.UserID == "" || user.OrganizationID != e.OrganizationID {
 		t.Errorf("user.created = %+v / %+v", e, user)
 	}
 

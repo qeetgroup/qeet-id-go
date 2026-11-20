@@ -15,7 +15,7 @@ Version string 0.1.0, **no tag pushed yet**. Go 1.26+, standard library only.
 ```text
 qeet-context (L0)      organization standards
       ↓
-qeet-id-context (L1)   product architecture, cross-repo contracts
+qeet-id-files (L1)   product architecture, cross-repo contracts
       ↓
 qeet-id-server         the API contract this SDK implements
       ↓

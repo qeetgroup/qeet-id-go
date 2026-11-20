@@ -1,5 +1,5 @@
 # qeet-id-go — repository context metadata (Level 2).
-# Inherits qeetgroup/qeet-context (L0) and qeetgroup/qeet-id-context (L1).
+# Inherits qeetgroup/qeet-context (L0) and qeetgroup/qeet-id-files (L1).
 
 schema_version: 1
 
@@ -11,7 +11,7 @@ context:
 
 inheritance:
   organization: {repository: qeetgroup/qeet-context, level: L0}
-  product:      {repository: qeetgroup/qeet-id-context, level: L1}
+  product:      {repository: qeetgroup/qeet-id-files, level: L1}
 
 repository:
   name: qeet-id-go

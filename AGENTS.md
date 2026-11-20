@@ -20,7 +20,7 @@ behaviour the API does not have.
 ## Context hierarchy
 
 ```text
-qeet-context (L0)  →  qeet-id-context (L1)  →  qeet-id-server (the contract)
+qeet-context (L0)  →  qeet-id-files (L1)  →  qeet-id-server (the contract)
                                             →  qeet-id-go (L2 — this repository)
 ```
 

@@ -9,7 +9,7 @@ The server-side **Go SDK for Qeet ID**. Module `github.com/qeetgroup/qeet-id-go`
 Go 1.26+, standard library only. It wraps the contract owned by `qeet-id-server` (its five OpenAPI
 documents) and never adds behaviour the API lacks.
 
-Context: **L0** `qeet-context` (organization) → **L1** `qeet-id-context` (product) → **L2** this
+Context: **L0** `qeet-context` (organization) → **L1** `qeet-id-files` (product) → **L2** this
 repository → source.
 
 ## Structure
